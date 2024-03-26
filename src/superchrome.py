@@ -3,8 +3,26 @@ import ctypes
 import time
 dll = windll.LoadLibrary("C:\Program Files (x86)\Fianium\SuperChrome\SuperChromeSDK.dll")
 
-dll.Initialise
-dll.RunCalibration  
-time.sleep(20)
-print(dll.GetCurrentWaveDual("1"))
-dll.MoveSyncWaveAndBw(ctypes.c_double(300.0),ctypes.c_double(25.0))
+class SuperChrome(Instrument):
+    """ A class for controlling the fianium superchrome filter
+    """
+    def __init__(self):
+#        self.dll = cdll.LoadLibrary(os.path.dirname(__file__) + "\\SuperChromeSDK")
+#        self.dll.InitialiseDll(windll.kernel32._handle)
+#        self.dll = windll
+
+        self.dll = cdll.LoadLibrary(r'C:\Program Files (x86)\Fianium\SuperChrome' + "\\SuperChromeSDK.dll")
+        self.init();
+    def init(self):
+        self.dll.InitialiseDll(windll.kernel32._handle)
+        self.dll.Initialise();
+        self.MoveSyncWaveAndBw(633, 10)
+        self.wvl = 633;
+        self.bw = 10;
+    def MoveWvl(self, centWvl, bwWvl):
+        """ centWvl and bwWvl are in nm
+        """
+        print("Moving")
+        self.MoveSyncWaveAndBw(centWvl, bwWvl)
+        self.wvl = centWvl;
+        self.bw = bwWvl;
