@@ -5,12 +5,27 @@ from pylablib.devices import Thorlabs
 import win32gui
 import win32com.client
 import time
+def wait_until_exits(object, timerstep=1, limit=10):
+    timer = 0
+    while True:
+        time.sleep(timerstep)
+        timer += timerstep
+        if object.exists():
+            break
+        assert timer < limit, "too much time is going"
 
-def open_superchrom():
+def open_superchrome(timeout=20):
     app = Application(backend="win32").start("C:\Program Files (x86)\Fianium\SuperChrome\SuperChrome.exe", timeout=10)
+    app["SuperChrome Initialisation"].wait(wait_for="exists",timeout=timeout)
     app["SuperChrome Initialisation"].OK.click()
+    print("SuperChrome opening")
+    app["SuperChrome"].wait(wait_for="enabled",timeout=timeout)
     print("SuperChrome opened")
     return app
+
+def change_wavelength(app,wavelength):
+    app["SuperChrome"].Edit2.set_text(str(wavelength))
+    app["SuperChrome"].Move.click()
 
 def print_superchrome(app):
     app["SuperChrome"].print_control_identifiers()
@@ -38,5 +53,8 @@ def init_ophir():
 
 
 if __name__ == "__main__":
-    app = open_superchrom()
+    app = open_superchrome()
     print_superchrome(app)
+    for i in range(10):
+        time.sleep(2)
+        change_wavelength(app, wavelength=300+i*50)
