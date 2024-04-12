@@ -8,6 +8,13 @@ import time
 
 def open_superchrom():
     app = Application(backend="win32").start("C:\Program Files (x86)\Fianium\SuperChrome\SuperChrome.exe", timeout=10)
+    app["SuperChrome Initialisation"].OK.click()
+    print("SuperChrome opened")
+    return app
+
+def print_superchrome(app):
+    app["SuperChrome"].print_control_identifiers()
+
 
 def init_thorlab():
     print("connected devices: ", Thorlabs.list_kinesis_devices())
@@ -31,4 +38,5 @@ def init_ophir():
 
 
 if __name__ == "__main__":
-    stage = init_thorlab()
+    app = open_superchrom()
+    print_superchrome(app)
