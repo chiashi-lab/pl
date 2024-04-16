@@ -1,5 +1,5 @@
 from pywinauto.application import Application
-
+import time
 class superchrome:
     """
     Class to control the SuperChrome software
@@ -19,15 +19,20 @@ class superchrome:
         self.app["SuperChrome Initialisation"].OK.click()
         print("SuperChrome opening")
         self.app["SuperChrome"].wait(wait_for="enabled",timeout=20)
-        self.wavelength = self.app["SuperChrome"].Edit2.get_text()
-        self.bandwidth = self.app["SuperChrome"].Edit3.get_text()
+        time.sleep(3)
+        self.wavelength = int(self.app["SuperChrome"].Edit2.texts()[0])
+        self.bandwidth = int(self.app["SuperChrome"].Edit.texts()[0])
         print("SuperChrome opened")
+    
+    def print(self):
+        self.app["SuperChrome"].print_control_identifiers()
+
 
     def change_lw(self, **kwargs):
         self.wavelength = kwargs.get("wavelength", self.wavelength)
         self.bandwidth = kwargs.get("bandwidth", self.bandwidth)
         self.app["SuperChrome"].Edit2.set_text(str(self.wavelength))
-        self.app["SuperChrome"].Edit3.set_text(str(self.bandwidth))
+        self.app["SuperChrome"].Edit.set_text(str(self.bandwidth))
         self.app["SuperChrome"].Move.click()
 
 if __name__ == "__main__":

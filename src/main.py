@@ -6,7 +6,11 @@ import time
 
 
 if __name__ == "__main__":
-    superchrome = superchrome()
-    for i in range(10):
-        time.sleep(2)
-        superchrome.change_wavelength(300+i*50)
+    #superchrome = superchrome()
+    powermeter = powermeter()
+    powermeter.open(immediate_mode=False)
+    stage = stage()
+    stage.move_to(600000)
+    stage.wait_for_stop()
+    print(stage.get_position())
+ 

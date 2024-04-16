@@ -24,6 +24,8 @@ ophirのstarlabにpythonのデモがある
 
 pythonからの数値取得に成功
 
+setrange後にdataを吐いてくれない
+
 ## superchrome
 [superchromeSDK](docs/SuperChromeSDK.pdf)
 

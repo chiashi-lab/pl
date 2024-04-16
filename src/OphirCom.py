@@ -32,13 +32,19 @@ class powermeter:
       self.DeviceHandle = None
       self.exists = False
       self.ranges = None
-      self.data = None
+      self.immediate_mode = False
+   def scan(self):
+      return self.OphirCOM.ScanUSB()
 
-   def open(self):
+   def open(self,immediate_mode=False):
+      self.immediate_mode = immediate_mode
       if len(self.DeviceList) > 0:
          self.DeviceHandle = self.OphirCOM.OpenUSBDevice(self.DeviceList[0])
          self.exists = self.OphirCOM.IsSensorExists(self.DeviceHandle, 0)
          if self.exists:
+            self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 0, 0)
+            if self.immediate_mode:
+               self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 2, 1)
             self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
             self.OphirCOM.StartStream(self.DeviceHandle, 0)
          else:
@@ -47,8 +53,32 @@ class powermeter:
          print('\nNo Device attached for ophir !!!')
 
    def get_data(self):
-      self.data = self.OphirCOM.GetData(self.DeviceHandle, 0)
-      return self.data
+      data = self.OphirCOM.GetData(self.DeviceHandle, 0)
+      while not data:
+         data = self.OphirCOM.GetData(self.DeviceHandle, 0)
+      return data
+   
+   def get_latestdata(self):
+      data = self.get_data()
+      return data[0][-1]
+
+   def get_range(self):
+      self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
+      return self.ranges
+   
+   def set_range(self,range):
+      if not (0<=range and range<=5):
+         print("range error!")
+         return
+      self.OphirCOM.StopAllStreams()
+
+      self.OphirCOM.SetRange(self.DeviceHandle, 0, range)
+      self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
+
+      if self.immediate_mode:
+               self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 2, 1)
+      self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
+      self.OphirCOM.StartStream(self.DeviceHandle, 0)
 
    def close(self):
       self.OphirCOM.StopAllStreams()
@@ -83,7 +113,7 @@ if __name__ == "__main__":
             
             # An Example for data retrieving
             OphirCOM.StartStream(DeviceHandle, 0)		# start measuring
-            for i in range(60):		
+            for i in range(600):		
                time.sleep(1)				# wait a little for data
                data = OphirCOM.GetData(DeviceHandle, 0)
                if len(data[0]) > 0:		# if any data available, print the first one from the batch

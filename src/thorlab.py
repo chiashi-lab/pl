@@ -18,17 +18,27 @@ class stage:
         print("connected devices: ", Thorlabs.list_kinesis_devices())
         print("trying to connect to device 27502401")
         self.stage = Thorlabs.KinesisMotor("27502401")
-        self.maxlimit = 200000
-        self.minlimit = 0
+        self.maxlimit = 1705825
+        self.minlimit =  600000
     
     def get_status(self):
         return self.stage.get_status()
+    
+    def get_scale(self):
+        return self.stage.get_scale()
+    
+    def get_scale_units(self):
+        return self.stage.get_scale_units()
+    
+    def get_position(self):
+        return self.stage.get_position()
     
     def move_to(self, position):
         if position > self.maxlimit:
             position = self.maxlimit
         elif position < self.minlimit:
             position = self.minlimit
+        print(f"stage is moving{position}")
         self.stage.move_to(position)
         #not blocked while moving
     
