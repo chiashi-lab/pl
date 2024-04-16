@@ -3,11 +3,11 @@
 
 src/
 
---Ophircom.py パワーメータのテストコード
+--ophircom.py パワーメータのクラス定義
 
---stage.py ステージのテストコード
+--thorlab.py ステージのクラス定義
 
---superchrome.py superchromeのテストコード
+--superchrome.py superchromeのクラス定義
 
 --main.py 全体の自動制御のテストコード
 
