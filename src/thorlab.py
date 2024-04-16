@@ -1,6 +1,7 @@
 from pylablib.devices import Thorlabs
+import config
 
-class stage:
+class motor:
     """
     class to control the Thorlabs stage
 
@@ -16,8 +17,8 @@ class stage:
     """
     def __init__(self):
         print("connected devices: ", Thorlabs.list_kinesis_devices())
-        print("trying to connect to device 27502401")
-        self.stage = Thorlabs.KinesisMotor("27502401")
+        print(f"trying to connect to device {config.KINESISMOTORID}")
+        self.stage = Thorlabs.KinesisMotor(str(config.KINESISMOTORID))
         self.maxlimit = 1705825
         self.minlimit =  600000
     
@@ -46,10 +47,7 @@ class stage:
         self.stage.wait_for_stop()
 
 if __name__ == "__main__":
-    print(Thorlabs.list_kinesis_devices())
-    stage = Thorlabs.KinesisMotor("27502401")
-    print(stage.get_status())
-    stage.move_to(200000)
+    stage = motor()
+    stage.move_to(600000)
     stage.wait_for_stop()
-    stage.move_to(0)
-    stage.wait_for_stop()
+    print(stage.get_position())

@@ -1,5 +1,6 @@
 from pywinauto.application import Application
 import time
+import config
 class superchrome:
     """
     Class to control the SuperChrome software
@@ -14,7 +15,7 @@ class superchrome:
 
     """
     def __init__(self):
-        self.app = Application(backend="win32").start("C:\Program Files (x86)\Fianium\SuperChrome\SuperChrome.exe", timeout=10)
+        self.app = Application(backend="win32").start(config.SUPERCHROMEPATH, timeout=10)
         self.app["SuperChrome Initialisation"].wait(wait_for="exists",timeout=20)
         self.app["SuperChrome Initialisation"].OK.click()
         print("SuperChrome opening")
@@ -36,5 +37,4 @@ class superchrome:
         self.app["SuperChrome"].Move.click()
 
 if __name__ == "__main__":
-    app = Application(backend="win32").start("C:\Program Files (x86)\Fianium\SuperChrome\SuperChrome.exe", timeout=10)
-    print(app.windows())
+    superchrome = superchrome()

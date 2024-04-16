@@ -1,6 +1,6 @@
 from superchrome import superchrome
-from ophircom import powermeter
-from thorlab import stage
+from ophircom import ophircom
+from thorlab import motor
 import time
 
 

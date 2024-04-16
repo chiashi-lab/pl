@@ -6,9 +6,10 @@ import win32com.client
 import time
 import traceback
 
-class powermeter:
+class ophircom:
    """
    class to control the Ophir Power Meter
+   if you want to get data, just wait a little before do"get_data"
 
    Attributes:
    OphirCOM: Ophir COM object
@@ -30,7 +31,6 @@ class powermeter:
       self.OphirCOM.CloseAll()
       self.DeviceList = self.OphirCOM.ScanUSB()
       self.DeviceHandle = None
-      self.exists = False
       self.ranges = None
       self.immediate_mode = False
    def scan(self):
@@ -40,8 +40,8 @@ class powermeter:
       self.immediate_mode = immediate_mode
       if len(self.DeviceList) > 0:
          self.DeviceHandle = self.OphirCOM.OpenUSBDevice(self.DeviceList[0])
-         self.exists = self.OphirCOM.IsSensorExists(self.DeviceHandle, 0)
-         if self.exists:
+         exists = self.OphirCOM.IsSensorExists(self.DeviceHandle, 0)
+         if exists:
             self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 0, 0)
             if self.immediate_mode:
                self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 2, 1)
@@ -73,11 +73,11 @@ class powermeter:
       self.OphirCOM.StopAllStreams()
 
       self.OphirCOM.SetRange(self.DeviceHandle, 0, range)
-      self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
-
+      self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 0, 0)
       if self.immediate_mode:
                self.OphirCOM.ConfigureStreamMode(self.DeviceHandle, 0, 2, 1)
       self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
+
       self.OphirCOM.StartStream(self.DeviceHandle, 0)
 
    def close(self):
@@ -86,49 +86,12 @@ class powermeter:
       self.OphirCOM = None
 
 if __name__ == "__main__":
-   try:
-      OphirCOM = win32com.client.Dispatch("OphirLMMeasurement.CoLMMeasurement")
-      # Stop & Close all devices
-      OphirCOM.StopAllStreams() 
-      OphirCOM.CloseAll()
-      # Scan for connected Devices
-      DeviceList = OphirCOM.ScanUSB()
-      print(DeviceList)
-      for Device in DeviceList:   	# if any device is connected
-         DeviceHandle = OphirCOM.OpenUSBDevice(Device)	# open first device
-         exists = OphirCOM.IsSensorExists(DeviceHandle, 0)
-         if exists:
-            print('\n----------Data for S/N {0} ---------------'.format(Device))
-
-            # An Example for Range control. first get the ranges
-            ranges = OphirCOM.GetRanges(DeviceHandle, 0)
-            print (ranges)
-            # change range at your will
-            if ranges[0] > 0:
-               newRange = ranges[0]-1
-            else:
-               newRange = ranges[0]+1
-            # set new range
-            OphirCOM.SetRange(DeviceHandle, 0, newRange)
-            
-            # An Example for data retrieving
-            OphirCOM.StartStream(DeviceHandle, 0)		# start measuring
-            for i in range(600):		
-               time.sleep(1)				# wait a little for data
-               data = OphirCOM.GetData(DeviceHandle, 0)
-               if len(data[0]) > 0:		# if any data available, print the first one from the batch
-                  print('Reading = {0}, TimeStamp = {1}, Status = {2} '.format(data[0][0] ,data[1][0] ,data[2][0]))
-            
-         else:
-            print('\nNo Sensor attached to {0} !!!'.format(Device))
-   except OSError as err:
-      print("OS error: {0}".format(err))
-   except:
-      traceback.print_exc()
-
-   win32gui.MessageBox(0, 'finished', '', 0)
-   # Stop & Close all devices
-   OphirCOM.StopAllStreams()
-   OphirCOM.CloseAll()
-   # Release the object
-   OphirCOM = None
+   powermeter = ophircom()
+   powermeter.open()
+   time.sleep(1)
+   print(powermeter.get_data())
+   print(powermeter.get_range())
+   powermeter.set_range(5)
+   time.sleep(1)
+   print(powermeter.get_data())
+   print(powermeter.get_range())
