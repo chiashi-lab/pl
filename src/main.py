@@ -7,9 +7,9 @@ import time
 
 if __name__ == "__main__":
     #superchrome = superchrome()
-    powermeter = powermeter()
+    powermeter = ophircom()
     powermeter.open(immediate_mode=False)
-    stage = stage()
+    stage = motor()
     stage.move_to(600000)
     stage.wait_for_stop()
     print(stage.get_position())
