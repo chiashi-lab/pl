@@ -23,14 +23,15 @@ class motor:
     getparam: get the parameters of the stage
     setparam: set the parameters of the stage
     """
-    def __init__(self):
+    def __init__(self,home):
         print("connected devices: ", Thorlabs.list_kinesis_devices())
         print(f"trying to connect to device {config.KINESISMOTORID}")
         self.stage = Thorlabs.KinesisMotor(str(config.KINESISMOTORID))
-        self.move_to_home(block=True)
+        if home:
+            self.move_to_home(block=True)
         self.position = self.get_position()
-        self.maxlimit = 1705825
-        self.minlimit =  600000
+        self.maxlimit = 1814000
+        self.minlimit =  665700
     
     def get_status(self):
         return self.stage.get_status()
@@ -70,6 +71,6 @@ class motor:
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
 if __name__ == "__main__":
-    stage = motor()
-    stage.move_to_home(block=True)
-    stage.move_to(1200000,block=True)
+    stage = motor(home=False)
+    stage.move_to(600000,block=True)
+    print(stage.get_position())
