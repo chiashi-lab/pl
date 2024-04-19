@@ -9,11 +9,19 @@ class motor:
     stage: Thorlabs.KinesisMotor object
     maxlimit: maximum limit of the stage
     minlimit: minimum limit of the stage
+    position: current position of the stage
 
     Methods:
     get_status: get the status of the stage
-    move_to: move the stage to a position
+    get_scale: get the scale of the stage
+    get_scale_units: get the scale units of the stage
+    get_position: get the position of the stage
     wait_for_stop: wait for the stage to stop
+    move_to: move the stage to a position
+    move_to_home: move the stage to the home position
+    gethome: get the home parameters of the stage
+    getparam: get the parameters of the stage
+    setparam: set the parameters of the stage
     """
     def __init__(self):
         print("connected devices: ", Thorlabs.list_kinesis_devices())

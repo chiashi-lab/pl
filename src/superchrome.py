@@ -11,7 +11,7 @@ class superchrome:
     bandwidth: current bandwidth
 
     Methods:
-    change_lw: change the wavelength and bandwidth of the SuperChrome
+    change_lw(wavelength=,bandwidth=): change the wavelength and bandwidth of the SuperChrome
 
     """
     def __init__(self):

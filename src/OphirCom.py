@@ -15,13 +15,16 @@ class ophircom:
    OphirCOM: Ophir COM object
    DeviceList: list of connected devices
    DeviceHandle: handle of the device
-   exists: boolean to check if device exists
    ranges: list of ranges
-   data: data from the device
+   immediate_mode: if True, the device will be in immediate mode
 
    Methods:
+   scan: scan the devices
    open: open the device
    get_data: get the data from the device
+   get_latestdata: get the latest data from the device
+   get_range: get the range of the device
+   set_range: set the range of the device
    close: close the device
 
    """

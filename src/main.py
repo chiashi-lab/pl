@@ -13,4 +13,3 @@ if __name__ == "__main__":
     stage.move_to(600000)
     stage.wait_for_stop()
     print(stage.get_position())
- 
