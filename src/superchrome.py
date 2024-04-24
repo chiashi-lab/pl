@@ -5,6 +5,9 @@ class superchrome:
     """
     Class to control the SuperChrome software
 
+    this class is indireclty controlling the SuperChrome using SuperChrome software with pywinauto.
+    So, the SuperChrome software should be installed in the computer.
+
     Attributes:
     app: pywinauto.application.Application object
     wavelength: current wavelength

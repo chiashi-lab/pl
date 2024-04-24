@@ -1,10 +1,9 @@
 # Use of Ophir COM object. 
 # Works with python 3.5.1 & 2.7.11
 # Uses pywin32
-import win32gui
 import win32com.client
 import time
-import traceback
+import numpy as np
 
 class ophircom:
     """
@@ -60,6 +59,10 @@ class ophircom:
         while not data:
             data = self.OphirCOM.GetData(self.DeviceHandle, 0)
         return data
+    
+    def get_meandata(self):
+        data = self.get_data()
+        return np.mean(data[0])
     
     def get_latestdata(self):
         data = self.get_data()

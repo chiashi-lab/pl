@@ -9,6 +9,10 @@ src/
 
 --superchrome.py superchromeのクラス定義
 
+--ihr320.py IHR320のクラス定義
+
+--symphony.py symphonyのクラス定義
+
 --main.py 全体の自動制御のテストコード
 
 ## ステージコントロール
