@@ -71,6 +71,6 @@ class motor:
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
 if __name__ == "__main__":
-    stage = motor(home=False)
-    stage.move_to(600000,block=True)
-    print(stage.get_position())
+    stage = motor(home=True)
+    stage.move_to(1000000,block=True)
+    print(f"moved{stage.get_position()}")
