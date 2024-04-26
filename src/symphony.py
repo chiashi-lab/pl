@@ -326,6 +326,12 @@ child_window(title="MFC_CCDExample", class_name="#32770")
         self.app = Application(backend="win32").start(config.MFCCCDPATH, timeout=10)
         self.app["MFC_CCDExample"].wait(wait_for="enabled",timeout=20)
         print("Symphony opened")
+        self.app["MFC_CCDExample"]["Connect"].click()
+        print("Symphony connected")
+    
+    def Initialize(self):
+        self.app["MFC_CCDExample"]["Initialize"].click()
+        print("Symphony initialized")
     
     def print(self):
         self.app["MFC_CCDExample"].print_control_identifiers()

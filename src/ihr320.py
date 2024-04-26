@@ -187,6 +187,10 @@ child_window(title="MonoExample", class_name="#32770")
     
     def print(self):
         self.app["MonoExample"].print_control_identifiers()
+    
+    def Initialize(self):
+        self.app["MonoExample"]["Initialize"].click()
+        print("IHR320 initialized")
 
 if __name__ == "__main__":
     ihr = ihr320()
