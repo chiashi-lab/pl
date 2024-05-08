@@ -6,10 +6,12 @@ from pywinauto.application import Application
 import func
 
 def control_power(targetpower,eps=0.001):
-    nowpower = ophircom.get_power()
     nowndstep = motor.get_position()
+    ratio = func.step2ratio(nowndstep)
+    nowpower = ratio * ophircom.get_power()
 
     if nowpower < targetpower - eps:
+
     elif nowpower > targetpower + eps:
     else:
         print("Already at target power")
