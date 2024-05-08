@@ -6,13 +6,16 @@ from pywinauto.application import Application
 import func
 
 def control_power(targetpower,eps=0.001):
+    time.sleep(1)
     nowndstep = motor.get_position()
     ratio = func.step2ratio(nowndstep)
     nowpower = ratio * ophircom.get_power()
 
-    if nowpower < targetpower - eps:
-
-    elif nowpower > targetpower + eps:
+    if nowpower < targetpower - eps or targetpower + eps < nowpower:
+        byratio = targetpower / nowpower
+        byratio = ratio * byratio
+        tostep = func.ratio2step(byratio)
+        motor.move_to_position(tostep)
     else:
         print("Already at target power")
 
