@@ -72,5 +72,5 @@ class motor:
 
 if __name__ == "__main__":
     stage = motor(home=True)
-    stage.move_to(1000000,block=True)
+    stage.move_to(7000000,block=True)
     print(f"moved{stage.get_position()}")

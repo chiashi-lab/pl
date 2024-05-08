@@ -14,11 +14,14 @@ def transmisson(od):
 def func(x, a, b, c, d):
     return -1 * a * np.exp(b * (x-c)) + d
 
+def mid_targetratio(step):
+    return func(step, 2.92800423e-01, 2.10349362e-07, 9.10476001e+06, 5.38950106e+00)
+
 def step2ratio(step):
     """
     step: step number
     """
-    return transmisson(optical_density_step(step)) * func(step, 2.92800423e-01, 2.10349362e-07, 9.10476001e+06, 5.38950106e+00)
+    return transmisson(optical_density_step(step)) * mid_targetratio(step)
 
 def inverse_func(y, a, b, c, d):
     return -1 * a * np.log((y + b) / c) + d

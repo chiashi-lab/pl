@@ -7,18 +7,24 @@ import func
 
 def control_power(targetpower,powermeter, stage, eps=0.001):
     while (True):
-        time.sleep(2)
+        time.sleep(5)
         nowndstep = stage.get_position()
-        ratio = func.step2ratio(nowndstep)
-        nowpower = ratio * powermeter.get_power()
+        ratio = func.mid_targetratio(nowndstep)
+        measuredpower = powermeter.get_latestdata()
+        nowpower = ratio * measuredpower
+        print("measured power: ", measuredpower)
         print("Current power: ", nowpower)
         print("Target power: ", targetpower)
+        print("step: ", nowndstep)
 
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
+            print("stage is moving")
             byratio = targetpower / nowpower
-            byratio = ratio * byratio
-            tostep = func.ratio2step(byratio)
-            motor.move_to_position(tostep)
+            ratio = func.step2ratio(nowndstep)
+            tostep = func.ratio2step(byratio*ratio)
+            print("byratio: ", byratio)
+            print("ratio: ", ratio)
+            stage.move_to(tostep)
         else:
             print("Already at target power")
             break
@@ -27,7 +33,7 @@ if __name__ == "__main__":
     laserchoone = superchrome()
 
     stage = motor(home=True)
-    motor.move_to(665700, block=True)
+    stage.move_to(665700, block=True)
     print(f"stage is at {stage.get_position()}")
 
     powermeter = ophircom()
@@ -37,11 +43,12 @@ if __name__ == "__main__":
 
     for i in [550, 650]:
         print(f"changing wavelength to {i}")
-        laserchoone.change_lw(wavelength=i)
+        laserchoone.change_lw(wavelength=i, bandwidth=10)
         time.sleep(5)
         print("changed wavelength")
-        print(f"powermeter is at {powermeter.get_data()}")
+        print(f"powermeter is at {powermeter.get_latestdata()}")
         print("start controlling power")
-        control_power(0.1, powermeter, stage)
+        control_power(0.001, powermeter, stage, eps=0.0007)
         print("end controlling power")
-        print(f"powermeter is at {powermeter.get_data()}")
+        time.sleep(2)
+        print(f"powermeter is at {powermeter.get_latestdata()}")
