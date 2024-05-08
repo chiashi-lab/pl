@@ -5,12 +5,12 @@ import time
 from pywinauto.application import Application
 import func
 
-def control_power(targetpower,eps=0.001):
+def control_power(targetpower,powermeter, stage, eps=0.001):
     while (True):
         time.sleep(2)
-        nowndstep = motor.get_position()
+        nowndstep = stage.get_position()
         ratio = func.step2ratio(nowndstep)
-        nowpower = ratio * ophircom.get_power()
+        nowpower = ratio * powermeter.get_power()
         print("Current power: ", nowpower)
         print("Target power: ", targetpower)
 
@@ -24,4 +24,24 @@ def control_power(targetpower,eps=0.001):
             break
 
 if __name__ == "__main__":
-    app = Application(backend="win32").start(r"C:\Users\maruk\Desktop\Jobin Yvon\SDK\Examples\C++\FilterWheel\Release\FWExample.exe", timeout=10)
+    laserchoone = superchrome()
+
+    stage = motor(home=True)
+    motor.move_to(665700, block=True)
+    print(f"stage is at {stage.get_position()}")
+
+    powermeter = ophircom()
+    powermeter.open()
+    powermeter.set_range(4)
+    print(f"powermeter is at {powermeter.get_range()}")
+
+    for i in [550, 650]:
+        print(f"changing wavelength to {i}")
+        laserchoone.change_lw(wavelength=i)
+        time.sleep(5)
+        print("changed wavelength")
+        print(f"powermeter is at {powermeter.get_data()}")
+        print("start controlling power")
+        control_power(0.1, powermeter, stage)
+        print("end controlling power")
+        print(f"powermeter is at {powermeter.get_data()}")

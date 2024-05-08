@@ -48,7 +48,7 @@ class motor:
     def wait_for_stop(self):
         self.stage.wait_for_stop()
     
-    def move_to(self, position, block):
+    def move_to(self, position, block=True):
         if position > self.maxlimit:
             position = self.maxlimit
         elif position < self.minlimit:
