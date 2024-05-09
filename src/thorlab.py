@@ -30,8 +30,8 @@ class motor:
         if home:
             self.move_to_home(block=True)
         self.position = self.get_position()
-        self.maxlimit = 1814000
-        self.minlimit =  665700
+        self.maxlimit = config.KINESISMAXLIMIT
+        self.minlimit =  config.KINESISMINLIMIT
     
     def get_status(self):
         return self.stage.get_status()

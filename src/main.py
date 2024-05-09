@@ -7,7 +7,7 @@ import func
 
 def control_power(targetpower,powermeter, stage, eps=0.001):
     while (True):
-        time.sleep(5)
+        time.sleep(10)
         nowndstep = stage.get_position()
         ratio = func.mid_targetratio(nowndstep)
         measuredpower = powermeter.get_latestdata()
@@ -41,14 +41,16 @@ if __name__ == "__main__":
     powermeter.set_range(4)
     print(f"powermeter is at {powermeter.get_range()}")
 
-    for i in [550, 650]:
+    for i in [561, 633]:
         print(f"changing wavelength to {i}")
         laserchoone.change_lw(wavelength=i, bandwidth=10)
         time.sleep(5)
         print("changed wavelength")
         print(f"powermeter is at {powermeter.get_latestdata()}")
         print("start controlling power")
-        control_power(0.001, powermeter, stage, eps=0.0007)
+        control_power(0.001, powermeter, stage, eps=0.0001)
         print("end controlling power")
         time.sleep(2)
         print(f"powermeter is at {powermeter.get_latestdata()}")
+        print("waiting for 20s")
+        time.sleep(20)
