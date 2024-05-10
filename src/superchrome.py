@@ -18,6 +18,15 @@ class superchrome:
 
     """
     def __init__(self):
+        """
+        initialize the SuperChrome software
+
+        args:
+        None
+
+        return:
+        None
+        """
         self.app = Application(backend="win32").start(config.SUPERCHROMEPATH, timeout=10)
         self.app["SuperChrome Initialisation"].wait(wait_for="exists",timeout=20)
         self.app["SuperChrome Initialisation"].OK.click()
@@ -32,7 +41,17 @@ class superchrome:
         self.app["SuperChrome"].print_control_identifiers()
 
 
-    def change_lw(self, **kwargs):
+    def change_lwbw(self, **kwargs):
+        """
+        change the wavelength and bandwidth of the SuperChrome
+
+        args:
+        wavelength: wavelength to change
+        bandwidth: bandwidth to change
+
+        return:
+        None
+        """
         self.wavelength = kwargs.get("wavelength", self.wavelength)
         self.bandwidth = kwargs.get("bandwidth", self.bandwidth)
         self.app["SuperChrome"].Edit2.set_text(str(self.wavelength))

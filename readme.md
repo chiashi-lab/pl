@@ -1,4 +1,4 @@
-# PL連続NDフィルターの制御
+# PLの制御
 ![overview](docs/fig1.png)
 
 data/
@@ -13,6 +13,8 @@ src/
 
 --config.py パラメータ設定
 
+--func.py ノートブックで算出された関数の設定
+
 --ophircom.py パワーメータのクラス定義
 
 --thorlab.py 連続NDフィルターが設置されたステージのクラス定義
@@ -22,8 +24,6 @@ src/
 --ihr320.py 分光器IHR320のクラス定義
 
 --symphony.py 検出器symphonyのクラス定義
-
---func.py ノートブックで算出された関数の定義
 
 --main.py 全体の自動制御のテストコード
 

@@ -24,8 +24,17 @@ class motor:
     setparam: set the parameters of the stage
     """
     def __init__(self,home):
-        print("connected devices: ", Thorlabs.list_kinesis_devices())
-        print(f"trying to connect to device {config.KINESISMOTORID}")
+        """
+        connect to the Thorlabs stage
+
+        args:
+        home: if True, the stage will be moved to the home position
+
+        return:
+        None
+        """
+        print("connected kinesis devices: ", Thorlabs.list_kinesis_devices())
+        print(f"trying to connect to kinesis device {config.KINESISMOTORID}")
         self.stage = Thorlabs.KinesisMotor(str(config.KINESISMOTORID))
         if home:
             self.move_to_home(block=True)
@@ -43,23 +52,59 @@ class motor:
         return self.stage.get_scale_units()
     
     def get_position(self):
+        """
+        get the position of the stage
+
+        args:
+        None
+
+        return:
+        position(int): current position of the stage
+        """
         return self.stage.get_position()
     
     def wait_for_stop(self):
+        """
+        wait for the stage to stop
+
+        args:
+        None
+
+        return:
+        None
+        """
         self.stage.wait_for_stop()
     
     def move_to(self, position, block=True):
+        """
+        move the stage to a position
+        
+        args:
+        position(int): position to move
+        block(bool): if True, the function will wait for the stage to stop
+        """
         if position > self.maxlimit:
             position = self.maxlimit
         elif position < self.minlimit:
             position = self.minlimit
-        print(f"stage is moving{position}")
+        print(f"stage is moving to {position}")
         self.stage.move_to(position)
         if block:
             self.wait_for_stop()
     
     def move_to_home(self,block):
+        """
+        move the stage to the home position
+
+        args:
+        block(bool): if True, the function will wait for the stage to stop
+
+        return:
+        None
+        """
+        print("stage is homing")
         self.stage.home(sync=block, force=True)
+        print("homing done")
 
     def gethome(self):
         return self.stage.get_homing_parameters()
