@@ -1,31 +1,29 @@
 # PLの制御
 ![overview](docs/fig1.png)
 
-data/
+## ディレクトリ構成
 
---手動で測定したデータを保存するディレクトリ
+```
+data/ --手動で測定したデータを保存するディレクトリ
 
 notebook/
-
---analysis.ipynb dataディレクトリに保存されたデータを解析するノートブック
+|--analysis.ipynb dataディレクトリに保存されたデータを解析するノートブック
 
 src/
+|--config.py パラメータ設定
+|--func.py ノートブックで算出された関数の設定
+|--ophircom.py パワーメータのクラス定義
+|--thorlab.py 連続NDフィルターが設置されたステージのクラス定義
+|--superchrome.py レーザー波長可変フィルターsuperchromeのクラス定義
+|--ihr320.py 分光器IHR320のクラス定義
+|--symphony.py 検出器symphonyのクラス定義
+|--main.py 全体の自動制御のテストコード
 
---config.py パラメータ設定
+obj/ --メーカー提供のライブラリを格納するディレクトリ
 
---func.py ノートブックで算出された関数の設定
+docs/ --メーカー提供のドキュメントを格納するディレクトリ
 
---ophircom.py パワーメータのクラス定義
-
---thorlab.py 連続NDフィルターが設置されたステージのクラス定義
-
---superchrome.py レーザー波長可変フィルターsuperchromeのクラス定義
-
---ihr320.py 分光器IHR320のクラス定義
-
---symphony.py 検出器symphonyのクラス定義
-
---main.py 全体の自動制御のテストコード
+```
 
 ## ステージコントロール
 
