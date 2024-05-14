@@ -1,8 +1,8 @@
 from superchrome import superchrome
 from ophircom import ophircom
 from thorlab import motor
+from shutter import shutter
 import time
-from pywinauto.application import Application
 import func
 
 def control_power(targetpower,powermeter, stage, eps=0.001):
@@ -30,6 +30,10 @@ def control_power(targetpower,powermeter, stage, eps=0.001):
             break
 
 if __name__ == "__main__":
+    shut = shutter()
+    shut.close(1)
+    shut.close(2)
+
     laserchoone = superchrome()
 
     stage = motor(home=True)
