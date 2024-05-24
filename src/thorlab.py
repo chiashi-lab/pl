@@ -1,7 +1,7 @@
 from pylablib.devices import Thorlabs
 import config
 
-class motor:
+class Stage:
     """
     class to control the Thorlabs stage
 
@@ -34,13 +34,13 @@ class motor:
         None
         """
         print("connected kinesis devices: ", Thorlabs.list_kinesis_devices())
-        print(f"trying to connect to kinesis device {config.KINESISMOTORID}")
-        self.stage = Thorlabs.KinesisMotor(str(config.KINESISMOTORID))
+        print(f"trying to connect to kinesis device {config.KINESISSTAGEMOTORID}")
+        self.stage = Thorlabs.KinesisMotor(str(config.KINESISSTAGEMOTORID))
         if home:
             self.move_to_home(block=True)
         self.position = self.get_position()
-        self.maxlimit = config.KINESISMAXLIMIT
-        self.minlimit =  config.KINESISMINLIMIT
+        self.maxlimit = config.KINESISSTAGEMAXLIMIT
+        self.minlimit =  config.KINESISSTAGEMINLIMIT
     
     def get_status(self):
         return self.stage.get_status()
@@ -115,7 +115,20 @@ class motor:
     def setparam(self, velocity=None, home_position=None, jog1=None, jog2=None, jog3=None, scale=False):
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
+class FlipMount:
+    def __init__(self):
+        self.flip = Thorlabs.Kinesis.MFF(str(config.KINESISFLIPMOUNTID))
+        self.state = self.flip.get_state()
+    
+    def open(self):
+        self.flip.move_to_state(1)
+        self.state = self.flip.get_state()
+
+    def close(self):
+        self.flip.move_to_state(0)
+        self.state = self.flip.get_state()
+
 if __name__ == "__main__":
-    stage = motor(home=False)
-    stage.move_to(500000,block=True)
+    stage = Stage(home=False)
+    stage.move_to(1400000,block=True)
     print(f"moved{stage.get_position()}")

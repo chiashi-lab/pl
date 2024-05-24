@@ -2,7 +2,7 @@ from pywinauto.application import Application
 import time
 import config
 
-class symphony:
+class Symphony:
     """
     Class to control the Symphony software
 
@@ -648,14 +648,20 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
     def print(self):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers()
 
+    def setintegrationtime(self,time):
+        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
+
     def saveconfig(self,path):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Simple Loop"].uncheck()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to memory"].uncheck()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].check()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
+    
+    def record(self):
+        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["GO"].click()
 
 
 if __name__ == "__main__":
-    sym = symphony()
+    sym = Symphony()
     sym.Initialize()
     sym.saveconfig("test")
