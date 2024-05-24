@@ -31,3 +31,12 @@ def ratio2step(ratio):
     step: step number
     """
     return inverse_func(ratio, 1.90690987e+05, 5.73903933e-03, 4.30286157e-02, 1.61579563e+06)
+
+def linear(x, a, b, c, d):
+    return a * np.log(b * (x-c)) +d
+
+def ratio(step):
+    return func(step, 7.77263496e-01, 3.45229002e-06, 1.32827965e+06, 4.86291339e+00)
+
+def a(step):
+    return linear(step, 1.62850538e-01, 4.80427255e-01, 5.14203755e+02, 2.07196791e-01)

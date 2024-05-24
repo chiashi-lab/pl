@@ -29,9 +29,47 @@ def control_power(targetpower,powermeter, stage, eps=0.001):
             print("Already at target power")
             break
 
+def pid_control_power(targetpower,powermeter, stage, eps=0.001):
+    dt = 1
+    r = 1e6 * (1/targetpower)#正規化
+    Kp = 1 * r
+    Ki = 0.1 * r
+    Kd = 0.1 * r
+    acc = 0
+    diff = 0
+    prev = 0
+    while (True):
+        time.sleep(10)
+        nowndstep = stage.get_position()
+        ratio = func.ratio(nowndstep)
+        a = func.a(nowndstep)
+        measuredpower = powermeter.get_latestdata()
+        nowpower = a * ratio * measuredpower
+        print("measured power: ", measuredpower)
+        print("predicted current power: ", nowpower)
+        print("now step: ", nowndstep)
+        print("\n")
+
+        if nowpower < targetpower - eps or targetpower + eps < nowpower:
+            error = targetpower - nowpower
+            acc += error * dt
+            diff = (error - prev) / dt
+
+            tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
+            print("move start")
+            print("error: ", error)
+            print("acc: ", acc)
+            print("diff: ", diff)
+            print("tostep: ", tostep)
+            print("\n")
+            stage.move_to(tostep)
+            prev = error
+        else:
+            print("Already at target power")
+            break
+
 if __name__ == "__main__":
     shut = shutter()
-    shut.close(1)
     shut.close(2)
 
     laserchoone = superchrome()
