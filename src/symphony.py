@@ -637,12 +637,12 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
         print("Symphony opened")
         time.sleep(2)
         self.app["MFC_CCDExample"]["Connect"].click()
-        time.sleep(5)
+        time.sleep(2)
         print("Symphony connected")
     
     def Initialize(self):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Initialize"].click()
-        time.sleep(10)
+        time.sleep(12)
         print("Symphony initialized")
     
     def print(self):
@@ -650,11 +650,10 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
 
     def setintegrationtime(self,time):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
+        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Set Params"].click()
 
     def saveconfig(self,path):
-        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Simple Loop"].uncheck()
-        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to memory"].uncheck()
-        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].check()
+        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].click()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
     
     def record(self):
@@ -662,6 +661,9 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
 
 
 if __name__ == "__main__":
+    path = r"c:\Users\optical group\Documents\individual\kanai"
     sym = Symphony()
     sym.Initialize()
-    sym.saveconfig("test")
+    sym.setintegrationtime(1)
+    sym.saveconfig(path)
+    #sym.record()

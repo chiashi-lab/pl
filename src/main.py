@@ -135,8 +135,9 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, stage=stage, eps=targetpower*0.1)
         #shut.open(2)
         symphony.record()
-        time.sleep(integrationtime*1.1)
-        os.rename(os.path.join(path, "data.txt"), os.path.join(path, f"{wavelength}.txt"))
+        time.sleep(integrationtime*1.2)
+        os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
 
 if __name__ == "__main__":
-    test()
+    path = r"c:\Users\optical group\Documents\individual\kanai"
+    pl(0.001,600,620,10,10,path)
