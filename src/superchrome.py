@@ -1,6 +1,7 @@
 from pywinauto.application import Application
 import time
 import config
+
 class superchrome:
     """
     Class to control the SuperChrome software

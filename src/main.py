@@ -3,34 +3,14 @@ from ophircom import ophircom
 from thorlab import Stage, FlipMount
 from shutter import shutter
 from symphony import Symphony
+from ihr320 import ihr320
 import time
 import func
 import numpy as np
 import os
+import tkinter
+from tkinter import filedialog
 
-def control_power(targetpower,powermeter, stage, eps=0.001):
-    while (True):
-        time.sleep(10)
-        nowndstep = stage.get_position()
-        ratio = func.mid_targetratio(nowndstep)
-        measuredpower = powermeter.get_latestdata()
-        nowpower = ratio * measuredpower
-        print("measured power: ", measuredpower)
-        print("Current power: ", nowpower)
-        print("Target power: ", targetpower)
-        print("step: ", nowndstep)
-
-        if nowpower < targetpower - eps or targetpower + eps < nowpower:
-            print("stage is moving")
-            byratio = targetpower / nowpower
-            ratio = func.step2ratio(nowndstep)
-            tostep = func.ratio2step(byratio*ratio)
-            print("byratio: ", byratio)
-            print("ratio: ", ratio)
-            stage.move_to(tostep)
-        else:
-            print("Already at target power")
-            break
 
 def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
     dt = 1
@@ -105,14 +85,20 @@ def test():
     time.sleep(20)
 
 def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     flipshut = FlipMount()
     flipshut.close()
     shut = shutter('COM5')
     shut.close(2)
 
+    grate = ihr320()
+    grate.Initialize()
+
     laserchoone = superchrome()
 
-    stage = Stage(home=False)
+    stage = Stage(home=True)
     stage.move_to(500000, block=True)
     print(f"stage is at {stage.get_position()}")
 
@@ -128,11 +114,11 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     symphony.setintegrationtime(integrationtime)
     symphony.saveconfig(path)
 
-    for wavelength in np.linspace(minwavelength+stepwavelength, maxwavelength, stepwavelength):
+    for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
         #shut.close(2)
         time.sleep(5)
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, stage=stage, eps=targetpower*0.1)
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, stage=stage, eps=targetpower*0.05)
         #shut.open(2)
         symphony.record()
         time.sleep(integrationtime*1.2)
@@ -140,4 +126,4 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
 
 if __name__ == "__main__":
     path = r"c:\Users\optical group\Documents\individual\kanai"
-    pl(0.001,600,620,10,10,path)
+    pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
