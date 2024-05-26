@@ -8,8 +8,6 @@ import time
 import func
 import numpy as np
 import os
-import tkinter
-from tkinter import filedialog
 
 
 def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
