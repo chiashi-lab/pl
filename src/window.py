@@ -13,7 +13,7 @@ def get_path():
 
 root = tkinter.Tk()
 root.title(u"PL")
-root.geometry("500x300")
+root.geometry("500x500")
 
 l1 = tkinter.Label(text=u'最小波長')
 l1.place(x=20, y=10)
@@ -55,16 +55,41 @@ e5.place(x=100, y=170)
 l5l = tkinter.Label(text=u'W')
 l5l.place(x=160, y=170)
 
-l6 = tkinter.Label(text=u'保存先')
+l6 = tkinter.Label(text=u'中心波長')
 l6.place(x=20, y=210)
-e6 = tkinter.Entry(width=40)
+e6 = tkinter.Entry(width=7)
+e6.insert(tkinter.END, '1200')
 e6.place(x=100, y=210)
-b6 = tkinter.Button(text=u'参照', width=10, command=get_path)
-b6.place(x=410, y=210)
+l6l = tkinter.Label(text=u'nm')
+l6l.place(x=160, y=210)
+
+l7 = tkinter.Label(text=u'グレーティング')
+l7.place(x=20, y=250)
+e7 = tkinter.Entry(width=7)
+e7.insert(tkinter.END, '150')
+e7.place(x=100, y=250)
+l7l = tkinter.Label(text=u'/nm')
+l7l.place(x=160, y=250)
+
+l8 = tkinter.Label(text=u'フロントスリット')
+l8.place(x=20, y=290)
+e8 = tkinter.Entry(width=7)
+e8.insert(tkinter.END, '0.5')
+e8.place(x=100, y=290)
+l8l = tkinter.Label(text=u'nm')
+l8l.place(x=160, y=290)
+
+l9 = tkinter.Label(text=u'保存先')
+l9.place(x=20, y=330)
+e9 = tkinter.Entry(width=40)
+e9.insert(tkinter.END, 'C:\\Users\\optical group\\Documents\\individual')
+e9.place(x=100, y=330)
+b9 = tkinter.Button(text=u'参照', width=10, command=get_path)
+b9.place(x=410, y=330)
 
 
 #ボタン
-Button1 = tkinter.Button(text=u'スタート', width=30, command=lambda: pl(targetpower=float(e5.get()), minwavelength=int(e1.get()), maxwavelength=int(e2.get()), stepwavelength=int(e3.get()), integrationtime=int(e4.get()), path=e6.get()))
-Button1.place(x=20, y=250)
+Button1 = tkinter.Button(text=u'スタート', width=30, command=lambda: pl(targetpower=float(e5.get()), minwavelength=int(e1.get()), maxwavelength=int(e2.get()), stepwavelength=int(e3.get()), integrationtime=int(e4.get()), centerwavelength=int(e6.get()), grating=int(e7.get()), slit=float(e8.get()), path=e9.get()))
+Button1.place(x=20, y=450)
 
 root.mainloop()

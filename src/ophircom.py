@@ -1,9 +1,9 @@
-# Use of Ophir COM object. 
-# Works with python 3.5.1 & 2.7.11
-# Uses pywin32
 import win32com.client
 import time
 import numpy as np
+
+#ophir power meterを操作するクラス
+#ソースコードはophirが提供しているものを参考にしている
 
 class ophircom:
     """

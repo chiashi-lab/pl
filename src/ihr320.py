@@ -2,6 +2,9 @@ from pywinauto.application import Application
 import time
 import config
 
+#pywinautoを使ってIHR320を操作するクラス
+#IHR320のソフトウェア"MonoExample"がインストールされている必要がある
+
 class ihr320:
     """
     Class to control the IHR320 software
@@ -189,8 +192,22 @@ child_window(title="MonoExample", class_name="#32770")
         self.app["MonoExample"].print_control_identifiers()
     
     def Initialize(self):
-        self.app["MonoExample"]["Initialize"].click()
+        self.app["MonoExample"]["Button"].click()
         print("IHR320 initialized")
+    
+    def setmirrors(self, mirrors):
+        self.app["MonoExample"]["Axial"].click()
+        self.app["MonoExample"]["Axial2"].click()
+        self.Initialize()
+    
+    def setallconfig(self, centralwavelength, grating, frontslit, sideslit=0):
+        self.app["MonoExample"]["Axial"].click()
+        self.app["MonoExample"]["Axial2"].click()
+        self.app["MonoExample"]["PositionEdit"].set_text(str(centralwavelength))
+        self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
+        self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
+        self.app["MonoExample"]["SideEdit"].set_text(str(sideslit))
+        self.Initialize()
 
 
 if __name__ == "__main__":

@@ -84,7 +84,7 @@ def test():
     print("waiting for 20s")
     time.sleep(20)
 
-def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, path):
+def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path):
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -97,6 +97,8 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     grate.Initialize()
 
     laserchoone = superchrome()
+
+    grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
     stage = Stage(home=True)
     stage.move_to(500000, block=True)

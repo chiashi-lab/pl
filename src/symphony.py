@@ -2,6 +2,9 @@ from pywinauto.application import Application
 import time
 import config
 
+#pywinautoを使って検出器Symphonyを操作するクラス
+#Symphonyのソフトウェア"MFC_CCDExample"がインストールされている必要がある
+
 class Symphony:
     """
     Class to control the Symphony software

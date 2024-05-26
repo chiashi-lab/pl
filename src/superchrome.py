@@ -2,6 +2,9 @@ from pywinauto.application import Application
 import time
 import config
 
+#pywinautoを使って波長可変チューナブルフィルタSuperChromeを操作するクラス
+#SuperChromeのソフトウェア"SuperChrome"がインストールされている必要がある
+
 class superchrome:
     """
     Class to control the SuperChrome software

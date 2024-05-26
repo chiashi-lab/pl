@@ -1,6 +1,9 @@
 import serial
 import time
 
+#シャッターを操作するクラス
+#シャッターのコントローラであるssh2cbとシリアル通信を行う
+
 class shutter:
     def __init__(self, port):
         self.serial = serial.Serial(port=port, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=3)

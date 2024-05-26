@@ -1,5 +1,9 @@
 from pylablib.devices import Thorlabs
 import config
+#thorlabsのデバイスを操作するクラス定義
+#pylablibというライブラリを使っている
+#StageクラスはThorlabs.KinesisMotorを使ってNDフィルターが設置されているステージを操作する
+#FlipMountクラスはThorlabs.MFFを使ってターミネーターへのミラーが設置されているフリップマウントを操作する
 
 class Stage:
     """
