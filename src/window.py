@@ -8,7 +8,7 @@ from main import pl, pid_control_power, test
 def get_path():
     iDir = os.path.abspath(os.path.dirname(__file__))
     file = filedialog.askdirectory(initialdir=iDir)
-    e6.insert(tkinter.END, file)
+    e9.insert(tkinter.END, file)
 
 
 root = tkinter.Tk()
