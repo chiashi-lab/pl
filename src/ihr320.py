@@ -200,14 +200,14 @@ child_window(title="MonoExample", class_name="#32770")
         self.app["MonoExample"]["Axial2"].click()
         self.Initialize()
     
-    def setallconfig(self, centralwavelength, grating, frontslit, sideslit=0):
+    def setallconfig(self, centerwavelength, grating, frontslit, sideslit=0):
         self.app["MonoExample"]["Axial"].click()
         self.app["MonoExample"]["Axial2"].click()
-        self.app["MonoExample"]["PositionEdit"].set_text(str(centralwavelength))
+        self.app["MonoExample"]["PositionEdit"].set_text(str(centerwavelength))
         self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
         self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
         self.app["MonoExample"]["SideEdit"].set_text(str(sideslit))
-        self.Initialize()
+        #self.Initialize()
 
 
 if __name__ == "__main__":
