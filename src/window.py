@@ -8,13 +8,12 @@ from main import pl, pid_control_power, test
 
 def get_path():
     iDir = os.path.abspath(os.path.dirname(__file__))
-    file = filedialog.askdirectory(initialdir=iDir)
+    file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
     e9.delete(0,tkinter.END)
     e9.insert(tkinter.END, file)
 
-def go_pl():
+def go_pl(event):
     Button1.pack_forget()
-
     thread1 = threading.Thread(target=pl(targetpower=float(e5.get()), minwavelength=int(e1.get()), maxwavelength=int(e2.get()), stepwavelength=int(e3.get()), integrationtime=int(e4.get()), centerwavelength=int(e6.get()), grating=int(e7.get()), slit=float(e8.get()), path=e9.get()))
     thread1.start()
 
@@ -90,14 +89,15 @@ l8l.place(x=180, y=290)
 l9 = tkinter.Label(text=u'保存先')
 l9.place(x=10, y=330)
 e9 = tkinter.Entry(width=40)
-e9.insert(tkinter.END, 'C:\\Users\\optical group\\Documents\\individual')
+e9.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
 e9.place(x=120, y=330)
 b9 = tkinter.Button(text=u'参照', width=10, command=get_path)
 b9.place(x=410, y=330)
 
 
 #ボタン
-Button1 = tkinter.Button(text=u'スタート', width=30, command=lambda: go_pl())
+Button1 = tkinter.Button(text=u'スタート', width=30)#, command=lambda: go_pl())
+Button1.bind("<1>", go_pl)
 Button1.place(x=20, y=450)
 
 root.mainloop()

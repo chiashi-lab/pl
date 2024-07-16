@@ -198,16 +198,13 @@ child_window(title="MonoExample", class_name="#32770")
     def setmirrors(self, mirrors):
         self.app["MonoExample"]["Axial"].click()
         self.app["MonoExample"]["Axial2"].click()
-        self.Initialize()
     
     def setallconfig(self, centerwavelength, grating, frontslit, sideslit=0):
-        self.app["MonoExample"]["Axial"].click()
-        self.app["MonoExample"]["Axial2"].click()
         self.app["MonoExample"]["PositionEdit"].set_text(str(centerwavelength))
         self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
         self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
+        self.app["MonoExample"]["FrontEdit"].type_keys("{ENTER}")
         self.app["MonoExample"]["SideEdit"].set_text(str(sideslit))
-        #self.Initialize()
 
 
 if __name__ == "__main__":

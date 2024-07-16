@@ -8,6 +8,7 @@ import time
 import func
 import numpy as np
 import os
+import sys
 
 
 def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
@@ -83,20 +84,31 @@ def test():
     time.sleep(20)
 
 def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path):
+    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
+
+    print("Experiment Condition")
+    print(f"targetpower:{targetpower}")
+    print(f"minimum excite wavelength:{minwavelength}")
+    print(f"maximum excite wavelength:{maxwavelength}")
+    print(f"wavelength width:{stepwavelength}")
+    print(f"integration time:{integrationtime}")
+    print(f"")
+
     if not os.path.exists(path):
         os.makedirs(path)
+        print(f"make dir at {path}")
 
     flipshut = FlipMount()
     flipshut.close()
     shut = shutter('COM5')
     shut.close(2)
 
-    grate = ihr320()
-    grate.Initialize()
+    #grate = ihr320()
+    #grate.Initialize()
 
     laserchoone = superchrome()
 
-    grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
+    #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
     stage = Stage(home=True)
     stage.move_to(500000, block=True)
@@ -118,7 +130,9 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
         #shut.close(2)
         time.sleep(5)
+        print(f"start power control at {wavelength}nm")
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, stage=stage, eps=targetpower*0.05)
+        print(f"start to get PL spectra at {wavelength}")
         #shut.open(2)
         symphony.record()
         time.sleep(integrationtime*1.1)

@@ -2,13 +2,14 @@ from pywinauto.application import Application
 import os
 import warnings
 import config
+import time
 
 class Aotf:
     def __init__(self, check_amplitude=True):
         if check_amplitude:
             if not self._check_amplitude():
                 return
-        self.app = Application(backend="uia").start(os.path.join(config.SPFIIIDIR, "SpfIII.exe"), timeout=10, work_dir=config.SPFIIIDIR)
+        self.app = Application(backend="win32").start(os.path.join(config.SPFIIIDIR, "SpfIII.exe"), timeout=10, work_dir=config.SPFIIIDIR)
 
     def _read_amplitude_from_cfg(self):
         flag = False
@@ -25,7 +26,7 @@ class Aotf:
         if amplitude == 100:
             return True
         else:
-            warnings.warn("SpfIIIを手動起動してAmplitudeを100に設定した後にSpfIIIを閉じてださい")
+            warnings.warn("SpfIIIGを手動起動してAmplitudeを100に設定した後にSpfIIIを閉じてださい")
             return False
 
     def print(self):
@@ -33,7 +34,12 @@ class Aotf:
         
     def set_wavelength(self, wavelength):
         self.app["Spf III Driver 2.0.0"]["Edit7"].set_text(str(wavelength))
-        self.app["Spf III Driver 2.0.0"]["Edit7"].TypeKeys("{ENTER}")
+        self.app["Spf III Driver 2.0.0"]["Edit7"].type_keys("{ENTER}")
 
 if __name__ == "__main__":
     test = Aotf(check_amplitude=True)
+    for _ in range(5):
+        test.set_wavelength(1053)
+        time.sleep(2)
+        test.set_wavelength(1200)
+        time.sleep(2)
