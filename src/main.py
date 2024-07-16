@@ -23,7 +23,7 @@ def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
     while (True):
         time.sleep(10)
         nowndstep = stage.get_position()
-        ratio = func.alnear(wavelength)
+        ratio = func.wavelength2ratio(wavelength)
         measuredpower = powermeter.get_latestdata()
         nowpower = ratio * measuredpower
         print("measured power: ", measuredpower)
