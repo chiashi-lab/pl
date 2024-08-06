@@ -3,6 +3,7 @@ from ophircom import ophircom
 from thorlab import ThorlabStage, FlipMount
 from shutter import shutter
 from symphony import Symphony
+from proscan import PriorStage
 import config
 from ihr320 import ihr320
 import time
@@ -159,6 +160,68 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     shut.close(2)
     flipshut.close()
 
+def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path, startpos, endpos, numberofsteps):
+    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
+
+    print("Experiment Condition")
+    print(f"targetpower:{targetpower}")
+    print(f"minimum excite wavelength:{minwavelength}")
+    print(f"maximum excite wavelength:{maxwavelength}")
+    print(f"wavelength width:{stepwavelength}")
+    print(f"integration time:{integrationtime}")
+    print(f"")
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"make dir at {path}")
+
+    flipshut = FlipMount()
+    flipshut.close()
+    shut = shutter(config.SHUTTERCOMPORT)
+    shut.close(2)
+
+    #grate = ihr320()
+    #grate.Initialize()
+
+    laserchoone = superchrome()
+
+    #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
+
+    NDfilter = ThorlabStage(home=True)
+    NDfilter.move_to(0, block=True)
+    print(f"stage is at {NDfilter.get_position()}")
+
+    flipshut.open()
+
+    powermeter = ophircom()
+    powermeter.open()
+    powermeter.set_range(4)
+
+    symphony = Symphony()
+    symphony.Initialize()
+    symphony.setintegrationtime(integrationtime)
+    symphony.saveconfig(path)
+
+    priorstage = PriorStage(config.PRIORCOMPORT)
+    poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+
+    for posidx in range(numberofsteps):
+        priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
+
+        for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
+            laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
+            time.sleep(5)
+            print(f"start power control at {wavelength}nm")
+            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
+            print(f"start to get PL spectra at {wavelength}")
+            shut.open(2)
+            symphony.record()
+            time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
+            shut.close(2)
+            os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
+        
+    shut.close(2)
+    flipshut.close()
 if __name__ == "__main__":
     #path = r"c:\Users\optical group\Documents\individual\kanai"
     #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
