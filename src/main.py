@@ -1,8 +1,9 @@
 from superchrome import superchrome
 from ophircom import ophircom
-from thorlab import Stage, FlipMount
+from thorlab import ThorlabStage, FlipMount
 from shutter import shutter
 from symphony import Symphony
+import config
 from ihr320 import ihr320
 import time
 import func
@@ -11,7 +12,7 @@ import os
 import sys
 
 
-def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
+def pid_control_power(targetpower,wavelength,powermeter, NDfilter, eps=0.001):
     dt = 1
     r = 1.9e5 /targetpower#正規化
     Kp = 1.0 * r
@@ -22,7 +23,7 @@ def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
     prev = 0
     while (True):
         time.sleep(10)
-        nowndstep = stage.get_position()
+        nowndstep = NDfilter.get_position()
         ratio = func.wavelength2ratio(wavelength)
         measuredpower = powermeter.get_latestdata()
         nowpower = ratio * measuredpower
@@ -43,7 +44,7 @@ def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
             print("diff: ", diff)
             print("tostep: ", tostep)
             print("\n")
-            stage.move_to(tostep)
+            NDfilter.move_to(tostep)
             prev = error
         else:
             print("Already at target power")
@@ -57,9 +58,9 @@ def test():
 
     laserchoone = superchrome()
 
-    stage = Stage(home=True)
-    stage.move_to(500000, block=True)
-    print(f"stage is at {stage.get_position()}")
+    NDfilter = ThorlabStage(home=True)
+    NDfilter.move_to(500000, block=True)
+    print(f"stage is at {NDfilter.get_position()}")
 
     shut.open(2)
     flipshut.open()
@@ -78,7 +79,7 @@ def test():
     print(f"powermeter is at {powermeter.get_latestdata()}")
     print("start controlling power")
     time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, stage, eps=powtar*0.05)
+    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
     print("end controlling power")
     time.sleep(2)
     print(f"powermeter is at {powermeter.get_latestdata()}")
@@ -94,7 +95,7 @@ def test():
     print(f"powermeter is at {powermeter.get_latestdata()}")
     print("start controlling power")
     time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, stage, eps=powtar*0.05)
+    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
     print("end controlling power")
     time.sleep(2)
     print(f"powermeter is at {powermeter.get_latestdata()}")
@@ -128,9 +129,9 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
 
     #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
-    stage = Stage(home=True)
-    stage.move_to(0, block=True)
-    print(f"stage is at {stage.get_position()}")
+    NDfilter = ThorlabStage(home=True)
+    NDfilter.move_to(0, block=True)
+    print(f"stage is at {NDfilter.get_position()}")
 
     shut.open(2)
     flipshut.open()
@@ -149,7 +150,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
         #shut.close(2)
         time.sleep(5)
         print(f"start power control at {wavelength}nm")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, stage=stage, eps=targetpower*0.05)
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.epsratio)
         print(f"start to get PL spectra at {wavelength}")
         #shut.open(2)
         symphony.record()

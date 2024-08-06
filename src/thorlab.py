@@ -5,7 +5,7 @@ import config
 #StageクラスはThorlabs.KinesisMotorを使ってNDフィルターが設置されているステージを操作する
 #FlipMountクラスはThorlabs.MFFを使ってターミネーターへのミラーが設置されているフリップマウントを操作する
 
-class Stage:
+class ThorlabStage:
     """
     class to control the Thorlabs stage
 
@@ -135,7 +135,7 @@ class FlipMount:
 if __name__ == "__main__":
     Thorlabs.list_kinesis_devices()
     
-    stage = Stage(home=True)
+    stage = ThorlabStage(home=True)
     stage.move_to(14000000,block=True)
     print(f"moved{stage.get_position()}")
 
