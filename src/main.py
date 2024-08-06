@@ -13,7 +13,7 @@ import sys
 
 def pid_control_power(targetpower,wavelength,powermeter, stage, eps=0.001):
     dt = 1
-    r = 2.0e5 /targetpower#正規化
+    r = 1.9e5 /targetpower#正規化
     Kp = 1.0 * r
     Ki = 0.05 * r
     Kd = 0.05 * r
@@ -57,7 +57,7 @@ def test():
 
     laserchoone = superchrome()
 
-    stage = Stage(home=False)
+    stage = Stage(home=True)
     stage.move_to(500000, block=True)
     print(f"stage is at {stage.get_position()}")
 
@@ -69,19 +69,37 @@ def test():
     powermeter.set_range(4)
     print(f"powermeter is at {powermeter.get_range()}")
 
-    print(f"changing wavelength to 561")
-    laserchoone.change_lwbw(wavelength=561, bandwidth=10)
+    wavetar = 650
+    powtar = 0.004
+    print(f"changing wavelength to {wavetar}")
+    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
     time.sleep(5)
     print("changed wavelength")
     print(f"powermeter is at {powermeter.get_latestdata()}")
     print("start controlling power")
     time.sleep(5)
-    pid_control_power(0.001,561, powermeter, stage, eps=0.0001)
+    pid_control_power(powtar,wavetar, powermeter, stage, eps=powtar*0.05)
     print("end controlling power")
     time.sleep(2)
     print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("waiting for 20s")
-    time.sleep(20)
+    print("waitng for 10s")
+    time.sleep(10)
+
+    wavetar = 810
+    powtar = 0.004
+    print(f"changing wavelength to {wavetar}")
+    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
+    time.sleep(5)
+    print("changed wavelength")
+    print(f"powermeter is at {powermeter.get_latestdata()}")
+    print("start controlling power")
+    time.sleep(5)
+    pid_control_power(powtar,wavetar, powermeter, stage, eps=powtar*0.05)
+    print("end controlling power")
+    time.sleep(2)
+    print(f"powermeter is at {powermeter.get_latestdata()}")
+    print("waitng for 10s")
+    time.sleep(10)
 
 def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path):
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
@@ -111,7 +129,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
     stage = Stage(home=True)
-    stage.move_to(500000, block=True)
+    stage.move_to(0, block=True)
     print(f"stage is at {stage.get_position()}")
 
     shut.open(2)
@@ -142,5 +160,6 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     flipshut.close()
 
 if __name__ == "__main__":
-    path = r"c:\Users\optical group\Documents\individual\kanai"
-    pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
+    #path = r"c:\Users\optical group\Documents\individual\kanai"
+    #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
+    test()

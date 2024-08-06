@@ -135,9 +135,9 @@ class FlipMount:
 if __name__ == "__main__":
     Thorlabs.list_kinesis_devices()
     
-    stage = Stage(home=False)
-    stage.move_to(1400000,block=True)
+    stage = Stage(home=True)
+    stage.move_to(14000000,block=True)
     print(f"moved{stage.get_position()}")
 
-    flip = FlipMount()
-    print(flip.state)
+    #flip = FlipMount()
+    #print(flip.state)
