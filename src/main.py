@@ -53,7 +53,7 @@ def pid_control_power(targetpower,wavelength,powermeter, NDfilter, eps=0.001):
 def test():
     flipshut = FlipMount()
     flipshut.close()
-    shut = shutter('COM5')
+    shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
     laserchoone = superchrome()
@@ -119,7 +119,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
 
     flipshut = FlipMount()
     flipshut.close()
-    shut = shutter('COM5')
+    shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
     #grate = ihr320()
@@ -133,7 +133,6 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     NDfilter.move_to(0, block=True)
     print(f"stage is at {NDfilter.get_position()}")
 
-    shut.open(2)
     flipshut.open()
 
     powermeter = ophircom()
@@ -147,14 +146,14 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
-        #shut.close(2)
         time.sleep(5)
         print(f"start power control at {wavelength}nm")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.epsratio)
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
         print(f"start to get PL spectra at {wavelength}")
-        #shut.open(2)
+        shut.open(2)
         symphony.record()
-        time.sleep(integrationtime*1.1)
+        time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
+        shut.close(2)
         os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
     
     shut.close(2)
