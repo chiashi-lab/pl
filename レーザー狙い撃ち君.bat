@@ -1,2 +1,2 @@
 cd src
-python easylaser.py
+python easylaser_window.py

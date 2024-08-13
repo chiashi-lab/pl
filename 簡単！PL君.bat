@@ -1,2 +1,2 @@
 cd src
-python window.py
+python easypl_window.py
