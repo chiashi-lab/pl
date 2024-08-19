@@ -103,14 +103,15 @@ def test():
     print("waitng for 10s")
     time.sleep(10)
 
-def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path):
+def pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path):
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
 
     print("Experiment Condition")
     print(f"targetpower:{targetpower}")
-    print(f"minimum excite wavelength:{minwavelength}")
-    print(f"maximum excite wavelength:{maxwavelength}")
-    print(f"wavelength width:{stepwavelength}")
+    print(f"minimum excite center wavelength:{minwavelength}")
+    print(f"maximum excite center wavelength:{maxwavelength}")
+    print(f"excite center wavelength step:{stepwavelength}")
+    print(f"excite wavelength width:{wavelengthwidth}")
     print(f"integration time:{integrationtime}")
     print(f"")
 
@@ -123,12 +124,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    #grate = ihr320()
-    #grate.Initialize()
-
     laserchoone = superchrome()
-
-    #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -146,7 +142,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     symphony.saveconfig(path)
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
+        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         print(f"start power control at {wavelength}nm")
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
@@ -160,15 +156,25 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtim
     shut.close(2)
     flipshut.close()
 
-def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, integrationtime, centerwavelength, grating, slit, path, startpos, endpos, numberofsteps):
+def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path, startpos, endpos, numberofsteps):
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
+
+    poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
 
     print("Experiment Condition")
     print(f"targetpower:{targetpower}")
-    print(f"minimum excite wavelength:{minwavelength}")
-    print(f"maximum excite wavelength:{maxwavelength}")
-    print(f"wavelength width:{stepwavelength}")
+    print(f"minimum excite center wavelength:{minwavelength}")
+    print(f"maximum excite center wavelength:{maxwavelength}")
+    print(f"excite center wavelength step:{stepwavelength}")
+    print(f"excite wavelength width:{wavelengthwidth}")
     print(f"integration time:{integrationtime}")
+    print(f"")
+    print(f"start position:{startpos}")
+    print(f"end position:{endpos}")
+    print(f"number of steps:{numberofsteps}")
+    print(f"")
+    for i in range(numberofsteps):
+        print(f"position {i}:{poslist[0][i], poslist[1][i]}")
     print(f"")
 
     if not os.path.exists(path):
@@ -180,12 +186,7 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, integra
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    #grate = ihr320()
-    #grate.Initialize()
-
     laserchoone = superchrome()
-
-    #grate.setallconfig(centerwavelength=centerwavelength, grating=grating, frontslit=slit, sideslit=0)
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -203,13 +204,18 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, integra
     symphony.saveconfig(path)
 
     priorstage = PriorStage(config.PRIORCOMPORT)
-    poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
 
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
 
+        savedirpath = os.path.join(path, f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}")
+        if not os.path.exists(savedirpath):
+            os.makedirs(savedirpath)
+            print(f"make dir at {savedirpath}")
+        symphony.saveconfig(savedirpath)
+
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-            laserchoone.change_lwbw(wavelength=wavelength, bandwidth=stepwavelength)
+            laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
             time.sleep(5)
             print(f"start power control at {wavelength}nm")
             pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
@@ -218,8 +224,7 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, integra
             symphony.record()
             time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
             shut.close(2)
-            os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
-        
+            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
     shut.close(2)
     flipshut.close()
 if __name__ == "__main__":

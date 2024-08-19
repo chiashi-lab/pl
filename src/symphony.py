@@ -651,11 +651,11 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
     def print(self):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers()
 
-    def setintegrationtime(self,time):
+    def setintegrationtime(self,time:int)->None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Set Params"].click()
 
-    def saveconfig(self,path):
+    def saveconfig(self, path:str)->None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].click()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
     
