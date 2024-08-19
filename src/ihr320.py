@@ -183,23 +183,23 @@ child_window(title="MonoExample", class_name="#32770")
    | ['UninitializedStatic', 'Uninitialized', 'Static16']
    | child_window(title="Uninitialized", class_name="Static")
     """
-    def __init__(self):
+    def __init__(self)->None:
         self.app = Application(backend="win32").start(config.CCDMONOPATH, timeout=10)
         self.app["MonoExample"].wait(wait_for="enabled",timeout=20)
         print("IHR320 opened")
     
-    def print(self):
+    def _print(self)->None:
         self.app["MonoExample"].print_control_identifiers()
     
-    def Initialize(self):
+    def Initialize(self)->None:
         self.app["MonoExample"]["Button"].click()
         print("IHR320 initialized")
     
-    def setmirrors(self, mirrors):
+    def setmirrors(self, mirrors)->None:
         self.app["MonoExample"]["Axial"].click()
         self.app["MonoExample"]["Axial2"].click()
     
-    def setallconfig(self, centerwavelength, grating, frontslit, sideslit=0):
+    def setallconfig(self, centerwavelength:float, grating:float, frontslit:float, sideslit=0)->None:
         self.app["MonoExample"]["PositionEdit"].set_text(str(centerwavelength))
         self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
         self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
