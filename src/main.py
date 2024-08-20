@@ -160,6 +160,8 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelen
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
 
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+    poslist = list(poslist)
+    poslist = [[int(x) for x in y] for y in poslist]
 
     print("Experiment Condition")
     print(f"targetpower:{targetpower}")
@@ -207,8 +209,9 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelen
 
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
+        priorstage.wait_until_stop()
 
-        savedirpath = os.path.join(path, f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}")
+        savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
         if not os.path.exists(savedirpath):
             os.makedirs(savedirpath)
             print(f"make dir at {savedirpath}")
@@ -224,7 +227,8 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelen
             symphony.record()
             time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
             shut.close(2)
-            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
+            time.sleep(3)
+            os.rename(savedirpath+"/"+"IMAGE0001_0001_AREA1_1.txt", savedirpath+"/"+f"{wavelength}.txt")
     shut.close(2)
     flipshut.close()
 if __name__ == "__main__":

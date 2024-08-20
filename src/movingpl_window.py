@@ -27,6 +27,7 @@ def get_pos():
 def getpos_start(event):
     executer = ThreadPoolExecutor(max_workers=1)
     pos = executer.submit(get_pos)
+    pos = pos.result()
     e10.delete(0, tkinter.END)
     e10.insert(tkinter.END, str(pos[0]))
     e11.delete(0, tkinter.END)
@@ -35,6 +36,7 @@ def getpos_start(event):
 def getpos_end(event):
     executer = ThreadPoolExecutor(max_workers=1)
     pos = executer.submit(get_pos)
+    pos = pos.result()
     e12.delete(0, tkinter.END)
     e12.insert(tkinter.END, str(pos[0]))
     e13.delete(0, tkinter.END)
