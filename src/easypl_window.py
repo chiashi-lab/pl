@@ -4,84 +4,91 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog
 import threading
-from main import pl, pid_control_power, test
+from main import pl
 
-def get_path():
-    iDir = os.path.abspath(os.path.dirname(__file__))
-    file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
-    e9.delete(0,tkinter.END)
-    e9.insert(tkinter.END, file)
+class Application(tkinter.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.pack()
+        self.master.geometry("600x500")
+        self.master.title(u"簡単PL君")
 
-def go_pl(event):
-    Button1.pack_forget()
-    thread1 = threading.Thread(target=pl(targetpower=float(e6.get())*0.001, minwavelength=int(e1.get()), maxwavelength=int(e2.get()), stepwavelength=int(e3.get()), wavelengthwidth=int(e4.get()), integrationtime=int(e5.get()), path=e9.get()))
-    thread1.start()
+        self.create_widgets()
+    
+    def create_widgets(self):
+        self.label_minWL = tkinter.Label(text=u'励起光最短中心波長')
+        self.label_minWL.place(x=10, y=10)
+        self.entry_minWL = tkinter.Entry(width=7)
+        self.entry_minWL.insert(tkinter.END, '500')
+        self.entry_minWL.place(x=150, y=10)
+        self.unit_minWL = tkinter.Label(text=u'nm')
+        self.unit_minWL.place(x=210, y=10)
 
+        self.label_maxWL = tkinter.Label(text=u'励起光最長中心波長')
+        self.label_maxWL.place(x=10, y=50)
+        self.entry_maxWL = tkinter.Entry(width=7)
+        self.entry_maxWL.insert(tkinter.END, '800')
+        self.entry_maxWL.place(x=150, y=50)
+        self.unit_maxWL = tkinter.Label(text=u'nm')
+        self.unit_maxWL.place(x=210, y=50)
+        
+        self.label_stepWL = tkinter.Label(text=u'励起光中心波長間隔')
+        self.label_stepWL.place(x=10, y=90)
+        self.entry_stepWL = tkinter.Entry(width=7)
+        self.entry_stepWL.insert(tkinter.END, '10')
+        self.entry_stepWL.place(x=150, y=90)
+        self.unit_stepWL = tkinter.Label(text=u'nm')
+        self.unit_stepWL.place(x=210, y=90)
 
-root = tkinter.Tk()
-root.title(u"簡単PL君")
-root.geometry("600x500")
+        self.label_widthWL = tkinter.Label(text=u'励起光波長幅')
+        self.label_widthWL.place(x=10, y=130)
+        self.entry_widthWL = tkinter.Entry(width=7)
+        self.entry_widthWL.insert(tkinter.END, '10')
+        self.entry_widthWL.place(x=150, y=130)
+        self.unit_widthWL = tkinter.Label(text=u'nm')
+        self.unit_widthWL.place(x=210, y=130)
 
-l1 = tkinter.Label(text=u'励起光最短中心波長')
-l1.place(x=10, y=10)
-e1 = tkinter.Entry(width=7)
-e1.insert(tkinter.END, '500')
-e1.place(x=150, y=10)
-l1l = tkinter.Label(text=u'nm')
-l1l.place(x=210, y=10)
+        self.label_exposure = tkinter.Label(text=u'露光時間')
+        self.label_exposure.place(x=10, y=170)
+        self.entry_exposure = tkinter.Entry(width=7, text='120')
+        self.entry_exposure.insert(tkinter.END, '120')
+        self.entry_exposure.place(x=150, y=170)
+        self.unit_exposure = tkinter.Label(text=u'秒')
+        self.unit_exposure.place(x=210, y=170)
 
-l2 = tkinter.Label(text=u'励起光最長中心波長')
-l2.place(x=10, y=50)
-e2 = tkinter.Entry(width=7)
-e2.insert(tkinter.END, '800')
-e2.place(x=150, y=50)
-l2l = tkinter.Label(text=u'nm')
-l2l.place(x=210, y=50)
+        self.label_power = tkinter.Label(text=u'サンプル照射パワー')
+        self.label_power.place(x=10, y=210)
+        self.entry_power = tkinter.Entry(width=7)
+        self.entry_power.insert(tkinter.END, '2')
+        self.entry_power.place(x=150, y=210)
+        self.unit_power = tkinter.Label(text=u'mW')
+        self.unit_power.place(x=210, y=210)
 
-l3 = tkinter.Label(text=u'励起光中心波長間隔')
-l3.place(x=10, y=90)
-e3 = tkinter.Entry(width=7)
-e3.insert(tkinter.END, '10')
-e3.place(x=150, y=90)
-l3l = tkinter.Label(text=u'nm')
-l3l.place(x=210, y=90)
+        self.label_savefolderpath = tkinter.Label(text=u'保存先')
+        self.label_savefolderpath.place(x=10, y=330)
+        self.entry_savefolderpath = tkinter.Entry(width=40)
+        self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
+        self.entry_savefolderpath.place(x=120, y=330)
+        self.button_browse = tkinter.Button(text=u'参照', width=10)
+        self.button_browse.bind("<1>", self.call_get_path)
+        self.button_browse.place(x=410, y=330)
 
-l4 = tkinter.Label(text=u'励起光波長幅')
-l4.place(x=10, y=130)
-e4 = tkinter.Entry(width=7)
-e4.insert(tkinter.END, '10')
-e4.place(x=150, y=130)
-l4l = tkinter.Label(text=u'nm')
-l4l.place(x=210, y=130)
+        self.button_start = tkinter.Button(text=u'スタート', width=30)
+        self.button_start.bind("<1>", self.call_pl)
+        self.button_start.place(x=20, y=450)
+    
+    def call_get_path(self, event):
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
+        self.entry_savefolderpath.delete(0,tkinter.END)
+        self.entry_savefolderpath.insert(tkinter.END, file)
+    
+    def call_pl(self, event):
+        self.button_start.pack_forget()
+        thread1 = threading.Thread(target=pl(targetpower=float(self.entry_power.get())*0.001, minwavelength=int(self.entry_minWL.get()), maxwavelength=int(self.entry_maxWL.get()), stepwavelength=int(self.entry_stepWL.get()), wavelengthwidth=int(self.entry_widthWL.get()), integrationtime=int(self.entry_exposure.get()), path=self.entry_savefolderpath.get()))
+        thread1.start()
 
-l5 = tkinter.Label(text=u'露光時間')
-l5.place(x=10, y=170)
-e5 = tkinter.Entry(width=7, text='120')
-e5.insert(tkinter.END, '120')
-e5.place(x=150, y=170)
-l5l = tkinter.Label(text=u'秒')
-l5l.place(x=210, y=170)
-
-l6 = tkinter.Label(text=u'サンプル照射パワー')
-l6.place(x=10, y=210)
-e6 = tkinter.Entry(width=7)
-e6.insert(tkinter.END, '2')
-e6.place(x=150, y=210)
-l6l = tkinter.Label(text=u'mW')
-l6l.place(x=210, y=210)
-
-l9 = tkinter.Label(text=u'保存先')
-l9.place(x=10, y=330)
-e9 = tkinter.Entry(width=40)
-e9.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
-e9.place(x=120, y=330)
-b9 = tkinter.Button(text=u'参照', width=10, command=get_path)
-b9.place(x=410, y=330)
-
-
-#ボタン
-Button1 = tkinter.Button(text=u'スタート', width=30)#, command=lambda: go_pl())
-Button1.bind("<1>", go_pl)
-Button1.place(x=20, y=450)
-
-root.mainloop()
+if __name__ == "__main__":
+    root = tkinter.Tk()
+    app = Application(master=root)
+    app.mainloop()
