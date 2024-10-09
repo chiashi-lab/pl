@@ -12,12 +12,23 @@ import os
 import sys
 
 
-def pid_control_power(targetpower,wavelength,powermeter, NDfilter, eps=0.001):
+def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float=0.001)->None:
+    '''
+    PID制御を用いて目標パワーに制御する関数
+    args:
+        targetpower(float): 目標パワー[W]
+        wavelength(int): 現在の波長[nm]
+        powermeter(juno): パワーメーターの自作ドライバークラス
+        NDfilter(ThorlabStage): NDフィルターがついているthorlabステージの自作ドライバークラス
+        eps(float): 目標パワーの許容誤差割合[無次元]
+    return:
+        None
+    '''
+    r = config.PIDNORMALIZATION / targetpower #正規化項
+    Kp = config.PIDKP * r
+    Ki = config.PIDKI * r
+    Kd = config.PIDKD * r
     dt = 1
-    r = 1.9e5 /targetpower#正規化
-    Kp = 1.0 * r
-    Ki = 0.05 * r
-    Kd = 0.05 * r
     acc = 0
     diff = 0
     prev = 0
@@ -48,7 +59,7 @@ def pid_control_power(targetpower,wavelength,powermeter, NDfilter, eps=0.001):
             prev = error
         else:
             print("Already at target power")
-            break
+            return
 
 def test():
     flipshut = FlipMount()
@@ -102,7 +113,20 @@ def test():
     print("waitng for 10s")
     time.sleep(10)
 
-def pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path):
+def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str)->None:
+    '''
+    PLEスペクトルを取得する関数
+    args:
+        targetpower(float): 目標パワー[W]
+        minwavelength(int): 最小励起中心波長[nm]
+        maxwavelength(int): 最大励起中心波長[nm]
+        stepwavelength(int): 中心励起波長のステップ[nm]
+        wavelengthwidth(int): 励起波長の幅[nm]
+        integrationtime(int): 露光時間[s]
+        path(str): データを保存するディレクトリのパス
+    return:
+        None
+    '''
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
 
     print("Experiment Condition")
@@ -155,7 +179,22 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidt
     shut.close(2)
     flipshut.close()
 
-def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path, startpos, endpos, numberofsteps):
+def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
+    '''
+    args:
+        targetpower(float): 目標パワー[W]
+        minwavelength(int): 最小励起中心波長[nm]
+        maxwavelength(int): 最大励起中心波長[nm]
+        stepwavelength(int): 中心励起波長のステップ[nm]
+        wavelengthwidth(int): 励起波長の幅[nm]
+        integrationtime(int): 露光時間[s]
+        path(str): データを保存するディレクトリのパス
+        startpos(tuple): 移動開始位置[x,y]
+        endpos(tuple): 移動終了位置[x,y]
+        numberofsteps(int): 移動ステップ数
+    return:
+        None
+    '''
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
 
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
