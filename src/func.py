@@ -1,5 +1,5 @@
-def linear(x, a, b):
+def linear(x:float, a:float, b:float) -> float:
     return a * x + b
 
-def wavelength2ratio(wavelength):
-    return linear(wavelength, -0.0039, 9.3265)
+def wavelength2ratio(wavelength: int) -> float:
+    return linear(float(wavelength), -0.0039, 9.3265)

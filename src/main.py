@@ -1,11 +1,10 @@
-from superchrome import superchrome
-from ophircom import ophircom
-from thorlab import ThorlabStage, FlipMount
-from shutter import shutter
-from symphony import Symphony
-from proscan import PriorStage
+from driver.fianium import superchrome
+from driver.ophir import juno
+from driver.thorlab import ThorlabStage, FlipMount
+from driver.sigmakoki import shutter
+from driver.prior import Proscan
+from driver.horiba import ihr320, Symphony
 import config
-from ihr320 import ihr320
 import time
 import func
 import numpy as np
@@ -66,7 +65,7 @@ def test():
     shut.open(2)
     flipshut.open()
 
-    powermeter = ophircom()
+    powermeter = juno()
     powermeter.open()
     powermeter.set_range(4)
     print(f"powermeter is at {powermeter.get_range()}")
@@ -132,7 +131,7 @@ def pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidt
 
     flipshut.open()
 
-    powermeter = ophircom()
+    powermeter = juno()
     powermeter.open()
     powermeter.set_range(4)
 
@@ -196,7 +195,7 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelen
 
     flipshut.open()
 
-    powermeter = ophircom()
+    powermeter = juno()
     powermeter.open()
     powermeter.set_range(4)
 
@@ -205,7 +204,7 @@ def moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelen
     symphony.setintegrationtime(integrationtime)
     symphony.saveconfig(path)
 
-    priorstage = PriorStage(config.PRIORCOMPORT)
+    priorstage = Proscan(config.PRIORCOMPORT)
 
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])

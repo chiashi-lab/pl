@@ -3,10 +3,10 @@ import sys
 sys.coinit_flags = 2
 import threading
 from main import pid_control_power
-from superchrome import superchrome
-from ophircom import ophircom
-from thorlab import ThorlabStage, FlipMount
-from shutter import shutter
+from driver.fianium import superchrome
+from driver.ophir import juno
+from driver.thorlab import ThorlabStage, FlipMount
+from driver.sigmakoki import shutter
 import config
 import sys
 
@@ -74,7 +74,7 @@ class Application(tkinter.Frame):
         self.flipshut.open()
         self.shut.open(2)
 
-        self.powermeter = ophircom()
+        self.powermeter = juno()
         self.powermeter.open()
         self.powermeter.set_range(4)
 

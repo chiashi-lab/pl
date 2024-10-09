@@ -5,7 +5,7 @@ from tkinter import filedialog
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from main import moving_pl
-from proscan import PriorStage
+from driver.prior import Proscan
 import config
 
 class Application(tkinter.Frame):
@@ -119,7 +119,7 @@ class Application(tkinter.Frame):
         thread1.start()
 
     def get_pos(self):
-        stage = PriorStage(config.PRIORCOMPORT)
+        stage = Proscan(config.PRIORCOMPORT)
         return stage.get_pos()
     
     def getpos_start(self, event):

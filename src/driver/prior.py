@@ -2,7 +2,7 @@ import serial
 import config
 import time
 
-class PriorStage:
+class Proscan:
     def __init__(self, port):
         self.serial = serial.Serial(port=port, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_ONE, timeout=5)
 
@@ -57,7 +57,7 @@ class PriorStage:
         return
 
 if __name__ == '__main__':
-    stage = PriorStage(config.PRIORCOMPORT)
+    stage = Proscan(config.PRIORCOMPORT)
     stage.move_to(10000,900)
     for _ in range(5):
         print(stage.is_moving())

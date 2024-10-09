@@ -5,7 +5,7 @@ import numpy as np
 #ophir power meterを操作するクラス
 #ソースコードはophirが提供しているものを参考にしている
 
-class ophircom:
+class juno:
     """
     class to control the Ophir Power Meter
     if you want to get data, just wait a little before do"get_data"
@@ -165,7 +165,7 @@ class ophircom:
         self.OphirCOM = None
 
 if __name__ == "__main__":
-    powermeter = ophircom()
+    powermeter = juno()
     powermeter.open()
     time.sleep(1)
     print(powermeter.get_data())
