@@ -1,5 +1,7 @@
 from pywinauto.application import Application
 import time
+import sys
+sys.path.append('../')
 import config
 
 #pywinautoを使って波長可変チューナブルフィルタSuperChromeを操作するクラス

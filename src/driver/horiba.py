@@ -1,5 +1,7 @@
 from pywinauto.application import Application
 import time
+import sys
+sys.path.append('../')
 import config
 
 #pywinautoを使ってIHR320を操作するクラス

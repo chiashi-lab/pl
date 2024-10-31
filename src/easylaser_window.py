@@ -8,7 +8,6 @@ from driver.ophir import juno
 from driver.thorlab import ThorlabStage, FlipMount
 from driver.sigmakoki import shutter
 import config
-import sys
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):

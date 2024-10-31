@@ -1,6 +1,8 @@
 from pywinauto.application import Application
 import os
 import warnings
+import sys
+sys.path.append('../')
 import config
 import time
 

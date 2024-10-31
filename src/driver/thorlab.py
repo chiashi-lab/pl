@@ -1,9 +1,11 @@
 from pylablib.devices import Thorlabs
-import config
 #thorlabsのデバイスを操作するクラス定義
 #pylablibというライブラリを使っている
 #StageクラスはThorlabs.KinesisMotorを使ってNDフィルターが設置されているステージを操作する
 #FlipMountクラスはThorlabs.MFFを使ってターミネーターへのミラーが設置されているフリップマウントを操作する
+import sys
+sys.path.append('../')
+import config
 
 class ThorlabStage:
     """
@@ -133,10 +135,10 @@ class FlipMount:
         self.state = self.flip.get_state()
 
 if __name__ == "__main__":
-    Thorlabs.list_kinesis_devices()
+    print(Thorlabs.list_kinesis_devices())
     
     stage = ThorlabStage(home=True)
-    stage.move_to(14000000,block=True)
+    stage.move_to(500000,block=True)
     print(f"moved{stage.get_position()}")
 
     #flip = FlipMount()

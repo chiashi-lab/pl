@@ -67,7 +67,7 @@ class Application(tkinter.Frame):
         self.label_savefolderpath = tkinter.Label(text=u'保存先')
         self.label_savefolderpath.place(x=10, y=330)
         self.entry_savefolderpath = tkinter.Entry(width=40)
-        self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
+        self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individual')
         self.entry_savefolderpath.place(x=120, y=330)
         self.button_browse = tkinter.Button(text=u'参照', width=10)
         self.button_browse.bind("<1>", self.call_get_path)
