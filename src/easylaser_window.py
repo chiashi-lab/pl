@@ -19,36 +19,40 @@ class Application(tkinter.Frame):
     
     def create_widgets(self):
         self.label_wavelength = tkinter.Label(text=u'波長')
-        self.label_wavelength.place(x=30, y=10)
+        self.label_wavelength.place(x=30, y=60)
         self.entry_wavelength = tkinter.Entry(width=7)
         self.entry_wavelength.insert(tkinter.END, '500')
-        self.entry_wavelength.place(x=140, y=10)
+        self.entry_wavelength.place(x=140, y=60)
         self.unit_wavelength = tkinter.Label(text=u'nm')
-        self.unit_wavelength.place(x=200, y=10)
+        self.unit_wavelength.place(x=200, y=60)
+        self.entry_wavelength["state"] = "readonly"
 
         self.label_width = tkinter.Label(text=u'波長幅')
-        self.label_width.place(x=30, y=60)
+        self.label_width.place(x=30, y=110)
         self.entry_width = tkinter.Entry(width=7)
         self.entry_width.insert(tkinter.END, '10')
-        self.entry_width.place(x=140, y=60)
+        self.entry_width.place(x=140, y=110)
         self.unit_width = tkinter.Label(text=u'nm')
-        self.unit_width.place(x=200, y=60)
+        self.unit_width.place(x=200, y=110)
+        self.entry_width["state"] = "readonly"
         
         self.label_power = tkinter.Label(text=u'目標パワー')
-        self.label_power.place(x=30, y=110)
+        self.label_power.place(x=30, y=160)
         self.entry_power = tkinter.Entry(width=7)
         self.entry_power.insert(tkinter.END, '2')
-        self.entry_power.place(x=140, y=110)
+        self.entry_power.place(x=140, y=160)
         self.unit_power = tkinter.Label(text=u'mW')
-        self.unit_power.place(x=200, y=110)
+        self.unit_power.place(x=200, y=160)
+        self.entry_power["state"] = "readonly"
 
         self.set_button = tkinter.Button(text=u'セット', width=20)
         self.set_button.bind("<1>", self.call_choonepower)
-        self.set_button.place(x=20, y=200)
+        self.set_button.place(x=20, y=220)
+        self.set_button["state"] = tkinter.DISABLED
 
         self.init_button = tkinter.Button(text=u'初期化', width=20)
         self.init_button.bind("<1>", self.call_init)
-        self.init_button.place(x=200, y=200)
+        self.init_button.place(x=20, y=10)
 
     def call_init(self, event):
         thread2 = threading.Thread(target=self.initialize())
@@ -76,6 +80,12 @@ class Application(tkinter.Frame):
         self.powermeter = juno()
         self.powermeter.open()
         self.powermeter.set_range(4)
+
+        self.set_button["state"] = tkinter.NORMAL
+        self.init_button["state"] = tkinter.DISABLED
+        self.entry_wavelength["state"] = "normal"
+        self.entry_width["state"] = "normal"
+        self.entry_power["state"] = "normal"
 
     def choonepower(self, targetpower, centerwavelength, wavelenghwidth):
         self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
