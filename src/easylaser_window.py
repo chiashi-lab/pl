@@ -79,7 +79,7 @@ class Application(tkinter.Frame):
 
         self.powermeter = juno()
         self.powermeter.open()
-        self.powermeter.set_range(4)
+        self.powermeter.set_range(3)
 
         self.set_button["state"] = tkinter.NORMAL
         self.init_button["state"] = tkinter.DISABLED
