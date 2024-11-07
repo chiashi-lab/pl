@@ -32,6 +32,8 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
     acc = 0
     diff = 0
     prev = 0
+    if NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
+        NDfilter.move_to(config.NDINITPOS, block=True)
     while (True):
         time.sleep(10)
         nowndstep = NDfilter.get_position()
