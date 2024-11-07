@@ -34,6 +34,7 @@ class superchrome:
         None
         """
         self.app = Application(backend="win32").start(config.SUPERCHROMEPATH, timeout=10)
+        time.sleep(1)
         self.app["SuperChrome Initialisation"].wait(wait_for="exists",timeout=20)
         self.app["SuperChrome Initialisation"].OK.click()
         print("SuperChrome opening")
