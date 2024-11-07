@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import ttk
 import sys
 sys.coinit_flags = 2
 from tkinter import filedialog
@@ -66,63 +67,81 @@ class Application(tkinter.Frame):
         self.unit_targetpower.place(x=210, y=210)
 
         self.label_path = tkinter.Label(text=u'保存先')
-        self.label_path.place(x=10, y=330)
+        self.label_path.place(x=10, y=280)
         self.entry_path = tkinter.Entry(width=40)
         self.entry_path.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
-        self.entry_path.place(x=120, y=330)
+        self.entry_path.place(x=120, y=280)
         self.button_path = tkinter.Button(text=u'参照', width=10)
         self.button_path.bind("<1>", self.get_path)
-        self.button_path.place(x=410, y=330)
+        self.button_path.place(x=410, y=280)
 
         self.label_startpos = tkinter.Label(text=u'開始位置')
-        self.label_startpos.place(x=10, y=400)
+        self.label_startpos.place(x=10, y=340)
         self.entry_startpos_x = tkinter.Entry(width=10)
         self.entry_startpos_x.insert(tkinter.END, '0')
-        self.entry_startpos_x.place(x=130, y=400)
+        self.entry_startpos_x.place(x=130, y=340)
         self.entry_startpos_y = tkinter.Entry(width=10)
         self.entry_startpos_y.insert(tkinter.END, '0')
-        self.entry_startpos_y.place(x=270, y=400)
+        self.entry_startpos_y.place(x=270, y=340)
         self.button_startpos = tkinter.Button(text=u'位置取得', width=7)
         self.button_startpos.bind("<1>", self.getpos_start)
-        self.button_startpos.place(x=400, y=400)
+        self.button_startpos.place(x=400, y=340)
 
         self.label_endpos = tkinter.Label(text=u'終了位置')
-        self.label_endpos.place(x=10, y=470)
+        self.label_endpos.place(x=10, y=400)
         self.entry_endpos_x = tkinter.Entry(width=10)
         self.entry_endpos_x.insert(tkinter.END, '0')
-        self.entry_endpos_x.place(x=130, y=470)
+        self.entry_endpos_x.place(x=130, y=400)
         self.entry_endpos_y = tkinter.Entry(width=10)
         self.entry_endpos_y.insert(tkinter.END, '0')
-        self.entry_endpos_y.place(x=270, y=470)
+        self.entry_endpos_y.place(x=270, y=400)
         self.button_endpos = tkinter.Button(text=u'位置取得', width=7)
         self.button_endpos.bind("<1>", self.getpos_end)
-        self.button_endpos.place(x=400, y=470)
+        self.button_endpos.place(x=400, y=400)
 
         self.label_numberofsteps = tkinter.Label(text=u'データ取得地点の個数')
-        self.label_numberofsteps.place(x=10, y=540)
+        self.label_numberofsteps.place(x=10, y=470)
         self.entry_numberofsteps = tkinter.Entry(width=8)
         self.entry_numberofsteps.insert(tkinter.END, '1')
-        self.entry_numberofsteps.place(x=150, y=540)
+        self.entry_numberofsteps.place(x=170, y=470)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
-        self.button_start.bind("<1>", self.call_pl)
-        self.button_start.place(x=20, y=600)
+        self.button_start.bind("<1>", self.call_pack_movingpl)
+        self.button_start.place(x=20, y=630)
+
+        self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
+        self.pb.place(x=30, y=570)
+
+        self.msg = tkinter.StringVar(value="Please close other applications to initialize")
+        self.label_msg = tkinter.Label(textvariable=self.msg)
+        self.label_msg.place(x=20, y=530)
 
     def get_path(self, event):
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
         self.entry_path.delete(0, tkinter.END)
         self.entry_path.insert(tkinter.END, file)
     
-    def call_pl(self, event):
-        self.button_start.pack_forget()
-        thread1 = threading.Thread(target=moving_pl(targetpower=float(self.entry_targetpower.get())*0.001, minwavelength=int(self.entry_minwavelength.get()), maxwavelength=int(self.entry_maxwavelength.get()), stepwavelength=int(self.entry_stepwavelength.get()), wavelengthwidth=int(self.entry_wavelengthwidth.get()), integrationtime=int(self.entry_integrationtime.get()), path=self.entry_path.get(), startpos=[int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())], endpos=[int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())], numberofsteps=int(self.entry_numberofsteps.get())))
+    def call_pack_movingpl(self, event):
+        thread1 = threading.Thread(target=moving_pl, args=(float(self.entry_targetpower.get())*0.001, int(self.entry_minwavelength.get()), int(self.entry_maxwavelength.get()), int(self.entry_stepwavelength.get()), int(self.entry_wavelengthwidth.get()), int(self.entry_integrationtime.get()), self.entry_path.get(), [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())], [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())], int(self.entry_numberofsteps.get())))
         thread1.start()
+
+    def pack_movingpl(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
+        self.button_start["state"] = tkinter.DISABLED
+        self.msg.set("Experiment is running")
+        self.pb.start()
+        moving_pl(targetpower, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path, startpos, endpos, numberofsteps)
+        self.pb.stop()
+        self.msg.set("Experiment is done")
+        self.button_start["state"] = tkinter.NORMAL
 
     def get_pos(self):
         stage = Proscan(config.PRIORCOMPORT)
         return stage.get_pos()
     
     def getpos_start(self, event):
+        self.button_startpos["state"] = tkinter.DISABLED
+        self.msg.set("Getting position...")
+        self.pb.start()
         executer = ThreadPoolExecutor(max_workers=1)
         pos = executer.submit(self.get_pos)
         pos = pos.result()
@@ -130,8 +149,14 @@ class Application(tkinter.Frame):
         self.entry_startpos_x.insert(tkinter.END, str(pos[0]))
         self.entry_startpos_y.delete(0, tkinter.END)
         self.entry_startpos_y.insert(tkinter.END, str(pos[1]))
+        self.button_startpos["state"] = tkinter.NORMAL
+        self.msg.set("Position is gotten")
+        self.pb.stop()
     
     def getpos_end(self, event):
+        self.button_endpos["state"] = tkinter.DISABLED
+        self.msg.set("Getting position...")
+        self.pb.start()
         executer = ThreadPoolExecutor(max_workers=1)
         pos = executer.submit(self.get_pos)
         pos = pos.result()
@@ -139,6 +164,8 @@ class Application(tkinter.Frame):
         self.entry_endpos_x.insert(tkinter.END, str(pos[0]))
         self.entry_endpos_y.delete(0, tkinter.END)
         self.entry_endpos_y.insert(tkinter.END, str(pos[1]))
+        self.msg.set("Position is gotten")
+        self.button_endpos["state"] = tkinter.NORMAL
 
 if __name__ == '__main__':
     root = tkinter.Tk()
