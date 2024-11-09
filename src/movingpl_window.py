@@ -16,7 +16,7 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master.geometry("600x800")
-        self.master.title(u"ちくちくPL君")
+        self.master.title(u"PLEマップのマッピング測定君")
         self.create_widgets()
 
     def create_widgets(self):
