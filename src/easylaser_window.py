@@ -58,7 +58,7 @@ class Application(tkinter.Frame):
         self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
         self.pb.place(x=30, y=310)
 
-        self.msg = tkinter.StringVar(value="Please close other applications to initialize")
+        self.msg = tkinter.StringVar(value="初期化してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=280)
 
@@ -67,30 +67,45 @@ class Application(tkinter.Frame):
         thread2.start()
 
     def call_choonepower(self, event):
-        thread1 = threading.Thread(target=self.choonepower, args=(0.001*float(self.entry_power.get()), int(self.entry_wavelength.get()), int(self.entry_width.get())))
+        try:
+            power = float(self.entry_power.get()) * 0.001
+            wavelength = int(self.entry_wavelength.get())
+            width = int(self.entry_width.get())
+        except:
+            self.msg.set("Please input numbers")
+            return
+        if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850 or width < 1 or width > 100:
+            self.msg.set("Please input correct values")
+            return
+        thread1 = threading.Thread(target=self.choonepower, args=(power, wavelength, width))
         thread1.start()
 
     def initialize(self):
-        self.init_button["state"] = tkinter.DISABLED
-        self.msg.set("Initializing...")
-        self.pb.start(10)
-        self.flipshut = FlipMount()
-        self.flipshut.close()
-        self.shut = shutter(config.SHUTTERCOMPORT)
-        self.shut.close(2)
+        try:
+            self.init_button["state"] = tkinter.DISABLED
+            self.msg.set("初期化中...")
+            self.pb.start(10)
+            self.flipshut = FlipMount()
+            self.flipshut.close()
+            self.shut = shutter(config.SHUTTERCOMPORT)
+            self.shut.close(2)
 
-        self.laserchoone = superchrome()
+            self.laserchoone = superchrome()
 
-        self.NDfilter = ThorlabStage(home=True)
-        self.NDfilter.move_to(0, block=True)
-        print(f"stage is at {self.NDfilter.get_position()}")
+            self.NDfilter = ThorlabStage(home=True)
+            self.NDfilter.move_to(0, block=True)
+            print(f"stage is at {self.NDfilter.get_position()}")
 
-        self.flipshut.open()
-        self.shut.open(2)
+            self.flipshut.open()
+            self.shut.open(2)
 
-        self.powermeter = juno()
-        self.powermeter.open()
-        self.powermeter.set_range(3)
+            self.powermeter = juno()
+            self.powermeter.open()
+            self.powermeter.set_range(3)
+        except:
+            self.msg.set("初期化に失敗しました")
+            self.pb.stop()
+            return
 
         self.set_button["state"] = tkinter.NORMAL
         self.init_button["state"] = tkinter.DISABLED
@@ -104,17 +119,23 @@ class Application(tkinter.Frame):
         self.label_power["state"] = "normal"
         self.unit_power["state"] = "normal"
         self.pb.stop()
-        self.msg.set("Initialization completed")
+        self.msg.set("初期化完了．値を設定してセットを押してください")
 
     def choonepower(self, targetpower, centerwavelength, wavelenghwidth):
         self.set_button["state"] = tkinter.DISABLED
-        self.msg.set("Setting power...")
+        self.msg.set("波長の切替とパワーの調整中...")
         self.pb.start(10)
-        self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
-        pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO)
+        try:
+            self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
+            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO)
+        except:
+            self.msg.set("波長の切替とパワーの調整に失敗しました")
+            self.pb.stop()
+            self.set_button["state"] = tkinter.NORMAL
+            return
         self.pb.stop()
         self.set_button["state"] = tkinter.NORMAL
-        self.msg.set("Power setting completed")
+        self.msg.set(f"中心波長: {centerwavelength} nm, 波長幅: {wavelenghwidth} nm, 目標パワー: {targetpower} mWを照射中")
 
 if __name__ == "__main__":
     root = tkinter.Tk()

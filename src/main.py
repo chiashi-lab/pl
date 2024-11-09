@@ -28,10 +28,10 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
     Kp = config.PIDKP * r
     Ki = config.PIDKI * r
     Kd = config.PIDKD * r
-    dt = 1
-    acc = 0
-    diff = 0
-    prev = 0
+    dt = 1.0
+    acc = 0.0
+    diff = 0.0
+    prev = 0.0
     if NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(config.NDINITPOS, block=True)
     while (True):
@@ -174,7 +174,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
         print(f"start to get PL spectra at {wavelength}")
         shut.open(2)
         symphony.record()
-        time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
+        time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
         shut.close(2)
         os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
     
@@ -265,7 +265,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             print(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.record()
-            time.sleep(integrationtime*1.1)#symphonyとの時刻ずれを考慮
+            time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
             shut.close(2)
             time.sleep(3)
             os.rename(savedirpath+"/"+"IMAGE0001_0001_AREA1_1.txt", savedirpath+"/"+f"{wavelength}.txt")
