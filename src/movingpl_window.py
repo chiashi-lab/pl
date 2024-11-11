@@ -4,12 +4,12 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog
 import threading
-from concurrent.futures import ThreadPoolExecutor
 from main import moving_pl
 from driver.prior import Proscan
 import config
 import func
 import datetime
+import gc
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
@@ -71,7 +71,7 @@ class Application(tkinter.Frame):
         self.label_path = tkinter.Label(text=u'保存先')
         self.label_path.place(x=10, y=280)
         self.entry_path = tkinter.Entry(width=40)
-        self.entry_path.insert(tkinter.END, 'C:\\Users\\optics\\individuall')
+        self.entry_path.insert(tkinter.END, 'C:\\Users\\optics\\individual')
         self.entry_path.place(x=120, y=280)
         self.button_path = tkinter.Button(text=u'参照', width=10)
         self.button_path.bind("<1>", self.get_path)
@@ -86,7 +86,7 @@ class Application(tkinter.Frame):
         self.entry_startpos_y.insert(tkinter.END, '0')
         self.entry_startpos_y.place(x=270, y=340)
         self.button_startpos = tkinter.Button(text=u'位置取得', width=7)
-        self.button_startpos.bind("<1>", self.getpos_start)
+        self.button_startpos.bind("<1>", self.call_get_pos_start)
         self.button_startpos.place(x=400, y=340)
 
         self.label_endpos = tkinter.Label(text=u'終了位置')
@@ -98,7 +98,7 @@ class Application(tkinter.Frame):
         self.entry_endpos_y.insert(tkinter.END, '0')
         self.entry_endpos_y.place(x=270, y=400)
         self.button_endpos = tkinter.Button(text=u'位置取得', width=7)
-        self.button_endpos.bind("<1>", self.getpos_end)
+        self.button_endpos.bind("<1>", self.call_get_pos_end)
         self.button_endpos.place(x=400, y=400)
 
         self.label_numberofsteps = tkinter.Label(text=u'データ取得地点の個数')
@@ -126,11 +126,11 @@ class Application(tkinter.Frame):
     def call_pack_movingpl(self, event):
         try:
             power = float(self.entry_targetpower.get()) * 0.001
-            minwavelength = int(self.entry_minwavelength.get())
-            maxwavelength = int(self.entry_maxwavelength.get())
-            stepwavelength = int(self.entry_stepwavelength.get())
-            wavelengthwidth = int(self.entry_wavelengthwidth.get())
-            integrationtime = int(self.entry_integrationtime.get())
+            minWL = int(self.entry_minwavelength.get())
+            maxWL = int(self.entry_maxwavelength.get())
+            stepWL = int(self.entry_stepwavelength.get())
+            widthWL = int(self.entry_wavelengthwidth.get())
+            exposure = int(self.entry_integrationtime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
@@ -138,17 +138,18 @@ class Application(tkinter.Frame):
         except:
             self.msg.set("値を正しく入力してください")
             return
-        thread1 = threading.Thread(target=self.pack_movingpl, args=(power, minwavelength, maxwavelength, stepwavelength, wavelengthwidth, integrationtime, path, startpos, endpos, numberofsteps))
+        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL or (maxWL - minWL) < stepWL:
+            self.msg.set("正しい値を入力してください")
+            return
+        thread1 = threading.Thread(target=self.pack_movingpl, args=(power, minWL, maxWL, stepWL, widthWL, exposure, path, startpos, endpos, numberofsteps))
         thread1.start()
 
     def pack_movingpl(self, power:float, minWL:int, maxWL:int, stepWL:int, widthWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps)
+        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
-        import time
-        time.sleep(5)
         try:
             moving_pl(power, minWL, maxWL, stepWL, widthWL, exposure, path, startpos, endpos, numberofsteps)
         except:
@@ -160,38 +161,61 @@ class Application(tkinter.Frame):
         self.msg.set("データ取得完了!")
         self.button_start["state"] = tkinter.NORMAL
 
-    def get_pos(self):
+    def get_pos(self)->None:
+        self.res_get_pos = None
         stage = Proscan(config.PRIORCOMPORT)
-        return stage.get_pos()
+        self.res_get_pos = stage.get_pos()
+        del stage
+        gc.collect()
+        return
     
-    def getpos_start(self, event):
+    def get_pos_start(self)->None:
         self.button_startpos["state"] = tkinter.DISABLED
+        self.button_endpos["state"] = tkinter.DISABLED
         self.msg.set("計測開始地点のステージ位置を取得中...")
-        self.pb.start()
-        executer = ThreadPoolExecutor(max_workers=1)
-        pos = executer.submit(self.get_pos)
-        pos = pos.result()
-        self.entry_startpos_x.delete(0, tkinter.END)
-        self.entry_startpos_x.insert(tkinter.END, str(pos[0]))
-        self.entry_startpos_y.delete(0, tkinter.END)
-        self.entry_startpos_y.insert(tkinter.END, str(pos[1]))
+        self.pb.start(5)
+        try:
+            self.get_pos()
+        except:
+            self.msg.set("ステージ位置を取得中にエラーが発生しました")
+        else:
+            self.entry_startpos_x.delete(0, tkinter.END)
+            self.entry_startpos_x.insert(tkinter.END, str(self.res_get_pos[0]))
+            self.entry_startpos_y.delete(0, tkinter.END)
+            self.entry_startpos_y.insert(tkinter.END, str(self.res_get_pos[1]))
+            self.msg.set("開始ステージ位置を取得しました")
         self.button_startpos["state"] = tkinter.NORMAL
-        self.msg.set("開始ステージ位置を取得しました")
+        self.button_endpos["state"] = tkinter.NORMAL
         self.pb.stop()
+        return
     
-    def getpos_end(self, event):
+    def get_pos_end(self):
+        self.button_startpos["state"] = tkinter.DISABLED
         self.button_endpos["state"] = tkinter.DISABLED
         self.msg.set("計測終了地点のステージ位置を取得中...")
-        self.pb.start()
-        executer = ThreadPoolExecutor(max_workers=1)
-        pos = executer.submit(self.get_pos)
-        pos = pos.result()
-        self.entry_endpos_x.delete(0, tkinter.END)
-        self.entry_endpos_x.insert(tkinter.END, str(pos[0]))
-        self.entry_endpos_y.delete(0, tkinter.END)
-        self.entry_endpos_y.insert(tkinter.END, str(pos[1]))
-        self.msg.set("終了ステージ位置を取得しました")
+        self.pb.start(5)
+        try:
+            self.get_pos()
+        except:
+            self.msg.set("ステージ位置を取得中にエラーが発生しました")
+        else:
+            self.entry_endpos_x.delete(0, tkinter.END)
+            self.entry_endpos_x.insert(tkinter.END, str(self.res_get_pos[0]))
+            self.entry_endpos_y.delete(0, tkinter.END)
+            self.entry_endpos_y.insert(tkinter.END, str(self.res_get_pos[1]))
+            self.msg.set("終了ステージ位置を取得しました")
+        self.button_startpos["state"] = tkinter.NORMAL
         self.button_endpos["state"] = tkinter.NORMAL
+        self.pb.stop()
+    
+    def call_get_pos_start(self, event):
+        thread_s = threading.Thread(target=self.get_pos_start)
+        thread_s.start()
+    
+    def call_get_pos_end(self, event):
+        thread_e = threading.Thread(target=self.get_pos_end)
+        thread_e.start()
+
 
 if __name__ == '__main__':
     root = tkinter.Tk()

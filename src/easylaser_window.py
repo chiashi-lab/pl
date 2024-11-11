@@ -96,9 +96,6 @@ class Application(tkinter.Frame):
             self.NDfilter.move_to(0, block=True)
             print(f"stage is at {self.NDfilter.get_position()}")
 
-            self.flipshut.open()
-            self.shut.open(2)
-
             self.powermeter = juno()
             self.powermeter.open()
             self.powermeter.set_range(3)
@@ -126,8 +123,10 @@ class Application(tkinter.Frame):
         self.msg.set("波長の切替とパワーの調整中...")
         self.pb.start(10)
         try:
+            self.flipshut.open()
             self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
             pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO)
+            self.shut.open(2)
         except:
             self.msg.set("波長の切替とパワーの調整に失敗しました")
             self.pb.stop()
