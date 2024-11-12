@@ -159,7 +159,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
 
     powermeter = juno()
     powermeter.open()
-    powermeter.set_range(4)
+    powermeter.set_range(3)
 
     symphony = Symphony()
     symphony.Initialize()
@@ -238,7 +238,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
 
     powermeter = juno()
     powermeter.open()
-    powermeter.set_range(4)
+    powermeter.set_range(3)
 
     symphony = Symphony()
     symphony.Initialize()
