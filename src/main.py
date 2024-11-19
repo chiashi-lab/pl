@@ -271,6 +271,102 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             os.rename(savedirpath+"/"+"IMAGE0001_0001_AREA1_1.txt", savedirpath+"/"+f"{wavelength}.txt")
     shut.close(2)
     flipshut.close()
+
+def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
+    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
+
+    poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+    poslist = list(poslist)
+    poslist = [[int(x) for x in y] for y in poslist]
+
+    print("Experiment Condition")
+    print(f"targetpower:{targetpower}")
+    print(f"excite center wavelength:{wavelength}")
+    print(f"excite wavelength width:{wavelengthwidth}")
+    print(f"integration time:{integrationtime}")
+    print(f"")
+    print(f"start position:{startpos}")
+    print(f"end position:{endpos}")
+    print(f"number of steps:{numberofsteps}")
+    print(f"")
+    for i in range(numberofsteps):
+        print(f"position {i}:{poslist[0][i], poslist[1][i]}")
+    print(f"")
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"make dir at {path}")
+
+    flipshut = FlipMount()
+    flipshut.close()
+    shut = shutter(config.SHUTTERCOMPORT)
+    shut.close(2)
+
+    laserchoone = superchrome()
+
+    NDfilter = ThorlabStage(home=True)
+    NDfilter.move_to(0, block=True)
+    print(f"stage is at {NDfilter.get_position()}")
+
+    flipshut.open()
+
+    powermeter = juno()
+    powermeter.open()
+    powermeter.set_range(3)
+
+    symphony = Symphony()
+    symphony.Initialize()
+    symphony.setintegrationtime(integrationtime)
+    symphony.saveconfig(path)
+
+    priorstage = Proscan(config.PRIORCOMPORT)
+
+    for posidx in range(numberofsteps-1):
+        priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
+        priorstage.wait_until_stop()
+
+        savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
+        if not os.path.exists(savedirpath):
+            os.makedirs(savedirpath)
+            print(f"make dir at {savedirpath}")
+        symphony.saveconfig(savedirpath)
+
+        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+        time.sleep(5)
+        print(f"start power control at {wavelength}nm")
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
+        print(f"start to get PL spectra at {wavelength}")
+        shut.open(2)
+        symphony.record()
+        #time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
+        comeandgo(pos1=(poslist[0][posidx], poslist[1][posidx]), pos2=(poslist[0][posidx+1], poslist[1][posidx+1]), exposuretime=func.waittime4exposure(integrationtime), priorstage=priorstage)
+        shut.close(2)
+        time.sleep(3)
+        os.rename(savedirpath+"/"+"IMAGE0001_0001_AREA1_1.txt", savedirpath+"/"+f"{wavelength}.txt")
+
+    shut.close(2)
+    flipshut.close()
+
+def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->None:
+    '''
+    2点間を往復しながら露光する関数
+    '''
+    starttime = time.time()
+    while True:
+        nowtime = time.time()
+        if nowtime - starttime > exposuretime:
+            break
+
+        priorstage.move_to(pos1[0], pos1[1])
+        priorstage.wait_until_stop()
+
+        nowtime = time.time()
+        if nowtime - starttime > exposuretime:
+            break
+
+        priorstage.move_to(pos2[0], pos2[1])
+        priorstage.wait_until_stop()
+
 if __name__ == "__main__":
     #path = r"c:\Users\optical group\Documents\individual\kanai"
     #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
