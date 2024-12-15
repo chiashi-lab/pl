@@ -31,6 +31,18 @@ void clear_buffer(){
 }
 
 class Clipper {
+  /*
+  Clipper class
+    clip value by min and max
+  Args:
+    min: int, expected positive value
+    max: int, expected positive value
+  Methods:
+    clip: int, clip value by min and max
+  Attributes:
+    min: int, expected positive value
+    max: int, expected positive value
+  */
   public:
     Clipper(int min, int max){
       this->min = min;
@@ -49,34 +61,88 @@ class Clipper {
 
 
 class MYStepper{
+  /*
+  MYStepper class
+    MYStepper class is a wrapper class of Stepper class in Arduino library.
+
+  Args:
+    steps_per_rotate: int, expected positive value
+    pin1: int. It corresponds to MOTOR_PIN1 of Stepper in Arduino library
+    pin2: int, It corresponds to MOTOR_PIN2 of Stepper in Arduino library
+    pin3: int, It corresponds to MOTOR_PIN3 of Stepper in Arduino library
+    pin4: int, It corresponds to MOTOR_PIN4 of Stepper in Arduino library
+
+  Methods:
+    _setSpeed: void, set speed of motor
+    _step: int, rotate motor at steps. if stoppableflag is true, stoppable by serial input "s"
+    getSpeed: int, get speed of motor
+    
+  Attributes:
+    steps_per_rotate: int, expected positive value
+    rpm: int, expected positive value
+    steps_per_sec: int, expected positive value
+    super_stepper: Stepper, Stepper class in Arduino library
+  */
   public:
-    MYStepper(int step, int pin1, int pin2, int pin3, int pin4)
-      : super_stepper(step, pin1, pin2, pin3, pin4) {
+    MYStepper(int steps_per_rotate, int pin1, int pin2, int pin3, int pin4)
+      : super_stepper(steps_per_rotate, pin1, pin2, pin3, pin4) {//construct Stepper class in Arduino library as a name of super_stepper
+      this->steps_per_rotate = steps_per_rotate;
     }
     void _setSpeed(int rpm){
-      this->step_per_sec = STEPS_PER_ROTATE_ST42BYH1004 * rpm / 60;
-      this->super_stepper.setSpeed(rpm);
+      /*
+      set speed of motor
+      Args:
+        rpm: int, expected positive value
+      */
+      this->rpm = rpm;
+      this->super_stepper.setSpeed(this->rpm);
+      this->steps_per_sec = this->steps_per_rotate * this->rpm / 60;
     }
     int _step(int steps, bool stoppableflag){
-      for(int rotatedstep = 0; rotatedstep < steps; rotatedstep+=this->step_per_sec){
-        if(stoppableflag && Serial.available()){
-          String str_input = Serial.readString();
-          str_input.trim();
-          clear_buffer();
-          if(str_input == "s") return rotatedstep;
+      /*
+      rotate motor at steps. if stoppableflag is true, stoppable by serial input "s"
+      This function is monitoring serial input every 1-second, before and after rotate motor by steps_per_sec steps.
+      This function is blocking function
+      Args:
+        steps: int, expected rotate steps, positive or negative value
+        stoppableflag: bool. if true, stoppable by serial input "s".  else, not stoppable
+      Return:
+        int, truly rotated steps
+      */
+      if(steps >= 0){//if steps is positive, rotate motor at positive direction
+        for(int rotatedsteps = 0; rotatedsteps < steps; rotatedsteps += this->steps_per_sec){
+          if(stoppableflag && Serial.available()){
+            String str_input = Serial.readString();
+            str_input.trim();
+            clear_buffer();
+            if(str_input == "s") return rotatedsteps;//if input "s", return rotated steps
+          }
+          this->super_stepper.step(min(this->steps_per_sec, steps - rotatedsteps));
         }
-        this->super_stepper.step(min(this->step_per_sec, steps-rotatedstep));
+        return steps;
       }
-      return steps;
+      else{//if steps is negative, rotate motor at negative direction
+        for(int rotatedsteps = 0; rotatedsteps > steps; rotatedsteps -= this->steps_per_sec){
+          if(stoppableflag && Serial.available()){
+            String str_input = Serial.readString();
+            str_input.trim();
+            clear_buffer();
+            if(str_input == "s") return rotatedsteps;//if input "s", return rotated steps
+          }
+          this->super_stepper.step(max(-1 * this->steps_per_sec, steps - rotatedsteps));
+        }
+        return steps;
+      }
     }
     int getSpeed(){
       return this->rpm;
     }
 
   private:
-    int rpm;
-    int step_per_sec;
-    Stepper super_stepper;
+    int steps_per_rotate; //steps per 1-rotation. It depends on motor. positive value
+    int rpm;//rotate per minute. speed. positive value
+    int steps_per_sec;// steps per 1-second. It calculated by steps_per_rotate * rpm / 60. positive value
+    Stepper super_stepper;// Stepper class in Arduino library
 };
 
 
@@ -90,6 +156,22 @@ void setup() {
 } 
 
 void loop() {
+  /*
+  command table
+    r value: rotate motor at value step. blocking function. 
+              after rotataion, send "t value". value is truly rotated steps
+      ex) r 100
+    l value: rotate motor at -1 * value step. blocking function. 
+              after rotataion, send "t value". value is truly rotated steps
+      ex) l 100
+    p value: set speed of motor at value rpm
+              after setting speed, send "t 0"
+      ex) p 10
+    s: stop motor
+      ex) s
+    
+    if command is not in command table, send "e 0" as error message
+  */
   if (Serial.available()){
     String command, value;
     int rotate_step, true_rotate_step;
@@ -121,6 +203,7 @@ void loop() {
     }
 
     else{
+      // send error message
       Serial.println("e 0");
     }
     delay(10);
