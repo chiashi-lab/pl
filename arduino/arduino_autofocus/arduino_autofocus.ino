@@ -146,7 +146,7 @@ class MYStepper{
 };
 
 
-Clipper speed_clipper(0, 100);  // speed clipper
+Clipper speed_clipper(0, 80);  // speed clipper
 Clipper step_clipper(0, 1000);  // step clipper
 MYStepper myStepper(STEPS_PER_ROTATE_ST42BYH1004, MOTOR_PIN1, MOTOR_PIN2, MOTOR_PIN3, MOTOR_PIN4);
 
