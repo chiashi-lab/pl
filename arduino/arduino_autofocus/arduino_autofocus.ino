@@ -127,7 +127,7 @@ class MYStepper{
             String str_input = Serial.readString();
             str_input.trim();
             clear_buffer();
-            if(str_input == "s") return rotatedsteps;//if input "s", return rotated steps
+            if(str_input == "s") return rotatedsteps;//if input "s", force stop and return rotated steps
           }
           this->super_stepper.step(max(-1 * this->steps_per_sec, steps - rotatedsteps));
         }
@@ -167,7 +167,7 @@ void loop() {
     p value: set speed of motor at value rpm
               after setting speed, send "t 0"
       ex) p 10
-    s: stop motor
+    s:       if input "s", stop motor and return truly rotated steps, while moving motor
       ex) s
     
     if command is not in command table, send "e 0" as error message
