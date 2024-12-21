@@ -203,6 +203,10 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     poslist = list(poslist)
     poslist = [[int(x) for x in y] for y in poslist]
 
+    slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+    slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
+    movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
+
     print("Experiment Condition")
     print(f"targetpower:{targetpower}")
     print(f"minimum excite center wavelength:{minwavelength}")
@@ -256,6 +260,17 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             os.makedirs(savedirpath)
             print(f"make dir at {savedirpath}")
         symphony.saveconfig(savedirpath)
+
+        # autofocus
+        """
+        if check_focus:
+            priorstage.move_to(poslist[0][posidx]+movepos_when_focus[0], poslist[1][posidx]+movepos_when_focus[1])
+            priorstage.wait_until_stop()
+
+            while max_pos - min_pos > 5:
+                symphony.setintegrationtime(1)
+                shut.open(2)
+        """
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
             laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
