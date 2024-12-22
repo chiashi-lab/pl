@@ -29,7 +29,7 @@ class ThorlabStage:
     getparam: get the parameters of the stage
     setparam: set the parameters of the stage
     """
-    def __init__(self,home):
+    def __init__(self, home: bool = False) -> None:
         """
         connect to the Thorlabs stage
 
@@ -39,8 +39,6 @@ class ThorlabStage:
         return:
         None
         """
-        print("connected kinesis devices: ", Thorlabs.list_kinesis_devices())
-        print(f"trying to connect to kinesis device {config.KINESISSTAGEMOTORID}")
         self.stage = Thorlabs.KinesisMotor(str(config.KINESISSTAGEMOTORID))
         if home:
             self.move_to_home(block=True)
@@ -57,7 +55,7 @@ class ThorlabStage:
     def get_scale_units(self):
         return self.stage.get_scale_units()
     
-    def get_position(self):
+    def get_position(self) -> int:
         """
         get the position of the stage
 
@@ -69,7 +67,7 @@ class ThorlabStage:
         """
         return self.stage.get_position()
     
-    def wait_for_stop(self):
+    def wait_for_stop(self) -> None:
         """
         wait for the stage to stop
 
@@ -81,7 +79,7 @@ class ThorlabStage:
         """
         self.stage.wait_for_stop()
     
-    def move_to(self, position, block=True):
+    def move_to(self, position: int, block: bool = True) -> None:
         """
         move the stage to a position
         
@@ -93,12 +91,11 @@ class ThorlabStage:
             position = self.maxlimit
         elif position < self.minlimit:
             position = self.minlimit
-        print(f"stage is moving to {position}")
         self.stage.move_to(position)
         if block:
             self.wait_for_stop()
     
-    def move_to_home(self,block):
+    def move_to_home(self,block) -> None:
         """
         move the stage to the home position
 
@@ -108,9 +105,7 @@ class ThorlabStage:
         return:
         None
         """
-        print("stage is homing")
         self.stage.home(sync=block, force=True)
-        print("homing done")
 
     def gethome(self):
         return self.stage.get_homing_parameters()

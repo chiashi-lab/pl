@@ -88,7 +88,7 @@ class MYStepper{
       : super_stepper(steps_per_rotate, pin1, pin2, pin3, pin4) {//construct Stepper class in Arduino library as a name of super_stepper
       this->steps_per_rotate = steps_per_rotate;
     }
-    void _setSpeed(int rpm){
+    int _setSpeed(int rpm){
       /*
       set speed of motor
       Args:
@@ -97,6 +97,7 @@ class MYStepper{
       this->rpm = rpm;
       this->super_stepper.setSpeed(this->rpm);
       this->steps_per_sec = this->steps_per_rotate * this->rpm / 60;
+      return this -> rpm;
     }
     int _step(int steps, bool stoppableflag){
       /*
@@ -174,12 +175,12 @@ void loop() {
   */
   if (Serial.available()){
     String command, value;
-    int rotate_step, true_rotate_step;
+    int rotate_step, true_rotate_step, rpm;
     String str_input_step = Serial.readString();
     str_input_step.trim();
     split(str_input_step, ' ', command, value);
 
-    if(command == "r"){
+    if(command == "u"){
       // rotate motor at value step
       // value: int(rotate step) expected positive value
       // after rotataion, send "t"
@@ -188,7 +189,7 @@ void loop() {
       Serial.println("t "+String(true_rotate_step));
     }
 
-    else if(command == "l"){
+    else if(command == "d"){
       // rotate motor at -1 * value step
       // value: int(rotate step) expected positive value
       // after rotataion, send "t"
@@ -198,8 +199,8 @@ void loop() {
     }
 
     else if(command == "p"){
-      myStepper._setSpeed(speed_clipper.clip(value.toInt()));
-      Serial.println("t 0");
+      rpm = myStepper._setSpeed(speed_clipper.clip(value.toInt()));
+      Serial.println("t " + String(rpm));
     }
 
     else{

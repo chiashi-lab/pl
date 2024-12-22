@@ -197,11 +197,11 @@ child_window(title="MonoExample", class_name="#32770")
         self.app["MonoExample"]["Button"].click()
         print("IHR320 initialized")
     
-    def setmirrors(self, mirrors)->None:
+    def set_mirrors(self, mirrors)->None:
         self.app["MonoExample"]["Axial"].click()
         self.app["MonoExample"]["Axial2"].click()
     
-    def setallconfig(self, centerwavelength:float, grating:float, frontslit:float, sideslit=0)->None:
+    def set_allconfig(self, centerwavelength:float, grating:float, frontslit:float, sideslit=0)->None:
         self.app["MonoExample"]["PositionEdit"].set_text(str(centerwavelength))
         self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
         self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
@@ -857,15 +857,15 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
     def print(self):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers()
 
-    def setintegrationtime(self,time:int)->None:
+    def set_exposuretime(self, time: int) -> None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Set Params"].click()
 
-    def saveconfig(self, path:str)->None:
+    def set_config_savetofiles(self, path: str) -> None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].click()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
     
-    def record(self):
+    def start_exposure(self):
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["GO"].click()
 
 
@@ -876,6 +876,6 @@ if __name__ == "__main__":
     path = r"c:\Users\optical group\Documents\individual\kanai"
     sym = Symphony()
     sym.Initialize()
-    sym.setintegrationtime(1)
-    sym.saveconfig(path)
-    #sym.record()
+    sym.set_exposuretime(1)
+    sym.set_config_savetofiles(path)
+    #sym.start_exposure()

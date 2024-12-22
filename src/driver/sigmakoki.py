@@ -5,16 +5,16 @@ import time
 #シャッターのコントローラであるssh2cbとシリアル通信を行う
 
 class shutter:
-    def __init__(self, port):
+    def __init__(self, port: str) -> None:
         self.serial = serial.Serial(port=port, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, rtscts=True, timeout=3)
         time.sleep(1)
         self.getstatus(1)
         time.sleep(1)
         self.getstatus(2)
 
-    def send(self, command):
+    def send(self, command: str) -> str:
         for _ in range(5):
-            self.serial.write(command)
+            self.serial.write(command.encode('utf-8'))
             message = self.serial.readline()
             message = message.strip().decode('utf-8')
             if list(message)[0] == 'S':
@@ -23,30 +23,27 @@ class shutter:
                 continue
         return 'Error'
 
-    def getstatus(self, ch):
-        sendm = 'open?' + str(ch) + '\r\n'
-        message = self.send(sendm.encode('utf-8'))
+    def getstatus(self, ch: int) -> None:
+        message = self.send('open?' + str(ch) + '\r\n')
         message = message.split(',')
         if ch == 1:
             self.ch1 = message[1]
         else:
             self.ch2 = message[1]
 
-    def open(self, ch):
+    def open(self, ch: int) -> None:
         if (ch == 1 and self.ch1 == 'O') or (ch==2 and self.ch2 == 'O'):
             return
-        sendm = 'open:' + str(ch) + '\r\n'
-        self.send(sendm.encode('utf-8'))
+        self.send('open:' + str(ch) + '\r\n')
         if ch ==1:
             self.ch1 ='O'
         else:
             self.ch2='O'
     
-    def close(self, ch):
+    def close(self, ch: int) -> None:
         if (ch == 1 and self.ch1 == 'C') or (ch==2 and self.ch2 == 'C'):
             return
-        sendm = 'close:' + str(ch) + '\r\n'
-        self.send(sendm.encode('utf-8'))
+        self.send('close:' + str(ch) + '\r\n')
         if ch ==1:
             self.ch1 ='C'
         else:

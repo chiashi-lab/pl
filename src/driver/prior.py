@@ -5,16 +5,16 @@ import config
 import time
 
 class Proscan:
-    def __init__(self, port):
+    def __init__(self, port: str) -> None:
         self.serial = serial.Serial(port=port, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_ONE, timeout=5)
 
-    def send(self, command):
-        self.serial.write(command)
+    def send(self, command: str) -> str:
+        self.serial.write(command.encode('utf-8'))
         message = self.serial.readline()
         message = message.strip().decode('utf-8')
         return message
 
-    def get_pos(self):
+    def get_pos(self) -> list[int]:
         """
         args: None
         return:
@@ -23,24 +23,21 @@ class Proscan:
             poslist[1]: Y position
             postlist[2]: Z position(Not used)
         """
-        sendm = "P"+ '\r'
-        poslist = self.send(sendm.encode('utf-8'))
+        poslist = self.send("P"+ '\r')
         poslist = poslist.split(',')
         poslist = [int(x) for x in poslist]
         return poslist
 
-    def move_to(self, xpos, ypos):
+    def move_to(self, xpos: int, ypos: int) -> None:
         """
         args:
             xpos: int
             ypos: int
         return: None
         """
-        sendm = 'G,' + str(xpos) + ',' + str(ypos) + '\r'
-        self.send(sendm.encode('utf-8'))
-        return
+        self.send('G,' + str(xpos) + ',' + str(ypos) + '\r')
 
-    def is_moving(self):
+    def is_moving(self) -> int:
         """
         args: None
         return: 
@@ -49,11 +46,10 @@ class Proscan:
             1: X is moving
             0: X and Y are not moving
         """
-        sendm = "$,S"+ '\r'
-        res = self.send(sendm.encode('utf-8'))
+        res = self.send("$,S"+ '\r')
         return int(res)
 
-    def wait_until_stop(self):
+    def wait_until_stop(self) -> None:
         while self.is_moving() != 0:
             time.sleep(1)
         return

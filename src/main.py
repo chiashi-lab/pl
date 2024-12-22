@@ -163,8 +163,8 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
 
     symphony = Symphony()
     symphony.Initialize()
-    symphony.setintegrationtime(integrationtime)
-    symphony.saveconfig(path)
+    symphony.set_exposuretime(integrationtime)
+    symphony.set_config_savetofiles(path)
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
@@ -173,7 +173,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
         print(f"start to get PL spectra at {wavelength}")
         shut.open(2)
-        symphony.record()
+        symphony.start_exposure()
         time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
         shut.close(2)
         os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
@@ -246,8 +246,8 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
 
     symphony = Symphony()
     symphony.Initialize()
-    symphony.setintegrationtime(integrationtime)
-    symphony.saveconfig(path)
+    symphony.set_exposuretime(integrationtime)
+    symphony.set_config_savetofiles(path)
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
@@ -259,7 +259,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
         if not os.path.exists(savedirpath):
             os.makedirs(savedirpath)
             print(f"make dir at {savedirpath}")
-        symphony.saveconfig(savedirpath)
+        symphony.set_config_savetofiles(savedirpath)
 
         # autofocus
         """
@@ -268,7 +268,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             priorstage.wait_until_stop()
 
             while max_pos - min_pos > 5:
-                symphony.setintegrationtime(1)
+                symphony.set_exposuretime(1)
                 shut.open(2)
         """
 
@@ -279,7 +279,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
             print(f"start to get PL spectra at {wavelength}")
             shut.open(2)
-            symphony.record()
+            symphony.start_exposure()
             time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
             shut.close(2)
             time.sleep(3)
@@ -331,8 +331,8 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
 
     symphony = Symphony()
     symphony.Initialize()
-    symphony.setintegrationtime(integrationtime)
-    symphony.saveconfig(path)
+    symphony.set_exposuretime(integrationtime)
+    symphony.set_config_savetofiles(path)
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
@@ -344,7 +344,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
         if not os.path.exists(savedirpath):
             os.makedirs(savedirpath)
             print(f"make dir at {savedirpath}")
-        symphony.saveconfig(savedirpath)
+        symphony.set_config_savetofiles(savedirpath)
 
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
@@ -352,7 +352,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
         print(f"start to get PL spectra at {wavelength}")
         shut.open(2)
-        symphony.record()
+        symphony.start_exposure()
         #time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
         comeandgo(pos1=(poslist[0][posidx], poslist[1][posidx]), pos2=(poslist[0][posidx+1], poslist[1][posidx+1]), exposuretime=func.waittime4exposure(integrationtime), priorstage=priorstage)
         shut.close(2)

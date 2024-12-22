@@ -1,6 +1,7 @@
 import win32com.client
 import time
 import numpy as np
+import warnings
 
 #ophir power meterを操作するクラス
 #ソースコードはophirが提供しているものを参考にしている
@@ -27,7 +28,7 @@ class juno:
     close: close the device
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         only construct the Ophir COM object
 
@@ -48,7 +49,7 @@ class juno:
     def scan(self):
         return self.OphirCOM.ScanUSB()
 
-    def open(self,immediate_mode=False):
+    def open(self, immediate_mode=False) -> None:
         """
         connect to the Ophir Power Meter
 
@@ -73,7 +74,7 @@ class juno:
         else:
             print('\nNo Device attached for ophir !!!')
 
-    def get_data(self):
+    def get_data(self) -> list:
         """
         get the 2Ddata from the device
         caution: if you want to get the data, just wait a little before do"get_data"
@@ -96,11 +97,16 @@ class juno:
             data = self.OphirCOM.GetData(self.DeviceHandle, 0)
         return data
     
-    def get_meandata(self):
+    def get_meandata(self) -> float:
+        """
+        get the mean powerdata from the device
+        caution: if you want to get the data, just wait a little before do"get_data"
+        caution: if you would change the range, data is always 'W' unit
+        """
         data = self.get_data()
         return np.mean(data[0])
     
-    def get_latestdata(self):
+    def get_latestdata(self) -> float:
         """
         get the latest powerdata from the device
         caution: if you want to get the data, just wait a little before do"get_data"
@@ -128,7 +134,7 @@ class juno:
         self.ranges = self.OphirCOM.GetRanges(self.DeviceHandle, 0)
         return self.ranges
     
-    def set_range(self,range):
+    def set_range(self, range: int) -> None:
         """
         set the range of the device
 
@@ -147,7 +153,7 @@ class juno:
         None
         """
         if not (0<=range and range<=5):
-            print("range error!")
+            warnings.warn("range should be 0 to 5")
             return
         self.OphirCOM.StopAllStreams()
 

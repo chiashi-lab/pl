@@ -23,7 +23,7 @@ class superchrome:
     change_lw(wavelength=,bandwidth=): change the wavelength and bandwidth of the SuperChrome
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         initialize the SuperChrome software
 
@@ -37,18 +37,16 @@ class superchrome:
         time.sleep(1)
         self.app["SuperChrome Initialisation"].wait(wait_for="exists",timeout=20)
         self.app["SuperChrome Initialisation"].OK.click()
-        print("SuperChrome opening")
         self.app["SuperChrome"].wait(wait_for="enabled",timeout=20)
         time.sleep(3)
         self.wavelength = int(self.app["SuperChrome"].Edit2.texts()[0])
         self.bandwidth = int(self.app["SuperChrome"].Edit.texts()[0])
-        print("SuperChrome opened")
     
     def print(self):
         self.app["SuperChrome"].print_control_identifiers()
 
 
-    def change_lwbw(self, **kwargs):
+    def change_lwbw(self, wavelength: int, bandwidth: int) -> None:
         """
         change the wavelength and bandwidth of the SuperChrome
 
@@ -59,8 +57,8 @@ class superchrome:
         return:
         None
         """
-        self.wavelength = kwargs.get("wavelength", self.wavelength)
-        self.bandwidth = kwargs.get("bandwidth", self.bandwidth)
+        self.wavelength = wavelength
+        self.bandwidth = bandwidth
         self.app["SuperChrome"].Edit2.set_text(str(self.wavelength))
         self.app["SuperChrome"].Edit.set_text(str(self.bandwidth))
         self.app["SuperChrome"].Move.click()
