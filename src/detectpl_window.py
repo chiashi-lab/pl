@@ -91,6 +91,10 @@ class Application(tkinter.Frame):
         self.entry_numberofsteps.insert(tkinter.END, '1')
         self.entry_numberofsteps.place(x=170, y=470)
 
+        self.autofocus = tkinter.BooleanVar()
+        self.checkbox_autofocus = tkinter.Checkbutton(text=u'オートフォーカス', variable=self.autofocus)
+        self.checkbox_autofocus.place(x=10, y=500)
+
         self.button_start = tkinter.Button(text=u'スタート', width=30)
         self.button_start.bind("<1>", self.call_pack_movingpl)
         self.button_start.place(x=20, y=750)
@@ -117,23 +121,24 @@ class Application(tkinter.Frame):
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
             numberofsteps = int(self.entry_numberofsteps.get())
+            autofocus = bool(self.autofocus.get())
         except:
             self.msg.set("値を正しく入力してください")
             return
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or numberofsteps < 1:
             self.msg.set("正しい値を入力してください")
             return
-        thread1 = threading.Thread(target=self.pack_movingpl, args=(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps))
+        thread1 = threading.Thread(target=self.pack_movingpl, args=(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
         thread1.start()
 
-    def pack_movingpl(self, power:float, minWL:int, widthWL:int, exposure:int, path:str, startpos:list, endpos:list, numberofsteps:int):
+    def pack_movingpl(self, power:float, minWL:int, widthWL:int, exposure:int, path:str, startpos:list, endpos:list, numberofsteps:int, autofocus:bool)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) *  numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            detect_pl(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps)
+            detect_pl(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus)
         except:
             self.msg.set("データ取得中にエラーが発生しました")
             self.pb.stop()

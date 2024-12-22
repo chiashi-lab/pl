@@ -168,7 +168,7 @@ if __name__ == '__main__':
         obejctive_lens = Focus_adjuster("COM3")
         print("Initialized")
         time.sleep(2)
-        obejctive_lens.set_rpm(20)
+        obejctive_lens.set_rpm(30)
         obejctive_lens.set_position(target)
         print("now target pos:", obejctive_lens.position)
         time.sleep(2)
@@ -186,10 +186,10 @@ if __name__ == '__main__':
             print("iteration:", iteration)
             print("left:", left)
             print("right:", right)
-            iteration += 1
 
             if iteration % 3 == 0:
                 obejctive_lens.set_rpm(obejctive_lens._clamp(int((right - left)/7), 2, 20))
+            iteration += 1
 
             mid1 = left + (right - left) / 3
             mid2 = right - (right - left) / 3

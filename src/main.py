@@ -1,15 +1,17 @@
 from driver.fianium import superchrome
-from driver.ophir import juno
-from driver.thorlab import ThorlabStage, FlipMount
-from driver.sigmakoki import shutter
-from driver.prior import Proscan
 from driver.horiba import ihr320, Symphony
+from driver.ophir import juno
+from driver.prior import Proscan
+from driver.sigmakoki import shutter
+from driver.thorlab import ThorlabStage, FlipMount
+from driver.focus_adjuster_driver import Focus_adjuster
 import config
 import time
 import func
 import numpy as np
 import os
 import sys
+import pandas as pd
 
 
 def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float=0.001)->None:
@@ -181,7 +183,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     shut.close(2)
     flipshut.close()
 
-def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
+def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool)->None:
     '''
     args:
         targetpower(float): 目標パワー[W]
@@ -251,6 +253,8 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
+    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
         priorstage.wait_until_stop()
@@ -262,15 +266,47 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
         symphony.set_config_savetofiles(savedirpath)
 
         # autofocus
-        """
-        if check_focus:
-            priorstage.move_to(poslist[0][posidx]+movepos_when_focus[0], poslist[1][posidx]+movepos_when_focus[1])
+        if posidx % 10 == 0 and check_autofocus:
+            symphony.set_exposuretime(1)
+
+            priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
             priorstage.wait_until_stop()
 
-            while max_pos - min_pos > 5:
-                symphony.set_exposuretime(1)
-                shut.open(2)
-        """
+            shut.open(2)
+
+            min_ol = -200
+            max_ol = 200
+            iter_ol = 0
+            while max_ol - min_ol > 9:
+                if iter_ol % 3 == 0:
+                    objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
+                iter_ol += 1
+
+                mid1_ol = min_ol + (max_ol - min_ol) / 3
+                mid2_ol = max_ol - (max_ol - min_ol) / 3
+
+                objective_lens.set_position(mid1_ol)
+                symphony.start_exposure()
+                time.sleep(func.waittime4exposure(1))
+                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+                value1_ol = df[1].max()
+
+                objective_lens.set_position(mid2_ol)
+                symphony.start_exposure()
+                time.sleep(func.waittime4exposure(1))
+                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+                value2_ol = df[1].max()
+
+                if value1_ol < value2_ol:
+                    min_ol = mid1_ol
+                else:
+                    max_ol = mid2_ol
+            objective_lens.set_position((min_ol + max_ol) / 2)
+            shut.close(2)
+            priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
+            priorstage.wait_until_stop()
+
+        symphony.set_exposuretime(integrationtime)
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
             laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
@@ -287,12 +323,16 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     shut.close(2)
     flipshut.close()
 
-def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int)->None:
+def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool)->None:
     sys.stdout = open(os.path.join(path,'log.txt'), 'a')
 
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
     poslist = list(poslist)
     poslist = [[int(x) for x in y] for y in poslist]
+
+    slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+    slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
+    movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
 
     print("Experiment Condition")
     print(f"targetpower:{targetpower}")
@@ -336,6 +376,8 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
+    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+
     for posidx in range(numberofsteps-1):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
         priorstage.wait_until_stop()
@@ -345,6 +387,48 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
             os.makedirs(savedirpath)
             print(f"make dir at {savedirpath}")
         symphony.set_config_savetofiles(savedirpath)
+
+        # autofocus
+        if posidx % 10 == 0 and check_autofocus:
+            symphony.set_exposuretime(1)
+
+            priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
+            priorstage.wait_until_stop()
+
+            shut.open(2)
+            min_ol = -200
+            max_ol = 200
+            iter_ol = 0
+            while max_ol - min_ol > 9:
+                if iter_ol % 3 == 0:
+                    objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
+                iter_ol += 1
+
+                mid1_ol = min_ol + (max_ol - min_ol) / 3
+                mid2_ol = max_ol - (max_ol - min_ol) / 3
+
+                objective_lens.set_position(mid1_ol)
+                symphony.start_exposure()
+                time.sleep(func.waittime4exposure(1))
+                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+                value1_ol = df[1].max()
+
+                objective_lens.set_position(mid2_ol)
+                symphony.start_exposure()
+                time.sleep(func.waittime4exposure(1))
+                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+                value2_ol = df[1].max()
+
+                if value1_ol < value2_ol:
+                    min_ol = mid1_ol
+                else:
+                    max_ol = mid2_ol
+            objective_lens.set_position((min_ol + max_ol) / 2)
+            shut.close(2)
+            priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
+            priorstage.wait_until_stop()
+
+        symphony.set_exposuretime(integrationtime)
 
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
