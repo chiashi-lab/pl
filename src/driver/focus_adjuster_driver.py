@@ -146,7 +146,7 @@ class Focus_adjuster:
 if __name__ == '__main__':
 
     def test():
-        obejctive_lens = Focus_adjuster("COM3")
+        obejctive_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         for i in range(5):
             obejctive_lens.set_rpm(i * 10+ 50)
             print("rpm:",obejctive_lens.rpm)
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         return -1 * ((x-target) **2) + 2500
 
     def test_autofocus():
-        obejctive_lens = Focus_adjuster("COM3")
+        obejctive_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         print("Initialized")
         time.sleep(2)
         obejctive_lens.set_rpm(30)
@@ -202,4 +202,4 @@ if __name__ == '__main__':
         print("result pos:", obejctive_lens.position)
         print("time:", time.time() - starttime)
 
-    test_autofocus()
+    test()
