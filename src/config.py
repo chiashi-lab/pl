@@ -14,5 +14,5 @@ NDINITPOS = 1.0e5
 EPSRATIO = 0.1#レーザーパワーの許容誤差比率．(1.0±epsratio)*目標パワーの範囲で許容する
 SHUTTERCOMPORT = 'COM5'
 PRIORCOMPORT = 'COM3'
-AUTOFOCUSCOMPORT = 'COM4'
+AUTOFOCUSCOMPORT = 'COM8'
 STEPS_PER_ROTATE_ST42BYH1004 = 400 #1回転に必要なステップ数　360deg/rotate / 0.9deg/step = 400step/rotate
