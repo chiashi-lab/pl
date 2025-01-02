@@ -253,7 +253,8 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
-    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+    if check_autofocus:
+        objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
 
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
@@ -376,7 +377,8 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
-    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+    if check_autofocus:
+        objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
 
     for posidx in range(numberofsteps-1):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
