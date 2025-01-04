@@ -13,8 +13,8 @@ class Focus_adjuster:
         self._steps_per_rotate = config.STEPS_PER_ROTATE_ST42BYH1004
         self._steps_per_sec = self._rpm * self._steps_per_rotate / 60
         time.sleep(5)
-        self.move_steps(1, block=True)
-        self.set_position(0)
+        self.move_by(1, block=True)
+        self.move_to(0)
 
     @property
     def position(self) -> int:
@@ -94,7 +94,7 @@ class Focus_adjuster:
                 return
 
 
-    def move_steps(self, steps: int, block: bool = True, max_retry: int = 5) -> None:
+    def move_by(self, steps: int, block: bool = True, max_retry: int = 5) -> None:
         """
         Move the autofocus motor by the specified number of steps
         command is string. "r |steps|" or "l |steps|"
@@ -130,7 +130,7 @@ class Focus_adjuster:
                 self._position += res_value
                 return
 
-    def set_position(self, position: int) -> None:
+    def move_to(self, position: int) -> None:
         """
         Set the position of the autofocus motor
 
@@ -139,7 +139,7 @@ class Focus_adjuster:
         return:
             None
         """
-        self.move_steps(position - self._position, block=True)
+        self.move_by(position - self._position, block=True)
         return
 
 
@@ -150,17 +150,17 @@ if __name__ == '__main__':
         for i in range(5):
             obejctive_lens.set_rpm(i * 10+ 50)
             print("rpm:",obejctive_lens.rpm)
-            obejctive_lens.set_position(0)
+            obejctive_lens.move_to(0)
             print("pos:",obejctive_lens.position)
             obejctive_lens.set_rpm(30)
             print("rpm:",obejctive_lens.rpm)
-            obejctive_lens.set_position(1000)
+            obejctive_lens.move_to(1000)
             print("pos:",obejctive_lens.position)
     
     target = -150
     
     def func(x: int, obejctive_lens: Focus_adjuster) -> int:
-        obejctive_lens.set_position(x)
+        obejctive_lens.move_to(x)
         time.sleep(10)
         return -1 * ((x-target) **2) + 2500
 
@@ -169,10 +169,10 @@ if __name__ == '__main__':
         print("Initialized")
         time.sleep(2)
         obejctive_lens.set_rpm(30)
-        obejctive_lens.set_position(target)
+        obejctive_lens.move_to(target)
         print("now target pos:", obejctive_lens.position)
         time.sleep(2)
-        obejctive_lens.set_position(0)
+        obejctive_lens.move_to(0)
         print("now, Im home")
         time.sleep(2)
         print("start autofocus")
@@ -198,7 +198,7 @@ if __name__ == '__main__':
                 left = mid1
             else:
                 right = mid2
-        obejctive_lens.set_position(int((left + right) / 2))
+        obejctive_lens.move_to(int((left + right) / 2))
         print("result pos:", obejctive_lens.position)
         print("time:", time.time() - starttime)
 

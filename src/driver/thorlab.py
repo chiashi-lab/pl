@@ -107,13 +107,13 @@ class ThorlabStage:
         """
         self.stage.home(sync=block, force=True)
 
-    def gethome(self):
+    def _gethome(self):
         return self.stage.get_homing_parameters()
     
-    def getparam(self, scale=False):
+    def _getparam(self, scale=False):
         return self.stage.get_polctl_parameters()
     
-    def setparam(self, velocity=None, home_position=None, jog1=None, jog2=None, jog3=None, scale=False):
+    def _setparam(self, velocity=None, home_position=None, jog1=None, jog2=None, jog3=None, scale=False):
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
 class FlipMount:

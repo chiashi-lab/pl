@@ -275,8 +275,8 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
 
             shut.open(2)
 
-            min_ol = -200
-            max_ol = 200
+            min_ol = -200 + objective_lens.position
+            max_ol = 200 + objective_lens.position
             iter_ol = 0
             while max_ol - min_ol > 9:
                 if iter_ol % 3 == 0:
@@ -286,13 +286,13 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
                 mid1_ol = min_ol + (max_ol - min_ol) / 3
                 mid2_ol = max_ol - (max_ol - min_ol) / 3
 
-                objective_lens.set_position(mid1_ol)
+                objective_lens.move_to(mid1_ol)
                 symphony.start_exposure()
                 time.sleep(func.waittime4exposure(1))
                 df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
                 value1_ol = df[1].max()
 
-                objective_lens.set_position(mid2_ol)
+                objective_lens.move_to(mid2_ol)
                 symphony.start_exposure()
                 time.sleep(func.waittime4exposure(1))
                 df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
@@ -302,7 +302,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
                     min_ol = mid1_ol
                 else:
                     max_ol = mid2_ol
-            objective_lens.set_position((min_ol + max_ol) / 2)
+            objective_lens.move_to((min_ol + max_ol) / 2)
             shut.close(2)
             priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
             priorstage.wait_until_stop()
@@ -398,8 +398,8 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
             priorstage.wait_until_stop()
 
             shut.open(2)
-            min_ol = -200
-            max_ol = 200
+            min_ol = -200 + objective_lens.position
+            max_ol = 200 + objective_lens.position
             iter_ol = 0
             while max_ol - min_ol > 9:
                 if iter_ol % 3 == 0:
@@ -409,13 +409,13 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
                 mid1_ol = min_ol + (max_ol - min_ol) / 3
                 mid2_ol = max_ol - (max_ol - min_ol) / 3
 
-                objective_lens.set_position(mid1_ol)
+                objective_lens.move_to(mid1_ol)
                 symphony.start_exposure()
                 time.sleep(func.waittime4exposure(1))
                 df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
                 value1_ol = df[1].max()
 
-                objective_lens.set_position(mid2_ol)
+                objective_lens.move_to(mid2_ol)
                 symphony.start_exposure()
                 time.sleep(func.waittime4exposure(1))
                 df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
@@ -425,7 +425,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
                     min_ol = mid1_ol
                 else:
                     max_ol = mid2_ol
-            objective_lens.set_position((min_ol + max_ol) / 2)
+            objective_lens.move_to((min_ol + max_ol) / 2)
             shut.close(2)
             priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
             priorstage.wait_until_stop()
