@@ -5,6 +5,7 @@ from driver.prior import Proscan
 from driver.sigmakoki import shutter
 from driver.thorlab import ThorlabStage, FlipMount
 from driver.focus_adjuster_driver import Focus_adjuster
+from logger import Logger
 import config
 import time
 import func
