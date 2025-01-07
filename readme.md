@@ -34,6 +34,7 @@ python == 3.11.9
 │   ├── movingpl_window.py...PLEマップのマッピング測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── detectpl_window.py...PLスペクトルのマッピング測定のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── func.py...main関数等で使う数式を記述している
+│   ├── logger.py...ログを記録するためのクラス定義
 │   └──driver
 │       ├── brimrose.py...brimrose社製AOTFの制御のためのクラス定義
 │       ├── fianium.py...fianium社製LVTFであるsuperchromeの制御のためのクラス定義

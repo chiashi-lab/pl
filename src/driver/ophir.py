@@ -46,7 +46,7 @@ class juno:
         self.ranges = None
         self.immediate_mode = False
 
-    def scan(self):
+    def scan(self) -> list:
         return self.OphirCOM.ScanUSB()
 
     def open(self, immediate_mode=False) -> None:
@@ -121,7 +121,7 @@ class juno:
         data = self.get_data()
         return data[0][-1]
 
-    def get_range(self):
+    def get_range(self) -> list:
         """
         get the range of the device
 
@@ -152,7 +152,7 @@ class juno:
         return:
         None
         """
-        if not (0<=range and range<=5):
+        if not (0 <= range and range <= 5):
             warnings.warn("range should be 0 to 5")
             return
         self.OphirCOM.StopAllStreams()
@@ -165,7 +165,7 @@ class juno:
 
         self.OphirCOM.StartStream(self.DeviceHandle, 0)
 
-    def close(self):
+    def close(self) -> None:
         self.OphirCOM.StopAllStreams()
         self.OphirCOM.CloseAll()
         self.OphirCOM = None

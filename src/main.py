@@ -5,16 +5,16 @@ from driver.prior import Proscan
 from driver.sigmakoki import shutter
 from driver.thorlab import ThorlabStage, FlipMount
 from driver.focus_adjuster_driver import Focus_adjuster
+from logger import Logger
 import config
 import time
 import func
 import numpy as np
 import os
-import sys
 import pandas as pd
 
 
-def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float=0.001)->None:
+def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.001, logger:Logger = None) -> None:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -42,10 +42,9 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
         ratio = func.wavelength2ratio(wavelength)
         measuredpower = powermeter.get_latestdata()
         nowpower = ratio * measuredpower
-        print("measured power: ", measuredpower)
-        print("predicted current power: ", nowpower)
-        print("now step: ", nowndstep)
-        print("\n")
+        logger.log(f"measured power: {measuredpower}")
+        logger.log(f"predicted current power: {nowpower}")
+        logger.log(f"now step: {nowndstep}")
 
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
@@ -53,71 +52,18 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
-            print("move start")
-            print("error: ", error)
-            print("acc: ", acc)
-            print("diff: ", diff)
-            print("tostep: ", tostep)
-            print("\n")
+            logger.log("move start")
+            logger.log(f"error: {error}")
+            logger.log(f"acc: {acc}")
+            logger.log(f"diff: {diff}")
+            logger.log(f"tostep: {tostep}")
             NDfilter.move_to(tostep)
             prev = error
         else:
-            print("Already at target power")
+            logger.log("Already at target power")
             return
 
-def test():
-    flipshut = FlipMount()
-    flipshut.close()
-    shut = shutter(config.SHUTTERCOMPORT)
-    shut.close(2)
-
-    laserchoone = superchrome()
-
-    NDfilter = ThorlabStage(home=True)
-    NDfilter.move_to(500000, block=True)
-    print(f"stage is at {NDfilter.get_position()}")
-
-    shut.open(2)
-    flipshut.open()
-
-    powermeter = juno()
-    powermeter.open()
-    powermeter.set_range(4)
-    print(f"powermeter is at {powermeter.get_range()}")
-
-    wavetar = 650
-    powtar = 0.004
-    print(f"changing wavelength to {wavetar}")
-    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
-    time.sleep(5)
-    print("changed wavelength")
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("start controlling power")
-    time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
-    print("end controlling power")
-    time.sleep(2)
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("waitng for 10s")
-    time.sleep(10)
-
-    wavetar = 810
-    powtar = 0.004
-    print(f"changing wavelength to {wavetar}")
-    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
-    time.sleep(5)
-    print("changed wavelength")
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("start controlling power")
-    time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
-    print("end controlling power")
-    time.sleep(2)
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("waitng for 10s")
-    time.sleep(10)
-
-def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str)->None:
+def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
     '''
     PLEスペクトルを取得する関数
     args:
@@ -131,31 +77,29 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     return:
         None
     '''
-    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
-
-    print("Experiment Condition")
-    print(f"targetpower:{targetpower}")
-    print(f"minimum excite center wavelength:{minwavelength}")
-    print(f"maximum excite center wavelength:{maxwavelength}")
-    print(f"excite center wavelength step:{stepwavelength}")
-    print(f"excite wavelength width:{wavelengthwidth}")
-    print(f"integration time:{integrationtime}")
-    print(f"")
+    logger.log("Experiment Condition")
+    logger.log(f"targetpower:{targetpower}")
+    logger.log(f"minimum excite center wavelength:{minwavelength}")
+    logger.log(f"maximum excite center wavelength:{maxwavelength}")
+    logger.log(f"excite center wavelength step:{stepwavelength}")
+    logger.log(f"excite wavelength width:{wavelengthwidth}")
+    logger.log(f"integration time:{integrationtime}")
+    logger.log(f"")
 
     if not os.path.exists(path):
         os.makedirs(path)
-        print(f"make dir at {path}")
+        logger.log(f"make dir at {path}")
 
     flipshut = FlipMount()
     flipshut.close()
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
-    print(f"stage is at {NDfilter.get_position()}")
+    logger.log(f"stage is at {NDfilter.get_position()}")
 
     flipshut.open()
 
@@ -169,11 +113,11 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     symphony.set_config_savetofiles(path)
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+        #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
-        print(f"start power control at {wavelength}nm")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
-        print(f"start to get PL spectra at {wavelength}")
+        logger.log(f"start power control at {wavelength}nm")
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
         symphony.start_exposure()
         time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
@@ -183,7 +127,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     shut.close(2)
     flipshut.close()
 
-def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool)->None:
+def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     '''
     args:
         targetpower(float): 目標パワー[W]
@@ -199,8 +143,6 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     return:
         None
     '''
-    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
-
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
     poslist = list(poslist)
     poslist = [[int(x) for x in y] for y in poslist]
@@ -209,36 +151,36 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
     movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
 
-    print("Experiment Condition")
-    print(f"targetpower:{targetpower}")
-    print(f"minimum excite center wavelength:{minwavelength}")
-    print(f"maximum excite center wavelength:{maxwavelength}")
-    print(f"excite center wavelength step:{stepwavelength}")
-    print(f"excite wavelength width:{wavelengthwidth}")
-    print(f"integration time:{integrationtime}")
-    print(f"")
-    print(f"start position:{startpos}")
-    print(f"end position:{endpos}")
-    print(f"number of steps:{numberofsteps}")
-    print(f"")
+    logger.log("Experiment Condition")
+    logger.log(f"targetpower:{targetpower}")
+    logger.log(f"minimum excite center wavelength:{minwavelength}")
+    logger.log(f"maximum excite center wavelength:{maxwavelength}")
+    logger.log(f"excite center wavelength step:{stepwavelength}")
+    logger.log(f"excite wavelength width:{wavelengthwidth}")
+    logger.log(f"integration time:{integrationtime}")
+    logger.log(f"")
+    logger.log(f"start position:{startpos}")
+    logger.log(f"end position:{endpos}")
+    logger.log(f"number of steps:{numberofsteps}")
+    logger.log(f"")
     for i in range(numberofsteps):
-        print(f"position {i}:{poslist[0][i], poslist[1][i]}")
-    print(f"")
+        logger.log(f"position {i}:{poslist[0][i], poslist[1][i]}")
+    logger.log(f"")
 
     if not os.path.exists(path):
         os.makedirs(path)
-        print(f"make dir at {path}")
+        logger.log(f"make dir at {path}")
 
     flipshut = FlipMount()
     flipshut.close()
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
-    print(f"stage is at {NDfilter.get_position()}")
+    logger.log(f"stage is at {NDfilter.get_position()}")
 
     flipshut.open()
 
@@ -263,11 +205,12 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
         savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
         if not os.path.exists(savedirpath):
             os.makedirs(savedirpath)
-            print(f"make dir at {savedirpath}")
+            logger.log(f"make dir at {savedirpath}")
         symphony.set_config_savetofiles(savedirpath)
 
         # autofocus
         if posidx % 10 == 0 and check_autofocus:
+            logger.log(f"start autofocus at {poslist[0][posidx], poslist[1][posidx]}")
             symphony.set_exposuretime(1)
 
             priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
@@ -303,6 +246,8 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
                 else:
                     max_ol = mid2_ol
             objective_lens.move_to((min_ol + max_ol) / 2)
+            logger.log(f"autofocus at {poslist[0][posidx], poslist[1][posidx]}")
+            logger.log(f"autofocus at {objective_lens.position}")
             shut.close(2)
             priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
             priorstage.wait_until_stop()
@@ -310,11 +255,11 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
         symphony.set_exposuretime(integrationtime)
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-            laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+            #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
             time.sleep(5)
-            print(f"start power control at {wavelength}nm")
-            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
-            print(f"start to get PL spectra at {wavelength}")
+            logger.log(f"start power control at {wavelength}")
+            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            logger.log(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.start_exposure()
             time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
@@ -324,9 +269,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     shut.close(2)
     flipshut.close()
 
-def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool)->None:
-    sys.stdout = open(os.path.join(path,'log.txt'), 'a')
-
+def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
     poslist = list(poslist)
     poslist = [[int(x) for x in y] for y in poslist]
@@ -335,34 +278,34 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
     slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
     movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
 
-    print("Experiment Condition")
-    print(f"targetpower:{targetpower}")
-    print(f"excite center wavelength:{wavelength}")
-    print(f"excite wavelength width:{wavelengthwidth}")
-    print(f"integration time:{integrationtime}")
-    print(f"")
-    print(f"start position:{startpos}")
-    print(f"end position:{endpos}")
-    print(f"number of steps:{numberofsteps}")
-    print(f"")
+    logger.log("Experiment Condition")
+    logger.log(f"targetpower:{targetpower}")
+    logger.log(f"excite center wavelength:{wavelength}")
+    logger.log(f"excite wavelength width:{wavelengthwidth}")
+    logger.log(f"integration time:{integrationtime}")
+    logger.log(f"")
+    logger.log(f"start position:{startpos}")
+    logger.log(f"end position:{endpos}")
+    logger.log(f"number of steps:{numberofsteps}")
+    logger.log(f"")
     for i in range(numberofsteps):
-        print(f"position {i}:{poslist[0][i], poslist[1][i]}")
-    print(f"")
+        logger.log(f"position {i}:{poslist[0][i], poslist[1][i]}")
+    logger.log(f"")
 
     if not os.path.exists(path):
         os.makedirs(path)
-        print(f"make dir at {path}")
+        logger.log(f"make dir at {path}")
 
     flipshut = FlipMount()
     flipshut.close()
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
-    print(f"stage is at {NDfilter.get_position()}")
+    logger.log(f"stage is at {NDfilter.get_position()}")
 
     flipshut.open()
 
@@ -387,11 +330,12 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
         savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
         if not os.path.exists(savedirpath):
             os.makedirs(savedirpath)
-            print(f"make dir at {savedirpath}")
+            logger.log(f"make dir at {savedirpath}")
         symphony.set_config_savetofiles(savedirpath)
 
         # autofocus
         if posidx % 10 == 0 and check_autofocus:
+            logger.log(f"start autofocus at {poslist[0][posidx], poslist[1][posidx]}")
             symphony.set_exposuretime(1)
 
             priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
@@ -426,17 +370,19 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
                 else:
                     max_ol = mid2_ol
             objective_lens.move_to((min_ol + max_ol) / 2)
+            logger.log(f"autofocus at {poslist[0][posidx], poslist[1][posidx]}")
+            logger.log(f"autofocus at {objective_lens.position}")
             shut.close(2)
             priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
             priorstage.wait_until_stop()
 
         symphony.set_exposuretime(integrationtime)
 
-        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+        #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
-        print(f"start power control at {wavelength}nm")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
-        print(f"start to get PL spectra at {wavelength}")
+        logger.log(f"start power control at {wavelength}")
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        logger.log(f"start to get PL spectra at {wavelength}")
         shut.open(2)
         symphony.start_exposure()
         #time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
@@ -471,4 +417,4 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
 if __name__ == "__main__":
     #path = r"c:\Users\optical group\Documents\individual\kanai"
     #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
-    test()
+    pass

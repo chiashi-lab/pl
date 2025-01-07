@@ -3,17 +3,19 @@ from tkinter import ttk
 import os
 import sys
 sys.coinit_flags = 2
-from tkinter import filedialog
+from tkinter import filedialog, scrolledtext
 import threading
 from main import pl
 import func
 import datetime
+import logger
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
-        self.master.geometry("600x600")
+        self.master = master
+        self.master.geometry("600x700")
         self.master.title(u"PLEマップ測定君")
 
         self.create_widgets()
@@ -68,24 +70,27 @@ class Application(tkinter.Frame):
         self.unit_power.place(x=250, y=210)
 
         self.label_savefolderpath = tkinter.Label(text=u'保存先')
-        self.label_savefolderpath.place(x=10, y=270)
+        self.label_savefolderpath.place(x=10, y=260)
         self.entry_savefolderpath = tkinter.Entry(width=40)
         self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individual')
-        self.entry_savefolderpath.place(x=120, y=270)
+        self.entry_savefolderpath.place(x=120, y=260)
         self.button_browse = tkinter.Button(text=u'参照', width=10)
         self.button_browse.bind("<1>", self.call_get_path)
-        self.button_browse.place(x=410, y=270)
+        self.button_browse.place(x=410, y=260)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
         self.button_start.bind("<1>", self.call_pack_pl)
-        self.button_start.place(x=20, y=550)
+        self.button_start.place(x=20, y=650)
 
-        self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
-        self.pb.place(x=30, y=490)
+        self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
+        self.pb.place(x=30, y=360)
 
         self.msg = tkinter.StringVar(value="値を設定してスタートを押してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
-        self.label_msg.place(x=20, y=350)
+        self.label_msg.place(x=20, y=310)
+
+        self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=50, height=10)
+        self.log_scrolltxt.place(x=20, y=400)
 
     def call_get_path(self, event)->None:
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
@@ -107,6 +112,9 @@ class Application(tkinter.Frame):
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL or (maxWL - minWL) < stepWL:
             self.msg.set("正しい値を入力してください")
             return
+        if not os.path.exists(savefolderpath):
+            self.msg.set("保存先が存在しません")
+            return
         thread1 = threading.Thread(target=self.pack_pl, args=(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath))
         thread1.start()
     
@@ -114,10 +122,11 @@ class Application(tkinter.Frame):
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
+        self.logger = logger.Logger(log_file_path=os.path.join(savefolderpath, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            pl(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath)
+            pl(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath, self.logger)
         except:
             self.msg.set("データ取得中にエラーが発生しました")
             self.pb.stop()
