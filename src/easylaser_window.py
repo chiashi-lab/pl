@@ -96,7 +96,7 @@ class Application(tkinter.Frame):
             self.shut = shutter(config.SHUTTERCOMPORT)
             self.shut.close(2)
 
-            self.laserchoone = superchrome()
+            #self.laserchoone = superchrome()
 
             self.NDfilter = ThorlabStage(home=True)
             self.NDfilter.move_to(0, block=True)
@@ -130,7 +130,7 @@ class Application(tkinter.Frame):
         self.pb.start(10)
         try:
             self.flipshut.open()
-            self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
+            #self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
             pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATION, logger=self.logger)
             self.shut.open(2)
         except:
