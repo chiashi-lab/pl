@@ -63,58 +63,6 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             logger.log("Already at target power")
             return
 
-def test():
-    flipshut = FlipMount()
-    flipshut.close()
-    shut = shutter(config.SHUTTERCOMPORT)
-    shut.close(2)
-
-    laserchoone = superchrome()
-
-    NDfilter = ThorlabStage(home=True)
-    NDfilter.move_to(500000, block=True)
-    print(f"stage is at {NDfilter.get_position()}")
-
-    shut.open(2)
-    flipshut.open()
-
-    powermeter = juno()
-    powermeter.open()
-    powermeter.set_range(4)
-    print(f"powermeter is at {powermeter.get_range()}")
-
-    wavetar = 650
-    powtar = 0.004
-    print(f"changing wavelength to {wavetar}")
-    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
-    time.sleep(5)
-    print("changed wavelength")
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("start controlling power")
-    time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
-    print("end controlling power")
-    time.sleep(2)
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("waitng for 10s")
-    time.sleep(10)
-
-    wavetar = 810
-    powtar = 0.004
-    print(f"changing wavelength to {wavetar}")
-    laserchoone.change_lwbw(wavelength=wavetar, bandwidth=10)
-    time.sleep(5)
-    print("changed wavelength")
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("start controlling power")
-    time.sleep(5)
-    pid_control_power(powtar,wavetar, powermeter, NDfilter, eps=powtar*0.05)
-    print("end controlling power")
-    time.sleep(2)
-    print(f"powermeter is at {powermeter.get_latestdata()}")
-    print("waitng for 10s")
-    time.sleep(10)
-
 def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
     '''
     PLEスペクトルを取得する関数
@@ -147,7 +95,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -165,7 +113,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     symphony.set_config_savetofiles(path)
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+        #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         logger.log(f"start power control at {wavelength}nm")
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
@@ -228,7 +176,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -307,7 +255,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
         symphony.set_exposuretime(integrationtime)
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-            laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+            #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
             time.sleep(5)
             logger.log(f"start power control at {wavelength}")
             pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
@@ -353,7 +301,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    laserchoone = superchrome()
+    #laserchoone = superchrome()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -430,7 +378,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
 
         symphony.set_exposuretime(integrationtime)
 
-        laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
+        #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         logger.log(f"start power control at {wavelength}")
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
@@ -469,4 +417,4 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
 if __name__ == "__main__":
     #path = r"c:\Users\optical group\Documents\individual\kanai"
     #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
-    test()
+    pass
