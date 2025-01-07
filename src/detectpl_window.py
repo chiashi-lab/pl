@@ -2,7 +2,7 @@ import tkinter
 from tkinter import ttk
 import sys
 sys.coinit_flags = 2
-from tkinter import filedialog
+from tkinter import filedialog, scrolledtext
 import threading
 from main import detect_pl
 from driver.prior import Proscan
@@ -10,12 +10,14 @@ import config
 import func
 import datetime
 import gc
+import os
+import logger
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
-        self.master.geometry("600x800")
+        self.master.geometry("600x900")
         self.master.title(u"PL探索君")
         self.create_widgets()
 
@@ -53,58 +55,61 @@ class Application(tkinter.Frame):
         self.unit_targetpower.place(x=250, y=210)
 
         self.label_path = tkinter.Label(text=u'保存先')
-        self.label_path.place(x=10, y=280)
+        self.label_path.place(x=10, y=260)
         self.entry_path = tkinter.Entry(width=40)
         self.entry_path.insert(tkinter.END, 'C:\\Users\\optics\\individual')
-        self.entry_path.place(x=120, y=280)
+        self.entry_path.place(x=120, y=260)
         self.button_path = tkinter.Button(text=u'参照', width=10)
         self.button_path.bind("<1>", self.get_path)
-        self.button_path.place(x=410, y=280)
+        self.button_path.place(x=410, y=260)
 
         self.label_startpos = tkinter.Label(text=u'開始位置')
-        self.label_startpos.place(x=10, y=340)
+        self.label_startpos.place(x=10, y=310)
         self.entry_startpos_x = tkinter.Entry(width=10)
         self.entry_startpos_x.insert(tkinter.END, '0')
-        self.entry_startpos_x.place(x=130, y=340)
+        self.entry_startpos_x.place(x=130, y=310)
         self.entry_startpos_y = tkinter.Entry(width=10)
         self.entry_startpos_y.insert(tkinter.END, '0')
-        self.entry_startpos_y.place(x=270, y=340)
+        self.entry_startpos_y.place(x=270, y=310)
         self.button_startpos = tkinter.Button(text=u'位置取得', width=7)
         self.button_startpos.bind("<1>", self.call_get_pos_start)
-        self.button_startpos.place(x=400, y=340)
+        self.button_startpos.place(x=400, y=310)
 
         self.label_endpos = tkinter.Label(text=u'終了位置')
-        self.label_endpos.place(x=10, y=400)
+        self.label_endpos.place(x=10, y=360)
         self.entry_endpos_x = tkinter.Entry(width=10)
         self.entry_endpos_x.insert(tkinter.END, '0')
-        self.entry_endpos_x.place(x=130, y=400)
+        self.entry_endpos_x.place(x=130, y=360)
         self.entry_endpos_y = tkinter.Entry(width=10)
         self.entry_endpos_y.insert(tkinter.END, '0')
-        self.entry_endpos_y.place(x=270, y=400)
+        self.entry_endpos_y.place(x=270, y=360)
         self.button_endpos = tkinter.Button(text=u'位置取得', width=7)
         self.button_endpos.bind("<1>", self.call_get_pos_end)
-        self.button_endpos.place(x=400, y=400)
+        self.button_endpos.place(x=400, y=360)
 
         self.label_numberofsteps = tkinter.Label(text=u'データ取得地点の個数')
-        self.label_numberofsteps.place(x=10, y=470)
+        self.label_numberofsteps.place(x=10, y=400)
         self.entry_numberofsteps = tkinter.Entry(width=8)
         self.entry_numberofsteps.insert(tkinter.END, '1')
-        self.entry_numberofsteps.place(x=170, y=470)
+        self.entry_numberofsteps.place(x=170, y=400)
 
         self.autofocus = tkinter.BooleanVar()
         self.checkbox_autofocus = tkinter.Checkbutton(text=u'オートフォーカス', variable=self.autofocus)
-        self.checkbox_autofocus.place(x=10, y=500)
+        self.checkbox_autofocus.place(x=10, y=440)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
         self.button_start.bind("<1>", self.call_pack_movingpl)
-        self.button_start.place(x=20, y=750)
+        self.button_start.place(x=20, y=850)
 
         self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
-        self.pb.place(x=30, y=690)
+        self.pb.place(x=30, y=550)
 
         self.msg = tkinter.StringVar(value="値を設定してスタートを押してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
-        self.label_msg.place(x=20, y=550)
+        self.label_msg.place(x=20, y=500)
+        
+        self.log_scrolltxt = scrolledtext.ScrolledText(root, wrap=tkinter.WORD, width=50, height=10)
+        self.log_scrolltxt.place(x=20, y=600)
 
     def get_path(self, event):
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
@@ -128,6 +133,9 @@ class Application(tkinter.Frame):
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or numberofsteps < 1:
             self.msg.set("正しい値を入力してください")
             return
+        if not os.path.exists(path):
+            self.msg.set("保存先が存在しません")
+            return
         thread1 = threading.Thread(target=self.pack_movingpl, args=(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
         thread1.start()
 
@@ -135,10 +143,11 @@ class Application(tkinter.Frame):
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) *  numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
+        self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, scrolledtext=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            detect_pl(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus)
+            detect_pl(power, minWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus, self.logger)
         except:
             self.msg.set("データ取得中にエラーが発生しました")
             self.pb.stop()

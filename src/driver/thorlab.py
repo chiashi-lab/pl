@@ -117,15 +117,15 @@ class ThorlabStage:
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
 class FlipMount:
-    def __init__(self):
+    def __init__(self) -> None:
         self.flip = Thorlabs.MFF(str(config.KINESISMFFID))
         self.state = self.flip.get_state()
     
-    def open(self):
+    def open(self) -> None:
         self.flip.move_to_state(1)
         self.state = self.flip.get_state()
 
-    def close(self):
+    def close(self) -> None:
         self.flip.move_to_state(0)
         self.state = self.flip.get_state()
 

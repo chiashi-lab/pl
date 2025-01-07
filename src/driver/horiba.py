@@ -185,23 +185,21 @@ child_window(title="MonoExample", class_name="#32770")
    | ['UninitializedStatic', 'Uninitialized', 'Static16']
    | child_window(title="Uninitialized", class_name="Static")
     """
-    def __init__(self)->None:
+    def __init__(self) -> None:
         self.app = Application(backend="win32").start(config.CCDMONOPATH, timeout=10)
         self.app["MonoExample"].wait(wait_for="enabled",timeout=20)
-        print("IHR320 opened")
     
-    def _print(self)->None:
-        self.app["MonoExample"].print_control_identifiers()
+    def _print(self) -> None:
+        print(self.app["MonoExample"].print_control_identifiers())
     
-    def Initialize(self)->None:
+    def Initialize(self) -> None:
         self.app["MonoExample"]["Button"].click()
-        print("IHR320 initialized")
     
-    def set_mirrors(self, mirrors)->None:
+    def set_mirrors(self, mirrors) -> None:
         self.app["MonoExample"]["Axial"].click()
         self.app["MonoExample"]["Axial2"].click()
     
-    def set_allconfig(self, centerwavelength:float, grating:float, frontslit:float, sideslit=0)->None:
+    def set_allconfig(self, centerwavelength:float, grating:float, frontslit:float, sideslit:float = 0.0) -> None:
         self.app["MonoExample"]["PositionEdit"].set_text(str(centerwavelength))
         self.app["MonoExample"]["GratingEdit"].set_text(str(grating))
         self.app["MonoExample"]["FrontEdit"].set_text(str(frontslit))
@@ -840,22 +838,19 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
    | ['Static40', 'EnabledStatic']
    | child_window(class_name="Static")
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.app = Application(backend="win32").start(config.MFCCCDPATH, timeout=10)
         self.app["MFC_CCDExample"].wait(wait_for="enabled",timeout=20)
-        print("Symphony opened")
-        time.sleep(2)
+        time.sleep(3)
         self.app["MFC_CCDExample"]["Connect"].click()
-        time.sleep(2)
-        print("Symphony connected")
+        time.sleep(3)
     
-    def Initialize(self):
+    def Initialize(self) -> None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Initialize"].click()
         time.sleep(12)
-        print("Symphony initialized")
     
-    def print(self):
-        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers()
+    def print(self) -> None:
+        print(self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers())
 
     def set_exposuretime(self, time: int) -> None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
@@ -865,7 +860,7 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].click()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
     
-    def start_exposure(self):
+    def start_exposure(self) -> None:
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["GO"].click()
 
 
