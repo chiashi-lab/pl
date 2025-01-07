@@ -63,7 +63,7 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             logger.log("Already at target power")
             return
 
-def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
+def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
     '''
     PLEスペクトルを取得する関数
     args:
@@ -127,7 +127,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
     shut.close(2)
     flipshut.close()
 
-def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
+def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     '''
     args:
         targetpower(float): 目標パワー[W]
@@ -269,7 +269,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
     shut.close(2)
     flipshut.close()
 
-def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
+def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
     poslist = list(poslist)
     poslist = [[int(x) for x in y] for y in poslist]

@@ -5,7 +5,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import pl
+from main import single_ple
 import func
 import datetime
 import logger
@@ -16,7 +16,7 @@ class Application(tkinter.Frame):
         self.pack()
         self.master = master
         self.master.geometry("600x700")
-        self.master.title(u"PLEマップ測定君")
+        self.master.title(u"PLEスペクトル測定")
 
         self.create_widgets()
     
@@ -79,7 +79,7 @@ class Application(tkinter.Frame):
         self.button_browse.place(x=410, y=260)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
-        self.button_start.bind("<1>", self.call_pack_pl)
+        self.button_start.bind("<1>", self.call_pack_single_ple)
         self.button_start.place(x=20, y=650)
 
         self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
@@ -97,7 +97,7 @@ class Application(tkinter.Frame):
         self.entry_savefolderpath.delete(0,tkinter.END)
         self.entry_savefolderpath.insert(tkinter.END, file)
     
-    def call_pack_pl(self, event)->None:
+    def call_pack_single_ple(self, event)->None:
         try:
             power = float(self.entry_power.get()) * 0.001
             minWL = int(self.entry_minWL.get())
@@ -115,10 +115,10 @@ class Application(tkinter.Frame):
         if not os.path.exists(savefolderpath):
             self.msg.set("保存先が存在しません")
             return
-        thread1 = threading.Thread(target=self.pack_pl, args=(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath))
+        thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath))
         thread1.start()
     
-    def pack_pl(self, power:float, minWL:int, maxWL:int, stepWL:int, widthWL:int, exposure:int, savefolderpath:str)->None:
+    def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, widthWL:int, exposure:int, savefolderpath:str)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -126,7 +126,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            pl(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath, self.logger)
+            single_ple(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath, self.logger)
         except:
             self.msg.set("データ取得中にエラーが発生しました")
             self.pb.stop()

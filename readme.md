@@ -27,14 +27,14 @@ python == 3.11.9
 │   ├── analyse.ipynb...パワーメータの結果からステージにおけるパワーを推定する式を導出するためのノートブック
 │   └── ple.ipynb...PLEマップのデータを解析，2次元ピークフィッティングを行うためのノートブック
 ├── src
-│   ├── main.py...メインスクリプト．計測の中心となる部分の関数を記述している
 │   ├── config.py...各デバイスの設定を記述している
-│   ├── easylaser_window.py...励起光照射君のGUI．このスクリプトを実行するとGUIが立ち上がる
-│   ├── easypl_window.py...PLEマップ測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
-│   ├── movingpl_window.py...PLEマップのマッピング測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
-│   ├── detectpl_window.py...PLスペクトルのマッピング測定のGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── emit_excitation_window.py...励起光照射君のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── func.py...main関数等で使う数式を記述している
 │   ├── logger.py...ログを記録するためのクラス定義
+│   ├── main.py...メインスクリプト．計測の中心となる部分の関数を記述している
+|   ├── scan_ple_sweep_window.py...PLEスペクトルのマッピング測定をsweepしながら行うためのGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── scan_ple_window.py...PLEスペクトルのマッピング測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── single_ple_window.py...PLEスペクトル測定のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   └──driver
 │       ├── brimrose.py...brimrose社製AOTFの制御のためのクラス定義
 │       ├── fianium.py...fianium社製LVTFであるsuperchromeの制御のためのクラス定義
