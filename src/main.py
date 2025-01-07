@@ -11,11 +11,10 @@ import time
 import func
 import numpy as np
 import os
-import sys
 import pandas as pd
 
 
-def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.001) -> None:
+def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.001, logger:Logger = None) -> None:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -43,10 +42,9 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
         ratio = func.wavelength2ratio(wavelength)
         measuredpower = powermeter.get_latestdata()
         nowpower = ratio * measuredpower
-        print("measured power: ", measuredpower)
-        print("predicted current power: ", nowpower)
-        print("now step: ", nowndstep)
-        print("\n")
+        logger.log(f"measured power: {measuredpower}")
+        logger.log(f"predicted current power: {nowpower}")
+        logger.log(f"now step: {nowndstep}")
 
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
@@ -54,16 +52,15 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
-            print("move start")
-            print("error: ", error)
-            print("acc: ", acc)
-            print("diff: ", diff)
-            print("tostep: ", tostep)
-            print("\n")
+            logger.log("move start")
+            logger.log(f"error: {error}")
+            logger.log(f"acc: {acc}")
+            logger.log(f"diff: {diff}")
+            logger.log(f"tostep: {tostep}")
             NDfilter.move_to(tostep)
             prev = error
         else:
-            print("Already at target power")
+            logger.log("Already at target power")
             return
 
 def test():
@@ -171,7 +168,7 @@ def pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:i
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         logger.log(f"start power control at {wavelength}nm")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
         symphony.start_exposure()
@@ -313,7 +310,7 @@ def moving_pl(targetpower:float, minwavelength:int, maxwavelength:int, stepwavel
             laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
             time.sleep(5)
             logger.log(f"start power control at {wavelength}")
-            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
+            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
             logger.log(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.start_exposure()
@@ -436,7 +433,7 @@ def detect_pl(targetpower:float, wavelength:int, wavelengthwidth:int, integratio
         laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         logger.log(f"start power control at {wavelength}")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO)
+        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}")
         shut.open(2)
         symphony.start_exposure()

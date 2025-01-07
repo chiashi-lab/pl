@@ -117,14 +117,14 @@ class Application(tkinter.Frame):
         self.button_start.bind("<1>", self.call_pack_movingpl)
         self.button_start.place(x=20, y=850)
 
-        self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
+        self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
         self.pb.place(x=30, y=550)
 
         self.msg = tkinter.StringVar(value="値を設定してスタートを押してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=500)
 
-        self.log_scrolltxt = scrolledtext.ScrolledText(root, wrap=tkinter.WORD, width=50, height=10)
+        self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=50, height=10)
         self.log_scrolltxt.place(x=20, y=600)
 
     def get_path(self, event):

@@ -8,13 +8,14 @@ from driver.fianium import superchrome
 from driver.ophir import juno
 from driver.thorlab import ThorlabStage, FlipMount
 from driver.sigmakoki import shutter
+from logger import Logger
 import config
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
-        self.master.geometry("400x400")
+        self.master.geometry("400x500")
         self.master.title(u"励起光照射君")
         self.create_widgets()
     
@@ -55,12 +56,17 @@ class Application(tkinter.Frame):
         self.init_button.bind("<1>", self.call_init)
         self.init_button.place(x=20, y=10)
 
-        self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
+        self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
         self.pb.place(x=30, y=310)
 
         self.msg = tkinter.StringVar(value="初期化してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=280)
+
+        self.log_scrolltext = tkinter.scrolledtext.ScrolledText(width=40, height=10)
+        self.log_scrolltext.place(x=20, y=360)
+        
+        self.logger = Logger(log_file_path=None, log_scroll=self.log_scrolltext)
 
     def call_init(self, event):
         thread2 = threading.Thread(target=self.initialize)
@@ -72,10 +78,10 @@ class Application(tkinter.Frame):
             wavelength = int(self.entry_wavelength.get())
             width = int(self.entry_width.get())
         except:
-            self.msg.set("Please input numbers")
+            self.msg.set("値を正しく入力してください")
             return
         if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850 or width < 1 or width > 100:
-            self.msg.set("Please input correct values")
+            self.msg.set("正しい値を入力して下さい")
             return
         thread1 = threading.Thread(target=self.choonepower, args=(power, wavelength, width))
         thread1.start()
@@ -94,7 +100,7 @@ class Application(tkinter.Frame):
 
             self.NDfilter = ThorlabStage(home=True)
             self.NDfilter.move_to(0, block=True)
-            print(f"stage is at {self.NDfilter.get_position()}")
+            self.logger.log(f"stage is at {self.NDfilter.get_position()}\n")
 
             self.powermeter = juno()
             self.powermeter.open()
@@ -125,7 +131,7 @@ class Application(tkinter.Frame):
         try:
             self.flipshut.open()
             self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
-            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO)
+            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATION, logger=self.logger)
             self.shut.open(2)
         except:
             self.msg.set("波長の切替とパワーの調整に失敗しました")

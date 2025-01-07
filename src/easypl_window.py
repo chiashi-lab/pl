@@ -14,6 +14,7 @@ class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
+        self.master = master
         self.master.geometry("600x700")
         self.master.title(u"PLEマップ測定君")
 
@@ -81,14 +82,14 @@ class Application(tkinter.Frame):
         self.button_start.bind("<1>", self.call_pack_pl)
         self.button_start.place(x=20, y=650)
 
-        self.pb = ttk.Progressbar(root, orient="horizontal", length=200, mode="indeterminate")
+        self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
         self.pb.place(x=30, y=360)
 
         self.msg = tkinter.StringVar(value="値を設定してスタートを押してください")
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=310)
 
-        self.log_scrolltxt = scrolledtext.ScrolledText(root, wrap=tkinter.WORD, width=50, height=10)
+        self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=50, height=10)
         self.log_scrolltxt.place(x=20, y=400)
 
     def call_get_path(self, event)->None:
