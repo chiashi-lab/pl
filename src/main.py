@@ -8,6 +8,7 @@ from driver.focus_adjuster_driver import Focus_adjuster
 from logger import Logger
 import config
 import time
+import datetime
 import func
 import numpy as np
 import os
@@ -56,8 +57,10 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             logger.log(f"error: {error}")
             logger.log(f"acc: {acc}")
             logger.log(f"diff: {diff}")
-            logger.log(f"tostep: {tostep}")
+            logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
+            logger.log("move end")
+            logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
             logger.log("Already at target power")
@@ -77,6 +80,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     return:
         None
     '''
+    logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logger.log("Experiment Condition")
     logger.log(f"targetpower:{targetpower}")
     logger.log(f"minimum excite center wavelength:{minwavelength}")
@@ -126,6 +130,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     
     shut.close(2)
     flipshut.close()
+    logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     '''
@@ -151,6 +156,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
     movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
 
+    logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logger.log("Experiment Condition")
     logger.log(f"targetpower:{targetpower}")
     logger.log(f"minimum excite center wavelength:{minwavelength}")
@@ -269,6 +275,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     shut.close(2)
     flipshut.close()
 
+    logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
 def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
     poslist = list(poslist)
@@ -278,6 +286,7 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
     slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
     movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
 
+    logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logger.log("Experiment Condition")
     logger.log(f"targetpower:{targetpower}")
     logger.log(f"excite center wavelength:{wavelength}")
@@ -393,6 +402,7 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
 
     shut.close(2)
     flipshut.close()
+    logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->None:
     '''

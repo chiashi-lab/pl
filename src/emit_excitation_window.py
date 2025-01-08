@@ -23,7 +23,7 @@ class Application(tkinter.Frame):
         self.label_wavelength = tkinter.Label(text=u'励起光中心波長', state='disabled')
         self.label_wavelength.place(x=30, y=60)
         self.entry_wavelength = tkinter.Entry(width=7)
-        self.entry_wavelength.insert(tkinter.END, '500')
+        self.entry_wavelength.insert(tkinter.END, '785')
         self.entry_wavelength["state"] = "disabled"
         self.entry_wavelength.place(x=140, y=60)
         self.unit_wavelength = tkinter.Label(text=u'nm', state='disabled')
@@ -32,7 +32,7 @@ class Application(tkinter.Frame):
         self.label_width = tkinter.Label(text=u'励起光波長幅', state='disabled')
         self.label_width.place(x=30, y=110)
         self.entry_width = tkinter.Entry(width=7)
-        self.entry_width.insert(tkinter.END, '25')
+        self.entry_width.insert(tkinter.END, '1')
         self.entry_width["state"] = "disabled"
         self.entry_width.place(x=140, y=110)
         self.unit_width = tkinter.Label(text=u'nm', state='disabled')

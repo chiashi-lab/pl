@@ -32,7 +32,7 @@ class Application(tkinter.Frame):
         self.label_maxWL = tkinter.Label(text=u'励起光最長中心波長')
         self.label_maxWL.place(x=10, y=50)
         self.entry_maxWL = tkinter.Entry(width=7)
-        self.entry_maxWL.insert(tkinter.END, '786')
+        self.entry_maxWL.insert(tkinter.END, '785')
         self.entry_maxWL.place(x=190, y=50)
         self.unit_maxWL = tkinter.Label(text=u'nm')
         self.unit_maxWL.place(x=250, y=50)

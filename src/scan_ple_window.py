@@ -33,7 +33,7 @@ class Application(tkinter.Frame):
         self.label_maxwavelength = tkinter.Label(text=u'励起光最長中心波長')
         self.label_maxwavelength.place(x=10, y=50)
         self.entry_maxwavelength = tkinter.Entry(width=7)
-        self.entry_maxwavelength.insert(tkinter.END, '786')
+        self.entry_maxwavelength.insert(tkinter.END, '785')
         self.entry_maxwavelength.place(x=190, y=50)
         self.unit_maxwavelength = tkinter.Label(text=u'nm')
         self.unit_maxwavelength.place(x=250, y=50)
