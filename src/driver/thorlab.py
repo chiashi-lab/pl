@@ -1,12 +1,13 @@
 from pylablib.devices import Thorlabs
+import sys
+sys.path.append('../')
+import config
+from ctypes import *
+
 #thorlabsのデバイスを操作するクラス定義
 #pylablibというライブラリを使っている
 #StageクラスはThorlabs.KinesisMotorを使ってNDフィルターが設置されているステージを操作する
 #FlipMountクラスはThorlabs.MFFを使ってターミネーターへのミラーが設置されているフリップマウントを操作する
-import sys
-sys.path.append('../')
-import config
-
 class ThorlabStage:
     """
     class to control the Thorlabs stage
@@ -116,6 +117,7 @@ class ThorlabStage:
     def _setparam(self, velocity=None, home_position=None, jog1=None, jog2=None, jog3=None, scale=False):
         self.stage.setup_polctl(velocity=velocity, home_position=home_position, jog1=jog1, jog2=jog2, jog3=jog3, scale=scale)
 
+
 class FlipMount:
     def __init__(self) -> None:
         self.flip = Thorlabs.MFF(str(config.KINESISMFFID))
@@ -128,6 +130,57 @@ class FlipMount:
     def close(self) -> None:
         self.flip.move_to_state(0)
         self.state = self.flip.get_state()
+
+
+# class for CCS200 spectrometer
+# https://github.com/Thorlabs/Light_Analysis_Examples/blob/main/Python/Thorlabs%20CCS%20Spectrometers/CCS%20using%20ctypes%20-%20Python%203.py
+class spectrometer:
+    def __init__(self) -> None:
+
+        self._lib = cdll.LoadLibrary(config.CCS200DLLPATH)
+        self._ccs_handle = c_int(0)
+        self._lib.tlccs_init(config.CCS200SPECTROMETERID.encode(), 1, 1, byref(self._ccs_handle))
+        self._set_integration_time(0.001)
+    
+    def _set_integration_time(self, integration_time: int) -> None:
+        """
+        set the integration time of the spectrometer
+        args:
+            time(int): integration time in seconds not milliseconds
+        return:
+            None
+        
+        """
+        self._lib.tlccs_setIntegrationTime(self._ccs_handle, c_double(integration_time))
+
+    def _get_wavelengths(self) -> list:
+        """
+        get the wavelengths from the spectrometer
+        args:
+            None
+        return:
+            wavelengths(list): wavelengths from the spectrometer
+        """
+        wavelengths = (c_double * 3648)()
+        self._lib.tlccs_getWavelengthData(self._ccs_handle, 0, byref(wavelengths), c_void_p(None), c_void_p(None))
+
+        return list(wavelengths)
+
+    def get_spectrum(self) -> tuple:
+        """
+        get the spectrum from the spectrometer
+        args:
+            None
+        return:
+            wavelengths(list): wavelengths from the spectrometer
+            spectrum(list): spectrum from the spectrometer
+        """
+        wavelengths = self._get_wavelengths()
+
+        spectrum = (c_double * 3648)()
+        self._lib.tlccs_getSpectrum(self._ccs_handle, 0, byref(spectrum))
+        return wavelengths, list(spectrum)
+
 
 if __name__ == "__main__":
     print(Thorlabs.list_kinesis_devices())
