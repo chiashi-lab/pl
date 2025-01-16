@@ -1,3 +1,3 @@
 CALL venv\Scripts\activate
 cd src
-python easypl_window.py
+python single_ple_window.py

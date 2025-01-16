@@ -1,7 +1,7 @@
 def linear(x:float, a:float, b:float) -> float:
     return a * x + b
 
-def wavelength2ratio(wavelength: int) -> float:
+def wavelength2ratio(wavelength: int) -> float: # Remove Me
     return linear(float(wavelength), -0.0165, 16.77)
 
 def waittime4exposure(exposure:float)->float:

@@ -1,3 +1,3 @@
 CALL venv\Scripts\activate
 cd src
-python movingpl_window.py
+python scan_ple_window.py

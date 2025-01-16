@@ -1,3 +1,3 @@
 CALL venv\Scripts\activate
 cd src
-python detectpl_window.py
+python scan_ple_sweep_window.py
