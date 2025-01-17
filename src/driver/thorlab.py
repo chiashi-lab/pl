@@ -3,7 +3,7 @@ import sys
 sys.path.append('../')
 import config
 from ctypes import *
-from scipy.signal import find_peaks
+import numpy as np
 
 #thorlabsのデバイスを操作するクラス定義
 #pylablibというライブラリを使っている
@@ -193,20 +193,13 @@ class thorlabspectrometer:
     def get_peak(self) -> float:
         """
         get the peak of the spectrum
-        numpy argmax is suitable? because find_peaks have possibility to find none peak
         args:
             None
         return:
             peak(float): peak of the spectrum
         """
         spectrum = self.get_spectrum()
-        peakindexs, _ = find_peaks(spectrum, distance=100)
-        peakvalue = 0
-        peakindex = 0
-        for i in peakindexs:
-            if spectrum[i] > peakvalue:
-                peakvalue = spectrum[i]
-                peakindex = i
+        peakindex = np.argmax(spectrum)
         return self.wavelengths_corrected[peakindex]
 
 
