@@ -130,8 +130,7 @@ class Application(tkinter.Frame):
         self.pb.start(10)
         try:
             self.flipshut.open()
-            #self.laserchoone.change_lwbw(wavelength=centerwavelength, bandwidth=wavelenghwidth)
-            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATION, logger=self.logger)
+            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
             self.shut.open(2)
         except:
             self.msg.set("波長の切替とパワーの調整に失敗しました")
@@ -140,7 +139,7 @@ class Application(tkinter.Frame):
             return
         self.pb.stop()
         self.set_button["state"] = tkinter.NORMAL
-        self.msg.set(f"中心波長: {centerwavelength} nm, 波長幅: {wavelenghwidth} nm, 目標パワー: {targetpower*1000} mWを照射中")
+        self.msg.set(f"中心波長: {centerwavelength} nm, 目標パワー: {targetpower*1000} mWを照射中")
 
 if __name__ == "__main__":
     root = tkinter.Tk()
