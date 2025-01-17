@@ -21,3 +21,8 @@ PRIORCOMPORT = 'COM3'
 
 AUTOFOCUSCOMPORT = 'COM8'
 STEPS_PER_ROTATE_ST42BYH1004 = 400 #1回転に必要なステップ数　360deg/rotate / 0.9deg/step = 400step/rotate
+
+#windows device manager -> NI-VISA USB Device -> Spectrometer -> Properties -> Details -> Device Instanceパス
+#実際の表示はUSB\VID_1313&PID_8089\M00331284だった
+CCS200SPECTROMETERID = "USB0::0x1313::0x8089::M00331284::RAW"
+CCS200DLLPATH = "C:/Program Files/IVI Foundation/VISA/Win64/Bin/TLCCS_64.dll"
