@@ -93,8 +93,6 @@ class Application(tkinter.Frame):
             self.pb.start(10)
             self.flipshut = FlipMount()
             self.flipshut.close()
-            self.shut = shutter(config.SHUTTERCOMPORT)
-            self.shut.close(2)
 
             #self.laserchoone = superchrome()
 
@@ -115,9 +113,6 @@ class Application(tkinter.Frame):
         self.entry_wavelength["state"] = "normal"
         self.label_wavelength["state"] = "normal"
         self.unit_wavelength["state"] = "normal"
-        self.entry_width["state"] = "normal"
-        self.label_width["state"] = "normal"
-        self.unit_width["state"] = "normal"
         self.entry_power["state"] = "normal"
         self.label_power["state"] = "normal"
         self.unit_power["state"] = "normal"
@@ -131,7 +126,6 @@ class Application(tkinter.Frame):
         try:
             self.flipshut.open()
             pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
-            self.shut.open(2)
         except:
             self.msg.set("波長の切替とパワーの調整に失敗しました")
             self.pb.stop()
