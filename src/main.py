@@ -132,6 +132,39 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     flipshut.close()
     logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
+def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, logger:Logger) -> int:
+    min_ol = -200 + objective_lens.position
+    max_ol = 200 + objective_lens.position
+    iter_ol = 0
+    while max_ol - min_ol > 9:
+        if iter_ol % 3 == 0:
+            objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
+        iter_ol += 1
+
+        mid1_ol = min_ol + (max_ol - min_ol) / 3
+        mid2_ol = max_ol - (max_ol - min_ol) / 3
+
+        objective_lens.move_to(mid1_ol)
+        symphony.start_exposure()
+        time.sleep(func.waittime4exposure(1))
+        df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+        value1_ol = df[1].max()
+
+        objective_lens.move_to(mid2_ol)
+        symphony.start_exposure()
+        time.sleep(func.waittime4exposure(1))
+        df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+        value2_ol = df[1].max()
+
+        if value1_ol < value2_ol:
+            min_ol = mid1_ol
+        else:
+            max_ol = mid2_ol
+    optimal = int((min_ol + max_ol) / 2)
+    objective_lens.move_to(optimal)
+    logger.log(f"autofocus at {optimal}")
+    return optimal
+
 def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     '''
     args:
@@ -154,7 +187,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
     slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
     slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
-    movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 1000
+    movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 10000
 
     logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
     logger.log("Experiment Condition")
@@ -203,10 +236,23 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
     if check_autofocus:
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+        diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
+
+        priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
+        shut.open(2)
+        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
+        shut.close(2)
+
+        priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
+        shut.open(2)
+        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
+        shut.close(2)
+
+        height_func = func.make_linear_from_two_points(0, start_height, numberofsteps-1, end_height)
+
 
     for posidx in range(numberofsteps):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
-        priorstage.wait_until_stop()
 
         savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
         if not os.path.exists(savedirpath):
@@ -214,50 +260,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
             logger.log(f"make dir at {savedirpath}")
         symphony.set_config_savetofiles(savedirpath)
 
-        # autofocus
-        if posidx % 10 == 0 and check_autofocus:
-            logger.log(f"start autofocus at {poslist[0][posidx], poslist[1][posidx]}")
-            symphony.set_exposuretime(1)
-
-            priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
-            priorstage.wait_until_stop()
-
-            shut.open(2)
-
-            min_ol = -200 + objective_lens.position
-            max_ol = 200 + objective_lens.position
-            iter_ol = 0
-            while max_ol - min_ol > 9:
-                if iter_ol % 3 == 0:
-                    objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
-                iter_ol += 1
-
-                mid1_ol = min_ol + (max_ol - min_ol) / 3
-                mid2_ol = max_ol - (max_ol - min_ol) / 3
-
-                objective_lens.move_to(mid1_ol)
-                symphony.start_exposure()
-                time.sleep(func.waittime4exposure(1))
-                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
-                value1_ol = df[1].max()
-
-                objective_lens.move_to(mid2_ol)
-                symphony.start_exposure()
-                time.sleep(func.waittime4exposure(1))
-                df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
-                value2_ol = df[1].max()
-
-                if value1_ol < value2_ol:
-                    min_ol = mid1_ol
-                else:
-                    max_ol = mid2_ol
-            objective_lens.move_to((min_ol + max_ol) / 2)
-            logger.log(f"autofocus at {poslist[0][posidx], poslist[1][posidx]}")
-            logger.log(f"autofocus at {objective_lens.position}")
-            shut.close(2)
-            priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
-            priorstage.wait_until_stop()
-
+        if check_autofocus:
+            objective_lens.move_to(height_func(posidx))
         symphony.set_exposuretime(integrationtime)
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
@@ -334,7 +338,6 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
 
     for posidx in range(numberofsteps-1):
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
-        priorstage.wait_until_stop()
 
         savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
         if not os.path.exists(savedirpath):
@@ -348,7 +351,6 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
             symphony.set_exposuretime(1)
 
             priorstage.move_to(poslist[0][posidx] + movepos_when_focus[0], poslist[1][posidx] + movepos_when_focus[1])
-            priorstage.wait_until_stop()
 
             shut.open(2)
             min_ol = -200 + objective_lens.position
@@ -383,7 +385,6 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
             logger.log(f"autofocus at {objective_lens.position}")
             shut.close(2)
             priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
-            priorstage.wait_until_stop()
 
         symphony.set_exposuretime(integrationtime)
 
@@ -415,14 +416,12 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
             break
 
         priorstage.move_to(pos1[0], pos1[1])
-        priorstage.wait_until_stop()
 
         nowtime = time.time()
         if nowtime - starttime > exposuretime:
             break
 
         priorstage.move_to(pos2[0], pos2[1])
-        priorstage.wait_until_stop()
 
 if __name__ == "__main__":
     #path = r"c:\Users\optical group\Documents\individual\kanai"
