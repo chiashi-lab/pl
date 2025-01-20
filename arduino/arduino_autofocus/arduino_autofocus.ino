@@ -2,10 +2,10 @@
 #include <String.h>
 #include <HardwareSerial.h>
 
-#define MOTOR_PIN1 8  // 使用するモータのpin 
-#define MOTOR_PIN2 9 
-#define MOTOR_PIN3 10
-#define MOTOR_PIN4 11
+#define MOTOR_PIN1 4  // 使用するモータのpin 
+#define MOTOR_PIN2 5 
+#define MOTOR_PIN3 6
+#define MOTOR_PIN4 7
 #define STEPS_PER_ROTATE_ST42BYH1004 400 // 1回転に必要なステップ数　360deg/rotate / 0.9deg/step = 400step/rotate
 #define INITIAL_RPM 10 // 初期rpm
 
