@@ -148,7 +148,7 @@ class Application(tkinter.Frame):
         except:
             self.msg.set("値を正しく入力してください")
             return
-        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL or (maxWL - minWL) < stepWL:
+        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
             return
         if not os.path.exists(path):

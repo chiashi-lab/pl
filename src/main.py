@@ -424,6 +424,27 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
         priorstage.move_to(pos2[0], pos2[1])
 
 if __name__ == "__main__":
-    #path = r"c:\Users\optical group\Documents\individual\kanai"
-    #pl(targetpower=0.002, minwavelength=500, maxwavelength=800, stepwavelength=10, integrationtime=120, path=path)
-    pass
+    #autofocus test on Si
+    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250120"
+    logger = Logger(log_file_path=path+"log.txt")
+    flipshut = FlipMount()
+    flipshut.close()
+    shut = shutter(config.SHUTTERCOMPORT)
+    shut.close(2)
+
+
+    flipshut.open()
+
+    powermeter = juno()
+    powermeter.open()
+    powermeter.set_range(3)
+
+    symphony = Symphony()
+    symphony.Initialize()
+    symphony.set_config_savetofiles(path)
+    symphony.set_exposuretime(1)
+
+    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+    shut.open(2)
+    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
+    shut.close(2)

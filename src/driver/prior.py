@@ -55,7 +55,7 @@ class Proscan:
         if block:
             self.block_until_stop()
 
-    def is_moving(self) -> int:
+    def is_moving(self) -> str:
         """
         args: None
         return: 
@@ -67,10 +67,10 @@ class Proscan:
         self._clear_buffer()
         self._send_command("$,S"+ '\r')
         res = self._read_command()
-        return int(res)
+        return res
 
     def block_until_stop(self) -> None:
-        while self.is_moving() != 0:
+        while self.is_moving() != '0':
             time.sleep(1)
         return
 
