@@ -132,11 +132,11 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     flipshut.close()
     logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
-def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, logger:Logger) -> int:
+def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger) -> int:
     min_ol = -200 + objective_lens.position
     max_ol = 200 + objective_lens.position
     iter_ol = 0
-    while max_ol - min_ol > 9:
+    while max_ol - min_ol > 6:
         if iter_ol % 3 == 0:
             objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
         iter_ol += 1
@@ -146,13 +146,13 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
 
         objective_lens.move_to(mid1_ol)
         symphony.start_exposure()
-        time.sleep(func.waittime4exposure(1))
+        time.sleep(func.waittime4exposure(exposuretime))
         df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
         value1_ol = df[1].max()
 
         objective_lens.move_to(mid2_ol)
         symphony.start_exposure()
-        time.sleep(func.waittime4exposure(1))
+        time.sleep(func.waittime4exposure(exposuretime))
         df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
         value2_ol = df[1].max()
 
@@ -240,12 +240,12 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
         priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
         shut.open(2)
-        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
+        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=10, logger=logger)
         shut.close(2)
 
         priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
         shut.open(2)
-        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
+        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=10, logger=logger)
         shut.close(2)
 
         height_func = func.make_linear_from_two_points(0, start_height, numberofsteps-1, end_height)
@@ -425,7 +425,8 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
 
 if __name__ == "__main__":
     #autofocus test on Si
-    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250120"
+    nowtime = time.time()
+    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250121"
     logger = Logger(log_file_path=path+"log.txt")
     flipshut = FlipMount()
     flipshut.close()
@@ -442,9 +443,9 @@ if __name__ == "__main__":
     symphony = Symphony()
     symphony.Initialize()
     symphony.set_config_savetofiles(path)
-    symphony.set_exposuretime(1)
+    symphony.set_exposuretime(5)
 
     objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
     shut.open(2)
-    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, logger=logger)
-    shut.close(2)
+    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger)
+    print(f"focus take {time.time()-nowtime}")
