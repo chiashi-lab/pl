@@ -18,6 +18,7 @@ class Focus_adjuster:
 
     @property
     def position(self) -> int:
+        # 1roatation == 400 position
         return self._position
 
     @property

@@ -132,11 +132,33 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     flipshut.close()
     logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
-def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger) -> int:
-    min_ol = -200 + objective_lens.position
-    max_ol = 200 + objective_lens.position
+def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
+    start_time = time.time()
+    center_dense_search = objective_lens.position
+    # sparse search
+    if range_sparse_search:
+        logger.log("sparse serch start")
+        logger.log(f"pos before search:{objective_lens.position}")
+        maxvl = 0
+        maxpos = 0
+        for pos in range(objective_lens.position - range_sparse_search, objective_lens.position + range_sparse_search + 100, 100):
+            objective_lens.move_to(pos)
+            symphony.start_exposure()
+            time.sleep(func.waittime4exposure(exposuretime))
+            df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
+            value = df[1].max()
+            logger.log(f"now pos:{pos}, value of Si PL:{value}")
+            if value > maxvl:
+                maxpos = pos
+                maxvl = value
+        logger.log(f"max pos(center dense search):{maxpos}, value of Si PL:{maxvl}")      
+        center_dense_search = maxpos
+    # dense search
+    logger.log("dense search start")
+    min_ol = -1 * range_dense_search + center_dense_search
+    max_ol = range_dense_search + center_dense_search
     iter_ol = 0
-    while max_ol - min_ol > 6:
+    while max_ol - min_ol > 5:
         if iter_ol % 3 == 0:
             objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
         iter_ol += 1
@@ -149,12 +171,14 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
         time.sleep(func.waittime4exposure(exposuretime))
         df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
         value1_ol = df[1].max()
+        logger.log(f"now pos:{mid1_ol}, value of Si PL:{value1_ol}")
 
         objective_lens.move_to(mid2_ol)
         symphony.start_exposure()
         time.sleep(func.waittime4exposure(exposuretime))
         df = pd.read_csv(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), sep='\t', comment='#', header=None)
         value2_ol = df[1].max()
+        logger.log(f"now pos:{mid2_ol}, value of Si PL:{value2_ol}")
 
         if value1_ol < value2_ol:
             min_ol = mid1_ol
@@ -163,6 +187,7 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
     optimal = int((min_ol + max_ol) / 2)
     objective_lens.move_to(optimal)
     logger.log(f"autofocus at {optimal}")
+    logger.log(f"autofocus take {time.time()- start_time}sec")
     return optimal
 
 def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
@@ -235,20 +260,22 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     priorstage = Proscan(config.PRIORCOMPORT)
 
     if check_autofocus:
+        pid_control_power(targetpower=1*0.001, wavelength=700, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
 
         priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
         shut.open(2)
-        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=10, logger=logger)
+        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
         shut.close(2)
 
         priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
         shut.open(2)
-        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=10, logger=logger)
+        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
         shut.close(2)
 
         height_func = func.make_linear_from_two_points(0, start_height, numberofsteps-1, end_height)
+        symphony.set_exposuretime(integrationtime)
 
 
     for posidx in range(numberofsteps):
@@ -262,7 +289,6 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
         if check_autofocus:
             objective_lens.move_to(height_func(posidx))
-        symphony.set_exposuretime(integrationtime)
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
             #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
@@ -425,27 +451,21 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
 
 if __name__ == "__main__":
     #autofocus test on Si
-    nowtime = time.time()
-    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250121"
-    logger = Logger(log_file_path=path+"log.txt")
-    flipshut = FlipMount()
-    flipshut.close()
+    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250122\\autofocus_test_single"
+    exposuretime = 3
+    logger = Logger(log_file_path=os.path.join(path, "log.txt"))
+
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
-
-
-    flipshut.open()
-
-    powermeter = juno()
-    powermeter.open()
-    powermeter.set_range(3)
 
     symphony = Symphony()
     symphony.Initialize()
     symphony.set_config_savetofiles(path)
-    symphony.set_exposuretime(5)
+    symphony.set_exposuretime(exposuretime)
+    logger.log(f"exposuretime:{exposuretime}")
 
+    stime = time.time()
     objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
     shut.open(2)
-    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger)
-    print(f"focus take {time.time()-nowtime}")
+    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=exposuretime, logger=logger, range_dense_search=100, range_sparse_search=400)
+    logger.log(f"focus take {time.time()-stime}")

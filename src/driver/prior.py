@@ -51,7 +51,7 @@ class Proscan:
         return: None
         """
         self._clear_buffer()
-        self._send_command('G'+ str(xpos) + ',' + str(ypos) + '\r')
+        self._send_command('G,'+ str(xpos) + ',' + str(ypos) + '\r')
         if block:
             self.block_until_stop()
 
@@ -76,7 +76,7 @@ class Proscan:
 
 if __name__ == '__main__':
     stage = Proscan(config.PRIORCOMPORT)
-    stage.move_to(10000,900)
+    stage.move_to(-315200,1402820, False)
     for _ in range(5):
         print(stage.is_moving())
     print(stage.get_pos())
