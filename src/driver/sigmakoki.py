@@ -12,7 +12,7 @@ class shutter:
         time.sleep(1)
         self.getstatus(2)
 
-    def send(self, command: str) -> str:
+    def send(self, command: str) -> str: #FIXME. split into _send and _read
         for _ in range(5):
             self.serial.write(command.encode('utf-8'))
             message = self.serial.readline()
