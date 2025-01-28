@@ -22,10 +22,6 @@ class Proscan:
                 return message
             time.sleep(1.0)
 
-    def _clear_buffer(self) -> None:
-        self.serial.reset_input_buffer()
-        self.serial.reset_output_buffer()
-
     def get_pos(self, max_retry: int = 5) -> list[int]:
         """
         args: None
@@ -35,7 +31,6 @@ class Proscan:
             poslist[1]: Y position(internal unit)
             postlist[2]: Z position(Not used)
         """
-        self._clear_buffer()
         for _ in range(max_retry):
             self._send_command("P"+ '\r')
             poslist = self._read_command()
@@ -50,7 +45,6 @@ class Proscan:
         args: None
         return: speed: float (micrometer/sec)
         """
-        self._clear_buffer()
         self._send_command("SMS,u"+ '\r')
         speed = float(self._read_command())
         self._speed = speed
@@ -63,8 +57,7 @@ class Proscan:
         """
         speed = Decimal(str(speed)).quantize(Decimal('0.0'), ROUND_HALF_UP)
         self._speed = float(speed)
-        self._clear_buffer()
-        self._send_command("SMS,u,"+ str(speed) + '\r')
+        self._send_command("SMS,"+ str(speed) + ',u\r')
         return
 
     def move_to(self, xpos: int, ypos: int, block: bool = True) -> None:
@@ -80,10 +73,13 @@ class Proscan:
         speed = self._dist2speed(dist)
         self.set_speed(speed)
 
-        self._clear_buffer()
         self._send_command('G,'+ str(xpos) + ',' + str(ypos) + '\r')
         if block:
             self.block_until_stop()
+            if speed > 4:
+                self.set_speed(4)
+                self._send_command('G,'+ str(xpos) + ',' + str(ypos) + '\r')
+                self.block_until_stop()
 
     def _dist2speed(self, dist: float) -> float:
         """
@@ -106,7 +102,6 @@ class Proscan:
             1: X is moving
             0: X and Y are not moving
         """
-        self._clear_buffer()
         self._send_command("$,S"+ '\r')
         res = self._read_command()
         return res
@@ -118,7 +113,7 @@ class Proscan:
 
 if __name__ == '__main__':
     stage = Proscan(config.PRIORCOMPORT)
-    stage.move_to(-315200,1402820, False)
-    for _ in range(5):
-        print(stage.is_moving())
+    now = time.time()
+    stage.move_to(-315200,1402820, True)
     print(stage.get_pos())
+    print(time.time()-now)
