@@ -77,8 +77,9 @@ class Application(tkinter.Frame):
             power = float(self.entry_power.get()) * 0.001
             wavelength = int(self.entry_wavelength.get())
             width = int(self.entry_width.get())
-        except:
-            self.msg.set("値を正しく入力してください")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"値を正しく入力してください\n{e}")
             return
         if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850 or width < 1 or width > 100:
             self.msg.set("正しい値を入力して下さい")
@@ -103,8 +104,9 @@ class Application(tkinter.Frame):
             self.powermeter = juno()
             self.powermeter.open()
             self.powermeter.set_range(3)
-        except:
-            self.msg.set("初期化に失敗しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"初期化に失敗しました\n{e}")
             self.pb.stop()
             return
 
@@ -126,8 +128,9 @@ class Application(tkinter.Frame):
         try:
             self.flipshut.open()
             pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
-        except:
-            self.msg.set("波長の切替とパワーの調整に失敗しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"波長の切替とパワーの調整に失敗しました\n{e}")
             self.pb.stop()
             self.set_button["state"] = tkinter.NORMAL
             return

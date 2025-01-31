@@ -106,8 +106,9 @@ class Application(tkinter.Frame):
             widthWL = int(self.entry_widthWL.get())
             exposure = int(self.entry_exposure.get())
             savefolderpath = self.entry_savefolderpath.get()
-        except:
-            self.msg.set("数字を入力してください")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"数字を入力してください\n{e}")
             return
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
@@ -127,8 +128,9 @@ class Application(tkinter.Frame):
         self.pb.start(10)
         try:
             single_ple(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath, self.logger)
-        except:
-            self.msg.set("データ取得中にエラーが発生しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
             self.pb.stop()
             self.button_start["state"] = tkinter.NORMAL
             return

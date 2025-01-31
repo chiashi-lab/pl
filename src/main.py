@@ -134,6 +134,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
 
 def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
     start_time = time.time()
+    symphony.set_exposuretime(exposuretime)
     center_dense_search = objective_lens.position
     # sparse search
     if range_sparse_search:

@@ -145,8 +145,9 @@ class Application(tkinter.Frame):
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
             numberofsteps = int(self.entry_numberofsteps.get())
             autofocus = bool(self.autofocus.get())
-        except:
-            self.msg.set("値を正しく入力してください")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"値を正しく入力してください\n{e}")
             return
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
@@ -166,8 +167,9 @@ class Application(tkinter.Frame):
         self.pb.start(10)
         try:
             scan_ple(power, minWL, maxWL, stepWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus, self.logger)
-        except:
-            self.msg.set("データ取得中にエラーが発生しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
             self.pb.stop()
             self.button_start["state"] = tkinter.NORMAL
             return
@@ -190,8 +192,9 @@ class Application(tkinter.Frame):
         self.pb.start(5)
         try:
             self.get_pos()
-        except:
-            self.msg.set("ステージ位置を取得中にエラーが発生しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"ステージ位置を取得中にエラーが発生しました\n{e}")
         else:
             self.entry_startpos_x.delete(0, tkinter.END)
             self.entry_startpos_x.insert(tkinter.END, str(self.res_get_pos[0]))
@@ -210,8 +213,9 @@ class Application(tkinter.Frame):
         self.pb.start(5)
         try:
             self.get_pos()
-        except:
-            self.msg.set("ステージ位置を取得中にエラーが発生しました")
+        except Exception as e:
+            print(e)
+            self.msg.set(f"ステージ位置を取得中にエラーが発生しました\n{e}")
         else:
             self.entry_endpos_x.delete(0, tkinter.END)
             self.entry_endpos_x.insert(tkinter.END, str(self.res_get_pos[0]))
