@@ -265,11 +265,15 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
 
+        logger.log(f"start autofocus at start position")
+        logger.log(f"stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
         priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
         shut.open(2)
         start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
         shut.close(2)
 
+        logger.log(f"start autofocus at end position")
+        logger.log(f"stage is moving to {endpos[0]+diff_vec[0], endpos[1]+diff_vec[1]}")
         priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
         shut.open(2)
         end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
@@ -280,6 +284,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
 
     for posidx in range(numberofsteps):
+        logger.log(f"stage is moving to {posidx}:{poslist[0][posidx], poslist[1][posidx]}")
         priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
 
         savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
@@ -289,6 +294,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
         symphony.set_config_savetofiles(savedirpath)
 
         if check_autofocus:
+            logger.log(f"obejctive lens is moving to {height_func(posidx)}")
             objective_lens.move_to(height_func(posidx))
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
