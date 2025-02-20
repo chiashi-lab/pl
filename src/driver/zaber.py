@@ -24,6 +24,14 @@ class zaber_linear_actuator:
 
         self._device_axis = self._device.get_axis(1)
         self._device_axis.park()
+    
+    def __del__(self) -> None:
+        self._device_axis.park()
+
+    def _home(self) -> None:
+        warnings.warn("zaber is homing. Linear actuator will be disconnected from the socket")
+        self._device_axis.home()
+        self._device_axis.park()
 
     def get_position(self) -> float:
         return self._device_axis.get_position(Units.LENGTH_MILLIMETRES)
@@ -44,5 +52,3 @@ if __name__ == "__main__":
     zaber.move_to(position-10)
     position = zaber.get_position()
     print(f"current position is {position}")
-    zaber.move_to(position+10)
-    print(f"moved to {zaber.get_position()}")
