@@ -86,12 +86,12 @@ class Proscan:
         args: dist: float (internal unit)
         return: speed: float (micrometer/sec)
         """
-        if dist < 40 * 100:
+        if dist < 4000:
             return 4
-        elif dist < 1000 * 100:
+        elif dist < 1000 * 12:
             return dist * 0.001
         else:
-            return 100
+            return 12
 
     def is_moving(self) -> str:
         """

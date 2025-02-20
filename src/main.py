@@ -143,6 +143,7 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
         maxvl = 0
         maxpos = 0
         for pos in range(objective_lens.position - range_sparse_search, objective_lens.position + range_sparse_search + 100, 100):
+            objective_lens.set_rpm(20)
             objective_lens.move_to(pos)
             symphony.start_exposure()
             time.sleep(func.waittime4exposure(exposuretime))
