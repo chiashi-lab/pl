@@ -27,10 +27,10 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
     return:
         None
     '''
-    r = config.PIDNORMALIZATION / targetpower #正規化項
-    Kp = config.PIDKP * r
-    Ki = config.PIDKI * r
-    Kd = config.PIDKD * r
+    r = config.EXCITEPOWERPIDNORMALIZATION / targetpower #正規化項
+    Kp = config.EXCITEPOWERPIDKP * r
+    Ki = config.EXCITEPOWERPIDKI * r
+    Kd = config.EXCITEPOWERPIDKD * r
     dt = 1.0
     acc = 0.0
     diff = 0.0
