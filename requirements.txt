@@ -33,6 +33,7 @@ pyusb
 PyVISA
 pywin32
 pywinauto
+reactivex
 rpyc
 scikit-learn
 scipy
@@ -42,3 +43,4 @@ threadpoolctl
 torch
 typing_extensions
 tzdata
+zaber_motion
