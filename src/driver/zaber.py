@@ -32,6 +32,9 @@ class zaber_linear_actuator:
         warnings.warn("zaber is homing. Linear actuator will be disconnected from the socket")
         self._device_axis.home()
         self._device_axis.park()
+    
+    def _check_home(self) -> bool:
+        return self._device_axis.is_homed()
 
     def get_position(self) -> float:
         return self._device_axis.get_position(Units.LENGTH_MILLIMETRES)
