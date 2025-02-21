@@ -12,7 +12,7 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master = master
-        self.master.geometry("600x700")
+        self.master.geometry("400x300")
         self.master.title(u"zaber_tool")
         self.create_widgets()
 
@@ -24,7 +24,6 @@ class Application(tkinter.Frame):
             self.msg.set("zaber is not homed")
             self.scale_position.configure(state="disabled")
             self.button_set_position.configure(state="disabled")
-
 
     def create_widgets(self):
         self.msg = tkinter.StringVar(value="")
@@ -60,15 +59,17 @@ class Application(tkinter.Frame):
             return
     
     def call_set_position(self, event) -> None:
-        if self.button_set_position["state"] == "disabled":
+        if self.button_set_position["state"] == "disabled" or self.scale_position["state"] == "disabled":
             return
         self.scale_position.configure(state="disabled")
+        self.button_set_position.configure(state="disabled")
         position = self.positon_var.get()
         self.msg.set(f"zaber is moving to {position}")
         if position < 14.0:
-            res = messagebox.askyesno("Move", f"本当に{position}に移動しますか？")
+            res = messagebox.askyesno("zaber", f"ソケットが外れる可能性があります．\n本当に{position}に移動しますか？")
             if not res:
                 self.scale_position.configure(state="normal")
+                self.button_set_position.configure(state="normal")
                 return
         thread_set_position = threading.Thread(target=self.set_position)
         thread_set_position.start()
@@ -83,9 +84,11 @@ class Application(tkinter.Frame):
     def set_position(self) -> None:
         position = self.positon_var.get()
         self.zaber_linear_actuator.move_to(position)
-        self.msg.set(f"zaber is moved to {position}")
-        self.positon_var.set(self.zaber_linear_actuator.get_position())
+        moved_position = self.zaber_linear_actuator.get_position()
+        self.msg.set(f"zaber is moved to {moved_position}")
+        self.positon_var.set(moved_position)
         self.scale_position.configure(state="normal")
+        self.button_set_position.configure(state="normal")
 
 
 
