@@ -76,6 +76,7 @@ class Application(tkinter.Frame):
     
     def home(self) -> None:
         self.zaber_linear_actuator._home()
+        self.positon_var.set(self.zaber_linear_actuator.get_position())
         self.scale_position.configure(state="normal")
         self.button_set_position.configure(state="normal")
         self.button_home.configure(state="normal")
