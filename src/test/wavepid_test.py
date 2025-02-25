@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+import os
 import sys
 sys.path.append('../')
 import config
@@ -68,7 +70,19 @@ def sim(Kp, Ki, Kd):
 def test():
     tisp = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
+    logger = Logger(None, timestamp_flag=True, log_scroll=None)
     pid_control_wavelength(700, tisp, spectrometer,eps=3, logger=None)
+
+def get_width(savedir):
+    tisp = zaber_linear_actuator()
+    spectrometer = thorlabspectrometer()
+    logger = Logger(None, timestamp_flag=True, log_scroll=None)
+    for wave in range(700, 900 + 5, 5):
+        pid_control_wavelength(wave, tisp, spectrometer,eps=3, logger=None)
+        wavelist = spectrometer.wavelengths_corrected
+        spectrum = spectrometer.get_spectrum()
+        df = pd.DataFrame({"wavelength": wavelist, "spectrum": spectrum})
+        df.to_csv(os.path.join(savedir, f"{wave}.csv"), index=False, header=False, sep='\t')
 
 
 if __name__ == "__main__":
