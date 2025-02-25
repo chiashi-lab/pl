@@ -1,10 +1,10 @@
-from driver.fianium import superchrome
 from driver.horiba import ihr320, Symphony
 from driver.ophir import juno
 from driver.prior import Proscan
 from driver.sigmakoki import shutter
-from driver.thorlab import ThorlabStage, FlipMount
+from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.focus_adjuster_driver import Focus_adjuster
+from driver.zaber import zaber_linear_actuator
 from logger import Logger
 import config
 import time
@@ -64,6 +64,49 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             prev = error
         else:
             logger.log("Already at target power")
+            return
+
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, eps:int = 3, logger:Logger = None) -> None:
+    '''
+    PID制御を用いて目標波長に制御する関数
+    args:
+        targetwavelength(int): 目標波長[nm]
+        TiSap_actuator(zaber_linear_actuator): TiSapのアクチュエータの自作ドライバークラス
+        spectrometer(thorlabspectrometer): スペクトロメータの自作ドライバークラス
+    return:
+        None
+    '''
+    Kp = config.EXCITEWAVELENGTHPIDKP
+    Ki = config.EXCITEWAVELENGTHPIDKI
+    Kd = config.EXCITEWAVELENGTHPIDKD
+    dt = 1.0
+    acc = 0.0
+    diff = 0.0
+    prev = 0.0
+    logger.log(f"wavelength control start for {targetwavelength}nm")
+    TiSap_actuator.move_to((1268 - targetwavelength) / 22.7)
+    while (True):
+        nowstep = TiSap_actuator.get_position()
+        nowwavelength = spectrometer.get_peak()
+        logger.log(f"current wavelength: {nowwavelength}")
+        logger.log(f"current step: {nowstep}")
+        print(f"current wavelength: {nowwavelength}")
+        print(f"current step: {nowstep}")
+        if nowwavelength < targetwavelength - eps or targetwavelength + eps < nowwavelength:
+            error = nowwavelength - targetwavelength
+            acc += error * dt
+            diff = (error - prev) / dt
+            tostep = nowstep + Kp * error + Ki * acc + Kd * diff
+            logger.log("move start")
+            logger.log(f"error: {error}")
+            logger.log(f"acc: {acc}")
+            logger.log(f"diff: {diff}")
+            logger.log(f"target step: {tostep}")
+            TiSap_actuator.move_to(tostep)
+            prev = error
+        else:
+            logger.log("Already at target wavelength")
+            print("finish")
             return
 
 def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
