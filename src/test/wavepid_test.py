@@ -71,14 +71,14 @@ def test():
     tisp = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
     logger = Logger(None, timestamp_flag=True, log_scroll=None)
-    pid_control_wavelength(700, tisp, spectrometer,eps=3, logger=None)
+    pid_control_wavelength(700, tisp, spectrometer,eps=2, logger=logger)
 
 def get_width(savedir):
     tisp = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
     logger = Logger(None, timestamp_flag=True, log_scroll=None)
     for wave in range(700, 900 + 5, 5):
-        pid_control_wavelength(wave, tisp, spectrometer,eps=3, logger=None)
+        pid_control_wavelength(wave, tisp, spectrometer,eps=2, logger=logger)
         wavelist = spectrometer.wavelengths_corrected
         spectrum = spectrometer.get_spectrum()
         df = pd.DataFrame({"wavelength": wavelist, "spectrum": spectrum})
@@ -87,4 +87,4 @@ def get_width(savedir):
 
 if __name__ == "__main__":
     #print(sim(0.02, 0.02, 0.01))
-    test()
+    get_width("C:\\Users\\optics\\individual\\kanai\\PL\\250225")
