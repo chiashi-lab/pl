@@ -3,11 +3,11 @@ from tkinter import ttk
 import sys
 sys.coinit_flags = 2
 import threading
-from main import pid_control_power
-from driver.fianium import superchrome
+from main import pid_control_power, pid_control_wavelength
 from driver.ophir import juno
-from driver.thorlab import ThorlabStage, FlipMount
+from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.sigmakoki import shutter
+from driver.zaber import zaber_linear_actuator
 from logger import Logger
 import config
 
@@ -29,15 +29,6 @@ class Application(tkinter.Frame):
         self.unit_wavelength = tkinter.Label(text=u'nm', state='disabled')
         self.unit_wavelength.place(x=200, y=60)
 
-        self.label_width = tkinter.Label(text=u'励起光波長幅', state='disabled')
-        self.label_width.place(x=30, y=110)
-        self.entry_width = tkinter.Entry(width=7)
-        self.entry_width.insert(tkinter.END, '1')
-        self.entry_width["state"] = "disabled"
-        self.entry_width.place(x=140, y=110)
-        self.unit_width = tkinter.Label(text=u'nm', state='disabled')
-        self.unit_width.place(x=200, y=110)
-        
         self.label_power = tkinter.Label(text=u'目標パワー',state='disabled')
         self.label_power.place(x=30, y=160)
         self.entry_power = tkinter.Entry(width=7)
@@ -76,15 +67,14 @@ class Application(tkinter.Frame):
         try:
             power = float(self.entry_power.get()) * 0.001
             wavelength = int(self.entry_wavelength.get())
-            width = int(self.entry_width.get())
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
             return
-        if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850 or width < 1 or width > 100:
+        if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850:
             self.msg.set("正しい値を入力して下さい")
             return
-        thread1 = threading.Thread(target=self.choonepower, args=(power, wavelength, width))
+        thread1 = threading.Thread(target=self.choonepower, args=(power, wavelength))
         thread1.start()
 
     def initialize(self):
@@ -104,6 +94,9 @@ class Application(tkinter.Frame):
             self.powermeter = juno()
             self.powermeter.open()
             self.powermeter.set_range(3)
+
+            self.tisp = zaber_linear_actuator()
+            self.spectrometer = thorlabspectrometer()
         except Exception as e:
             print(e)
             self.msg.set(f"初期化に失敗しました\n{e}")
@@ -121,12 +114,13 @@ class Application(tkinter.Frame):
         self.pb.stop()
         self.msg.set("初期化完了．値を設定してセットを押してください")
 
-    def choonepower(self, targetpower, centerwavelength, wavelenghwidth):
+    def choonepower(self, targetpower, centerwavelength):
         self.set_button["state"] = tkinter.DISABLED
         self.msg.set("波長の切替とパワーの調整中...")
         self.pb.start(10)
         try:
             self.flipshut.open()
+            pid_control_wavelength(targetwavelength=centerwavelength, TiSap_actuator=self.tisp, spectrometer=self.spectrometer, logger=self.logger)
             pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
         except Exception as e:
             print(e)

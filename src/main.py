@@ -73,6 +73,9 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
         targetwavelength(int): 目標波長[nm]
         TiSap_actuator(zaber_linear_actuator): TiSapのアクチュエータの自作ドライバークラス
         spectrometer(thorlabspectrometer): スペクトロメータの自作ドライバークラス
+        logger(Logger): 自作ロガークラス
+        eps(float): 目標波長の許容誤差[nm]
+        max_retry(int): PID制御が失敗した場合の最大リトライ回数
     return:
         None
     '''
@@ -115,7 +118,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     logger.log(f"current wavelength: {nowwavelength}")
     return
 
-def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
+def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, logger:Logger) -> None:
     '''
     PLEスペクトルを取得する関数
     args:
@@ -135,9 +138,8 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     logger.log(f"minimum excite center wavelength:{minwavelength}")
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
-    logger.log(f"excite wavelength width:{wavelengthwidth}")
     logger.log(f"integration time:{integrationtime}")
-    logger.log(f"")
+    logger.log("")
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -165,10 +167,11 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     symphony.set_exposuretime(integrationtime)
     symphony.set_config_savetofiles(path)
 
+    tisp_linear_actuator = zaber_linear_actuator()
+    spectrometer = thorlabspectrometer()
+
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-        #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
-        time.sleep(5)
-        logger.log(f"start power control at {wavelength}nm")
+        pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
         pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
@@ -241,7 +244,7 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
     logger.log(f"autofocus take {time.time()- start_time}sec")
     return optimal
 
-def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
+def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
     '''
     args:
         targetpower(float): 目標パワー[W]
@@ -271,16 +274,15 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     logger.log(f"minimum excite center wavelength:{minwavelength}")
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
-    logger.log(f"excite wavelength width:{wavelengthwidth}")
     logger.log(f"integration time:{integrationtime}")
-    logger.log(f"")
+    logger.log("")
     logger.log(f"start position:{startpos}")
     logger.log(f"end position:{endpos}")
     logger.log(f"number of steps:{numberofsteps}")
-    logger.log(f"")
+    logger.log("")
     for i in range(numberofsteps):
         logger.log(f"position {i}:{poslist[0][i], poslist[1][i]}")
-    logger.log(f"")
+    logger.log("")
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -310,7 +312,12 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
     priorstage = Proscan(config.PRIORCOMPORT)
 
+    tisp_linear_actuator = zaber_linear_actuator()
+    spectrometer = thorlabspectrometer()
+
     if check_autofocus:
+        logger.log(f"setting up for autofocus")
+        pid_control_wavelength(targetwavelength=700, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
         pid_control_power(targetpower=1*0.001, wavelength=700, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
@@ -348,8 +355,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
             objective_lens.move_to(height_func(posidx))
 
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
-            #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
-            time.sleep(5)
+            logger.log(f"start wavelength control at {wavelength}")
+            pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
             logger.log(f"start power control at {wavelength}")
             pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
             logger.log(f"start to get PL spectra at {wavelength}")
