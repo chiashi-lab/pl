@@ -43,8 +43,9 @@ class zaber_linear_actuator:
         if self._device_axis.is_parked():
             self._device_axis.unpark()
         if position < config.ZABERMINLIMIT or position > config.ZABERMAXLIMIT:
-            warnings.warn(f"zaber {position} is out of range. position is clipped to {position}")
+            warnings.warn(f"zaber {position} is out of range")
             position = np.clip(position, config.ZABERMINLIMIT, config.ZABERMAXLIMIT)
+            warnings.warn(f"position is clipped to {position}")
         self._device_axis.move_absolute(position, Units.LENGTH_MILLIMETRES)
         self._device_axis.park()
 

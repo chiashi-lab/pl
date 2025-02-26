@@ -45,14 +45,6 @@ class Application(tkinter.Frame):
         self.unit_stepWL = tkinter.Label(text=u'nm')
         self.unit_stepWL.place(x=250, y=90)
 
-        self.label_widthWL = tkinter.Label(text=u'励起光波長幅')
-        self.label_widthWL.place(x=10, y=130)
-        self.entry_widthWL = tkinter.Entry(width=7)
-        self.entry_widthWL.insert(tkinter.END, '1')
-        self.entry_widthWL.place(x=190, y=130)
-        self.unit_widthWL = tkinter.Label(text=u'nm')
-        self.unit_widthWL.place(x=250, y=130)
-
         self.label_exposure = tkinter.Label(text=u'露光時間')
         self.label_exposure.place(x=10, y=170)
         self.entry_exposure = tkinter.Entry(width=7, text='120')
@@ -103,23 +95,22 @@ class Application(tkinter.Frame):
             minWL = int(self.entry_minWL.get())
             maxWL = int(self.entry_maxWL.get())
             stepWL = int(self.entry_stepWL.get())
-            widthWL = int(self.entry_widthWL.get())
             exposure = int(self.entry_exposure.get())
             savefolderpath = self.entry_savefolderpath.get()
         except Exception as e:
             print(e)
             self.msg.set(f"数字を入力してください\n{e}")
             return
-        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL:
+        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
             return
         if not os.path.exists(savefolderpath):
             self.msg.set("保存先が存在しません")
             return
-        thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath))
+        thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, exposure, savefolderpath))
         thread1.start()
     
-    def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, widthWL:int, exposure:int, savefolderpath:str)->None:
+    def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, savefolderpath:str)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -127,7 +118,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            single_ple(power, minWL, maxWL, stepWL, widthWL, exposure, savefolderpath, self.logger)
+            single_ple(power, minWL, maxWL, stepWL, exposure, savefolderpath, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")

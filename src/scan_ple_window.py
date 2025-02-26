@@ -138,7 +138,6 @@ class Application(tkinter.Frame):
             minWL = int(self.entry_minwavelength.get())
             maxWL = int(self.entry_maxwavelength.get())
             stepWL = int(self.entry_stepwavelength.get())
-            widthWL = int(self.entry_wavelengthwidth.get())
             exposure = int(self.entry_integrationtime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
@@ -149,16 +148,16 @@ class Application(tkinter.Frame):
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
             return
-        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or widthWL < 1 or widthWL > 100 or exposure < 0 or exposure > 1000 or minWL > maxWL:
+        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
             return
         if not os.path.exists(path):
             self.msg.set("保存先が存在しません")
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
+        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
         thread1.start()
 
-    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, widthWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool)->None:
+    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -166,7 +165,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            scan_ple(power, minWL, maxWL, stepWL, widthWL, exposure, path, startpos, endpos, numberofsteps, autofocus, self.logger)
+            scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
