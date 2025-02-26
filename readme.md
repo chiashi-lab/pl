@@ -22,6 +22,8 @@ python == 3.11.9
 ```
 .
 ├── data...notebookで使うデータを保存するフォルダ
+├── arduino/arduino_auto_focus...オートフォーカス用のarduinoのスケッチを保存するフォルダ
+│   └── arduino_auto_focus.ino...オートフォーカス用のarduinoのスケッチ
 ├── docs
 │   └── readme用の画像等
 ├── notebook
