@@ -66,7 +66,7 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
             logger.log("Already at target power")
             return
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, eps:int = 3, logger:Logger = None) -> None:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 50) -> None:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
@@ -76,6 +76,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     return:
         None
     '''
+    # PID制御のパラメータ. PIDゲインはsrc/config.pyに記述されている
     Kp = config.EXCITEWAVELENGTHPIDKP
     Ki = config.EXCITEWAVELENGTHPIDKI
     Kd = config.EXCITEWAVELENGTHPIDKD
@@ -83,16 +84,18 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     acc = 0.0
     diff = 0.0
     prev = 0.0
+
     logger.log(f"wavelength control start for {targetwavelength}nm")
-    TiSap_actuator.move_to((1268 - targetwavelength) / 22.7)
-    while (True):
+    TiSap_actuator.move_to((1268 - targetwavelength) / 22.7) # 事前に取得したリニアアクチュエータ位置と波長の関係から一次関数の関係にあることがわかっている(tisp.ipynbにフィッティング結果がある)．このフィッティング式から目標波長に対応するアクチュエータ位置を計算して移動する.この処理はフィードバック制御ではない
+
+    # ここからPID制御
+    for i in range(max_retry):
         nowstep = TiSap_actuator.get_position()
         nowwavelength = spectrometer.get_peak()
+        logger.log(f"{i}th retry of PID wavelength control")
         logger.log(f"current wavelength: {nowwavelength}")
         logger.log(f"current step: {nowstep}")
-        print(f"current wavelength: {nowwavelength}")
-        print(f"current step: {nowstep}")
-        if nowwavelength < targetwavelength - eps or targetwavelength + eps < nowwavelength:
+        if nowwavelength < targetwavelength - eps or targetwavelength + eps < nowwavelength:#目標波長に到達していない場合
             error = nowwavelength - targetwavelength
             acc += error * dt
             diff = (error - prev) / dt
@@ -104,10 +107,13 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
             logger.log(f"target step: {tostep}")
             TiSap_actuator.move_to(tostep)
             prev = error
-        else:
+        else:#目標波長に到達したら終了
             logger.log("Already at target wavelength")
-            print("finish")
             return
+    # max_retry回繰り返しても目標波長に到達しなかった場合
+    logger.log(f"Failed to control wavelength by {max_retry} times")
+    logger.log(f"current wavelength: {nowwavelength}")
+    return
 
 def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, wavelengthwidth:int, integrationtime:int, path:str, logger:Logger) -> None:
     '''

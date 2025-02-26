@@ -87,4 +87,4 @@ def get_width(savedir):
 
 if __name__ == "__main__":
     #print(sim(0.02, 0.02, 0.01))
-    get_width("C:\\Users\\optics\\individual\\kanai\\PL\\250225")
+    get_width(input("savedir:"))
