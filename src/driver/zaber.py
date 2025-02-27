@@ -23,6 +23,8 @@ class zaber_linear_actuator:
         self._device = self.stage_connection.detect_devices()[0]
 
         self._device_axis = self._device.get_axis(1)
+        if not self._device_axis.is_homed():
+            warnings.warn("zaber is not homed")
         self._device_axis.park()
     
     def __del__(self) -> None:
