@@ -15,7 +15,7 @@ import os
 import pandas as pd
 
 
-def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.001, logger:Logger = None) -> None:
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 50) -> None:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -37,8 +37,42 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
     prev = 0.0
     if NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(config.NDINITPOS, block=True)
-    while (True):
-        time.sleep(10)
+    time.sleep(5)#最初の熱緩和待機時間
+    # PID制御first
+    logger.log("PID power control fist start")
+    for i in range(max_retry):
+        logger.log(f"{i}th retry of PID power control")
+        time.sleep(1)
+        nowndstep = NDfilter.get_position()
+        measuredpower = powermeter.get_latestdata()
+        nowpower = measuredpower * func.ndstep2ratio(nowndstep)
+        logger.log(f"measured power: {measuredpower}")
+        logger.log(f"predicted current power: {nowpower}")
+        logger.log(f"now step: {nowndstep}")
+
+        if nowpower < targetpower - eps or targetpower + eps < nowpower:
+            error = nowpower - targetpower
+            acc += error * dt
+            diff = (error - prev) / dt
+
+            tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
+            logger.log("move start")
+            logger.log(f"error: {error}")
+            logger.log(f"acc: {acc}")
+            logger.log(f"diff: {diff}")
+            logger.log(f"target step: {tostep}")
+            NDfilter.move_to(tostep)
+            logger.log("move end")
+            logger.log(f"now step: {NDfilter.get_position()}\n")
+            prev = error
+        else:
+            logger.log("Already at target power")
+            return
+
+    # PID制御second
+    for i in range(max_retry):
+        logger.log(f"{i}th retry of PID power control")
+        time.sleep(5)
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
@@ -171,7 +205,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
         pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
         symphony.start_exposure()
@@ -317,7 +351,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     if check_autofocus:
         logger.log(f"setting up for autofocus")
         pid_control_wavelength(targetwavelength=700, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-        pid_control_power(targetpower=1*0.001, wavelength=700, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        pid_control_power(targetpower=1*0.001, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
         diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
 
@@ -357,7 +391,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
             logger.log(f"start power control at {wavelength}")
-            pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
             logger.log(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.start_exposure()
@@ -480,7 +514,7 @@ def scan_ple_sweep(targetpower:float, wavelength:int, wavelengthwidth:int, integ
         #laserchoone.change_lwbw(wavelength=wavelength, bandwidth=wavelengthwidth)
         time.sleep(5)
         logger.log(f"start power control at {wavelength}")
-        pid_control_power(targetpower=targetpower, wavelength=wavelength, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}")
         shut.open(2)
         symphony.start_exposure()
