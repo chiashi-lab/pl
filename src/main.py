@@ -40,9 +40,8 @@ def pid_control_power(targetpower:float, wavelength:int, powermeter:juno, NDfilt
     while (True):
         time.sleep(10)
         nowndstep = NDfilter.get_position()
-        ratio = 3.0 # FIXME
         measuredpower = powermeter.get_latestdata()
-        nowpower = ratio * measuredpower
+        nowpower = measuredpower * func.ndstep2ratio(nowndstep)
         logger.log(f"measured power: {measuredpower}")
         logger.log(f"predicted current power: {nowpower}")
         logger.log(f"now step: {nowndstep}")
