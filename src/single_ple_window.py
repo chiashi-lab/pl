@@ -66,9 +66,9 @@ class Application(tkinter.Frame):
         self.entry_savefolderpath = tkinter.Entry(width=40)
         self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individual')
         self.entry_savefolderpath.place(x=120, y=260)
-        self.button_browse = tkinter.Button(text=u'参照', width=10)
-        self.button_browse.bind("<1>", self.call_get_path)
-        self.button_browse.place(x=410, y=260)
+        self.button_savefolderpath = tkinter.Button(text=u'参照', width=10)
+        self.button_savefolderpath.bind("<1>", self.call_get_path)
+        self.button_savefolderpath.place(x=410, y=260)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
         self.button_start.bind("<1>", self.call_pack_single_ple)
@@ -85,11 +85,18 @@ class Application(tkinter.Frame):
         self.log_scrolltxt.place(x=20, y=400)
 
     def call_get_path(self, event)->None:
+        if self.button_savefolderpath["state"] == tkinter.DISABLED:
+            return
+        self.button_savefolderpath["state"] = tkinter.DISABLED
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
         self.entry_savefolderpath.delete(0,tkinter.END)
         self.entry_savefolderpath.insert(tkinter.END, file)
+        self.button_savefolderpath["state"] = tkinter.NORMAL
     
     def call_pack_single_ple(self, event)->None:
+        if self.button_start["state"] == tkinter.DISABLED:
+            return
+        self.button_start["state"] = tkinter.DISABLED
         try:
             power = float(self.entry_power.get()) * 0.001
             minWL = int(self.entry_minWL.get())
@@ -100,12 +107,15 @@ class Application(tkinter.Frame):
         except Exception as e:
             print(e)
             self.msg.set(f"数字を入力してください\n{e}")
+            self.button_start["state"] = tkinter.NORMAL
             return
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
+            self.button_start["state"] = tkinter.NORMAL
             return
         if not os.path.exists(savefolderpath):
             self.msg.set("保存先が存在しません")
+            self.button_start["state"] = tkinter.NORMAL
             return
         thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, exposure, savefolderpath))
         thread1.start()
