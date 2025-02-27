@@ -60,32 +60,37 @@ class Application(tkinter.Frame):
         self.logger = Logger(log_file_path=None, log_scroll=self.log_scrolltext)
 
     def call_init(self, event):
+        if self.init_button["state"] == tkinter.DISABLED:
+            return
+        self.init_button["state"] = tkinter.DISABLED
         thread2 = threading.Thread(target=self.initialize)
         thread2.start()
 
     def call_choonepower(self, event):
+        if self.set_button["state"] == tkinter.DISABLED:
+            return
+        self.set_button["state"] = tkinter.DISABLED
         try:
             power = float(self.entry_power.get()) * 0.001
             wavelength = int(self.entry_wavelength.get())
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
+            self.set_button["state"] = tkinter.NORMAL
             return
         if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850:
             self.msg.set("正しい値を入力して下さい")
+            self.set_button["state"] = tkinter.NORMAL
             return
         thread1 = threading.Thread(target=self.choonepower, args=(power, wavelength))
         thread1.start()
 
     def initialize(self):
         try:
-            self.init_button["state"] = tkinter.DISABLED
             self.msg.set("初期化中...")
             self.pb.start(10)
             self.flipshut = FlipMount()
             self.flipshut.close()
-
-            #self.laserchoone = superchrome()
 
             self.NDfilter = ThorlabStage(home=True)
             self.NDfilter.move_to(0, block=True)
@@ -101,6 +106,7 @@ class Application(tkinter.Frame):
             print(e)
             self.msg.set(f"初期化に失敗しました\n{e}")
             self.pb.stop()
+            self.init_button["state"] = tkinter.NORMAL
             return
 
         self.set_button["state"] = tkinter.NORMAL
@@ -115,7 +121,6 @@ class Application(tkinter.Frame):
         self.msg.set("初期化完了．値を設定してセットを押してください")
 
     def choonepower(self, targetpower, centerwavelength):
-        self.set_button["state"] = tkinter.DISABLED
         self.msg.set("波長の切替とパワーの調整中...")
         self.pb.start(10)
         try:

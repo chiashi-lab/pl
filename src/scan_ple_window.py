@@ -46,14 +46,6 @@ class Application(tkinter.Frame):
         self.unit_stepwavelength = tkinter.Label(text=u'nm')
         self.unit_stepwavelength.place(x=250, y=90)
 
-        self.label_wavelengthwidth = tkinter.Label(text=u'励起光波長幅')
-        self.label_wavelengthwidth.place(x=10, y=130)
-        self.entry_wavelengthwidth = tkinter.Entry(width=7)
-        self.entry_wavelengthwidth.insert(tkinter.END, '1')
-        self.entry_wavelengthwidth.place(x=190, y=130)
-        self.unit_wavelengthwidth = tkinter.Label(text=u'nm')
-        self.unit_wavelengthwidth.place(x=250, y=130)
-
         self.label_integrationtime = tkinter.Label(text=u'露光時間')
         self.label_integrationtime.place(x=10, y=170)
         self.entry_integrationtime = tkinter.Entry(width=7, text='120')
@@ -128,11 +120,21 @@ class Application(tkinter.Frame):
         self.log_scrolltxt.place(x=20, y=600)
 
     def get_path(self, event):
+        if self.button_path["state"] == tkinter.DISABLED:
+            return
+        self.button_path["state"] = tkinter.DISABLED
+
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
         self.entry_path.delete(0, tkinter.END)
         self.entry_path.insert(tkinter.END, file)
+
+        self.button_path["state"] = tkinter.NORMAL
+        return
     
     def call_pack_scan_ple(self, event):
+        if self.button_start["state"] == tkinter.DISABLED:
+            return
+        self.button_start["state"] = tkinter.DISABLED
         try:
             power = float(self.entry_targetpower.get()) * 0.001
             minWL = int(self.entry_minwavelength.get())
@@ -147,12 +149,15 @@ class Application(tkinter.Frame):
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
+            self.button_start["state"] = tkinter.NORMAL
             return
         if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
+            self.button_start["state"] = tkinter.NORMAL
             return
         if not os.path.exists(path):
             self.msg.set("保存先が存在しません")
+            self.button_start["state"] = tkinter.NORMAL
             return
         thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
         thread1.start()
@@ -175,6 +180,7 @@ class Application(tkinter.Frame):
         self.pb.stop()
         self.msg.set("データ取得完了!")
         self.button_start["state"] = tkinter.NORMAL
+        return
 
     def get_pos(self)->None:
         self.res_get_pos = None
@@ -185,8 +191,6 @@ class Application(tkinter.Frame):
         return
     
     def get_pos_start(self)->None:
-        self.button_startpos["state"] = tkinter.DISABLED
-        self.button_endpos["state"] = tkinter.DISABLED
         self.msg.set("計測開始地点のステージ位置を取得中...")
         self.pb.start(5)
         try:
@@ -206,8 +210,6 @@ class Application(tkinter.Frame):
         return
     
     def get_pos_end(self):
-        self.button_startpos["state"] = tkinter.DISABLED
-        self.button_endpos["state"] = tkinter.DISABLED
         self.msg.set("計測終了地点のステージ位置を取得中...")
         self.pb.start(5)
         try:
@@ -226,10 +228,18 @@ class Application(tkinter.Frame):
         self.pb.stop()
     
     def call_get_pos_start(self, event):
+        if self.button_startpos["state"] == tkinter.DISABLED:
+            return
+        self.button_startpos["state"] = tkinter.DISABLED
+        self.button_endpos["state"] = tkinter.DISABLED
         thread_s = threading.Thread(target=self.get_pos_start)
         thread_s.start()
     
     def call_get_pos_end(self, event):
+        if self.button_endpos["state"] == tkinter.DISABLED:
+            return
+        self.button_startpos["state"] = tkinter.DISABLED
+        self.button_endpos["state"] = tkinter.DISABLED
         thread_e = threading.Thread(target=self.get_pos_end)
         thread_e.start()
 
