@@ -32,7 +32,7 @@ class Application(tkinter.Frame):
         self.label_power = tkinter.Label(text=u'目標パワー',state='disabled')
         self.label_power.place(x=30, y=160)
         self.entry_power = tkinter.Entry(width=7)
-        self.entry_power.insert(tkinter.END, '2')
+        self.entry_power.insert(tkinter.END, '1')
         self.entry_power["state"] = "disabled"
         self.entry_power.place(x=140, y=160)
         self.unit_power = tkinter.Label(text=u'mW', state='disabled')
@@ -126,7 +126,7 @@ class Application(tkinter.Frame):
         try:
             self.flipshut.open()
             pid_control_wavelength(targetwavelength=centerwavelength, TiSap_actuator=self.tisp, spectrometer=self.spectrometer, logger=self.logger)
-            pid_control_power(targetpower=targetpower, wavelength=centerwavelength, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
+            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"波長の切替とパワーの調整に失敗しました\n{e}")
