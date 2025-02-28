@@ -15,7 +15,7 @@ from logger import Logger
 def get_wavelength_power_relation(save_path):
     logger = Logger(None, timestamp_flag=True, log_scroll=None)
     flipshut = FlipMount()
-    flipshut.close()
+    flipshut.open()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
@@ -28,15 +28,18 @@ def get_wavelength_power_relation(save_path):
     tisp = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
 
-    wavelengthlist = np.arange(700, 850, 10)
+    wavelengthlist = np.arange(700, 900+10, 10)
 
     measured_power_list = []
     predicted_power_list = []
     for wavelength in wavelengthlist:
+        print(f"measuring at {wavelength} nm")
         pid_control_wavelength(wavelength, tisp, spectrometer, logger)
         time.sleep(10)
         measured_power = powermeter.get_latestdata()
         predicted_power = func.ndstep2ratio(0) * measured_power
+        print(f"measured power: {measured_power}")
+        print(f"predicted power: {predicted_power}")
 
         measured_power_list.append(measured_power)
         predicted_power_list.append(predicted_power)
