@@ -41,6 +41,12 @@ class zaber_linear_actuator:
     def get_position(self) -> float:
         return self._device_axis.get_position(Units.LENGTH_MILLIMETRES)
     
+    def _move_to(self, position: float) -> None:
+        if self._device_axis.is_parked():
+            self._device_axis.unpark()
+        self._device_axis.move_absolute(position, Units.LENGTH_MILLIMETRES)
+        self._device_axis.park()
+    
     def move_to(self, position: float) -> None:
         if self._device_axis.is_parked():
             self._device_axis.unpark()
@@ -48,7 +54,7 @@ class zaber_linear_actuator:
             warnings.warn(f"zaber {position} is out of range")
             position = np.clip(position, config.ZABERMINLIMIT, config.ZABERMAXLIMIT)
             warnings.warn(f"position is clipped to {position}")
-        self._device_axis.move_absolute(position, Units.LENGTH_MILLIMETRES)
+        self._move_to(position)
         self._device_axis.park()
 
 if __name__ == "__main__":
