@@ -84,7 +84,7 @@ class Application(tkinter.Frame):
     
     def set_position(self) -> None:
         position = self.positon_var.get()
-        self.zaber_linear_actuator.move_to(position)
+        self.zaber_linear_actuator._move_to(position)
         moved_position = self.zaber_linear_actuator.get_position()
         self.msg.set(f"zaber is moved to {moved_position}")
         self.positon_var.set(moved_position)
