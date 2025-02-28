@@ -13,9 +13,10 @@ import func
 import numpy as np
 import os
 import pandas as pd
+import warnings
 
 
-def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 50) -> None:
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 30) -> None:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -37,19 +38,19 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     prev = 0.0
     if NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(config.NDINITPOS, block=True)
-    time.sleep(5)#最初の熱緩和待機時間
+    time.sleep(2)#最初の熱緩和待機時間
     # PID制御first
     logger.log("PID power control fist start")
     for i in range(max_retry):
-        logger.log(f"{i}th retry of PID power control")
-        time.sleep(1)
+        logger.log(f"first {i}th retry of PID power control")
+        time.sleep(2)#毎回の熱緩和待機時間
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
         logger.log(f"measured power: {measuredpower}")
         logger.log(f"predicted current power: {nowpower}")
         logger.log(f"now step: {nowndstep}")
-
+        flag = False
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
             acc += error * dt
@@ -67,12 +68,19 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             prev = error
         else:
             logger.log("Already at target power")
-            return
-
+            flag = True
+            break
+    
+    if not flag:
+        logger.log("cant choone power")
+        warnings.warn("cant choone power")
+        return
+    
     # PID制御second
+    time.sleep(2)
     for i in range(max_retry):
-        logger.log(f"{i}th retry of PID power control")
-        time.sleep(5)
+        logger.log(f"second {i}th retry of PID power control")
+        time.sleep(3)
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
@@ -99,7 +107,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log("Already at target power")
             return
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 50) -> None:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> None:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
