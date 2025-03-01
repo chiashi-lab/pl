@@ -1,6 +1,6 @@
 # PLの制御
 python == 3.11.9
-![overview](docs/fig1.png)
+![overview](docs/pl-diagram.png)
 
 1. レーザ前ミラーとシャッターの起動。二つで光路を遮断
 2. NDフィルターを搭載したthorlabsステージの初期化
@@ -71,6 +71,8 @@ thoalbas社製のNDフィルター部ステージを制御するためにpylabli
 
 [https://pylablib.readthedocs.io/en/latest/devices/Thorlabs_kinesis.html](https://pylablib.readthedocs.io/en/latest/devices/Thorlabs_kinesis.html)
 
+NDフィルターの向きは下図参照
+![NDfilter](docs/ndfilter-diagram.png)
 
 ## 励起光パワー計測用のパワーメータの制御
 ophir社製のパワーメーターを制御にはophirの公式マニュアルを参考にCOMオブジェクトを使用している。
@@ -108,6 +110,9 @@ thorlabs社製のレーザー前ミラーを制御するためにpylablibを使�
 ## チタンサファイアレーザーの波長制御
 
 チタンサファイアレーザーの波長を制御するためにチタンサファイアレーザーの複屈折フィルター部にzaber社製のアクチュエータを取り付けている。zaber社製のアクチュエータを制御にはzaberが公式に配布しているzaber-motionというpip配布のライブラリを使用している。
+
+リニアアクチュエータの安全運用位置の目安は下図参照
+![linear](docs/ti-sp-linear-act.png)
 
 ## オートフォーカス
 

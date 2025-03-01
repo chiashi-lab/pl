@@ -28,6 +28,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     return:
         None
     '''
+    # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
     r = config.EXCITEPOWERPIDNORMALIZATION / targetpower #正規化項
     Kp = config.EXCITEPOWERPIDKP * r
     Ki = config.EXCITEPOWERPIDKI * r
