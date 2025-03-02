@@ -192,8 +192,6 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    #laserchoone = superchrome()
-
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
     logger.log(f"stage is at {NDfilter.get_position()}")
@@ -213,7 +211,9 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     spectrometer = thorlabspectrometer()
 
     for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
+        logger.log(f"start wavelength control at {wavelength}")
         pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
+        logger.log(f"start power control at {wavelength} for {targetpower}")
         pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
         logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
@@ -335,8 +335,6 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
 
-    #laserchoone = superchrome()
-
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
     logger.log(f"stage is at {NDfilter.get_position()}")
@@ -399,15 +397,14 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
         for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-            logger.log(f"start power control at {wavelength}")
+            logger.log(f"start power control at {wavelength} for {targetpower}")
             pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
             logger.log(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.start_exposure()
             time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
             shut.close(2)
-            time.sleep(3)
-            os.rename(savedirpath+"/"+"IMAGE0001_0001_AREA1_1.txt", savedirpath+"/"+f"{wavelength}.txt")
+            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
     shut.close(2)
     flipshut.close()
 
@@ -555,9 +552,8 @@ def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->N
 
         priorstage.move_to(pos2[0], pos2[1])
 
-if __name__ == "__main__":
+def autofocus_test_Si(path):
     #autofocus test on Si
-    path = "C:\\Users\\optics\\individual\\kanai\\PL\\250122\\autofocus_test_single"
     exposuretime = 3
     logger = Logger(log_file_path=os.path.join(path, "log.txt"))
 
@@ -574,4 +570,8 @@ if __name__ == "__main__":
     objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
     shut.open(2)
     start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=exposuretime, logger=logger, range_dense_search=100, range_sparse_search=400)
+    logger.log(f"autofocus at start position:{start_height}")
     logger.log(f"focus take {time.time()-stime}")
+
+if __name__ == "__main__":
+    autofocus_test_Si(input("path:"))

@@ -12,7 +12,7 @@ def make_linear_from_two_points(x1:float, y1:float, x2:float, y2:float) -> calla
     return linear
 
 def waittime4exposure(exposure:float)->float:
-    return linear(float(exposure), 1.1, 2.0)
+    return linear(float(exposure), 1.05, 5.0)
 
 def ndstep2ratio(ndstep:int)->float:
     return 2.9526e-12 * ndstep ** 2 + 2.4736
