@@ -46,6 +46,10 @@ class Application(tkinter.Frame):
         self.unit_stepwavelength = tkinter.Label(text=u'nm')
         self.unit_stepwavelength.place(x=250, y=90)
 
+        self.sweep = tkinter.BooleanVar()
+        self.checkbox_sweep = tkinter.Checkbutton(text=u'スイープ', variable=self.sweep)
+        self.checkbox_sweep.place(x=10, y=130)
+
         self.label_integrationtime = tkinter.Label(text=u'露光時間')
         self.label_integrationtime.place(x=10, y=170)
         self.entry_integrationtime = tkinter.Entry(width=7, text='120')
@@ -146,12 +150,13 @@ class Application(tkinter.Frame):
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
             numberofsteps = int(self.entry_numberofsteps.get())
             autofocus = bool(self.autofocus.get())
+            sweep = bool(self.sweep.get())
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_start["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or minWL < 400 or minWL > 850 or maxWL < 400 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
+        if power < 0.0 or power > 4.0 or minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL < 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return
@@ -159,10 +164,10 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus))
+        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep))
         thread1.start()
 
-    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool)->None:
+    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool, sweep:bool)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -170,7 +175,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, self.logger)
+            scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
