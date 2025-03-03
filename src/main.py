@@ -17,7 +17,7 @@ import pandas as pd
 import warnings
 
 
-def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 30, NDinitpos:int = config.NDINITPOS) -> None:
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 40, NDinitpos:int = config.NDINITPOS) -> list:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -30,7 +30,8 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         None
     '''
     # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
-    r = config.EXCITEPOWERPIDNORMALIZATION / targetpower #正規化項
+    poslog =[]
+    r = config.EXCITEPOWERPIDNORMALIZATION
     Kp = config.EXCITEPOWERPIDKP * r
     Ki = config.EXCITEPOWERPIDKI * r
     Kd = config.EXCITEPOWERPIDKD * r
@@ -40,8 +41,10 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     prev = 0.0
     if NDinitpos != config.NDINITPOS:
         NDfilter.move_to(NDinitpos)
+        poslog.append(NDinitpos)
     elif NDinitpos == config.NDINITPOS and NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(NDinitpos)
+        poslog.append(NDinitpos)
     time.sleep(2)#最初の熱緩和待機時間.初回はやや長めに待つ
     # PID制御first
     logger.log("PID power control fist start")
@@ -57,7 +60,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         flag = False
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
-            acc += error * dt
+            acc += (error + prev) * dt /2
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
@@ -67,6 +70,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
+            poslog.append(tostep)
             logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
@@ -103,12 +107,13 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
+            poslog.append(tostep)
             logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
             logger.log("Already at target power")
-            return
+            return poslog
 
 def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> None:
     '''

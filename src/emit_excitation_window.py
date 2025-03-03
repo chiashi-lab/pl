@@ -10,12 +10,14 @@ from driver.sigmakoki import shutter
 from driver.zaber import zaber_linear_actuator
 from logger import Logger
 import config
+from power_dict import PowerDict
+import matplotlib.pyplot as plt
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
-        self.master.geometry("400x500")
+        self.master.geometry("500x500")
         self.master.title(u"励起光制御")
         self.create_widgets()
     
@@ -54,8 +56,8 @@ class Application(tkinter.Frame):
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=280)
 
-        self.log_scrolltext = tkinter.scrolledtext.ScrolledText(width=40, height=10)
-        self.log_scrolltext.place(x=20, y=360)
+        self.log_scrolltext = tkinter.scrolledtext.ScrolledText(width=60, height=10)
+        self.log_scrolltext.place(x=10, y=360)
         
         self.logger = Logger(log_file_path=None, log_scroll=self.log_scrolltext)
 
@@ -89,8 +91,12 @@ class Application(tkinter.Frame):
         try:
             self.msg.set("初期化中...")
             self.pb.start(10)
+
             self.flipshut = FlipMount()
             self.flipshut.close()
+            self.logger.log("flipshut is closed")
+
+            self.mypowerdict = PowerDict()
 
             self.NDfilter = ThorlabStage(home=True)
             self.NDfilter.move_to(0, block=True)
@@ -99,9 +105,13 @@ class Application(tkinter.Frame):
             self.powermeter = juno()
             self.powermeter.open()
             self.powermeter.set_range(0)
+            self.logger.log("powermeter is opened")
 
             self.tisp = zaber_linear_actuator()
+            self.logger.log("TiSap actuator is initialized")
+
             self.spectrometer = thorlabspectrometer()
+            self.logger.log("spectrometer is initialized")
         except Exception as e:
             print(e)
             self.msg.set(f"初期化に失敗しました\n{e}")
@@ -125,8 +135,14 @@ class Application(tkinter.Frame):
         self.pb.start(10)
         try:
             self.flipshut.open()
+
+            self.logger.log(f"start wavelength control at {centerwavelength}")
             pid_control_wavelength(targetwavelength=centerwavelength, TiSap_actuator=self.tisp, spectrometer=self.spectrometer, logger=self.logger)
-            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger)
+            self.logger.log(f"start power control at {centerwavelength} for {targetpower}")
+            poslog = pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger, NDinitpos=self.mypowerdict.get_nearest(centerwavelength, targetpower))
+            self.mypowerdict.add(centerwavelength, targetpower, self.NDfilter.get_position())
+            plt.plot(poslog)
+            plt.show()
         except Exception as e:
             print(e)
             self.msg.set(f"波長の切替とパワーの調整に失敗しました\n{e}")

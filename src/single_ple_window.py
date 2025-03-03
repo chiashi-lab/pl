@@ -81,7 +81,7 @@ class Application(tkinter.Frame):
         self.label_msg = tkinter.Label(textvariable=self.msg)
         self.label_msg.place(x=20, y=310)
 
-        self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=50, height=10)
+        self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=400)
 
     def call_get_path(self, event)->None:
