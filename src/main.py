@@ -324,8 +324,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
     logger.log(f"integration time:{integrationtime}")
-    logger.log("")
     wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+    logger.log("")
     logger.log("wave length list")
     for wavelength in wavelengthlist:
         logger.log(str(wavelength))
