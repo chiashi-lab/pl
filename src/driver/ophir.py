@@ -87,10 +87,11 @@ class juno:
         data(3xN float array): 2D(3xN) array of data
         0st row: time
         1st row: power [W]
-        2nd row: energy
+        2nd row: status
 
         if there is no data, return null 2D array(3x0)
         If you want to get the data, just wait a little before do"get_data"
+        データは時系列順である．先頭（インデックスの値が小さい）ほど古いデータ，末尾（インデックスの値が大きい）ほど新しいデータである．
         """
         data = self.OphirCOM.GetData(self.DeviceHandle, 0)
         while not data:

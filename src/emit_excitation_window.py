@@ -98,7 +98,7 @@ class Application(tkinter.Frame):
 
             self.powermeter = juno()
             self.powermeter.open()
-            self.powermeter.set_range(3)
+            self.powermeter.set_range(0)
 
             self.tisp = zaber_linear_actuator()
             self.spectrometer = thorlabspectrometer()
