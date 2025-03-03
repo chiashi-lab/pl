@@ -207,7 +207,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
 
     powermeter = juno()
     powermeter.open()
-    powermeter.set_range(3)
+    powermeter.set_range(0)
 
     symphony = Symphony()
     symphony.Initialize()
@@ -355,7 +355,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
     powermeter = juno()
     powermeter.open()
-    powermeter.set_range(3)
+    powermeter.set_range(0)
 
     symphony = Symphony()
     symphony.Initialize()

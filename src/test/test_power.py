@@ -23,7 +23,7 @@ def get_wavelength_power_relation(save_path):
 
     powermeter = juno()
     powermeter.open()
-    powermeter.set_range(3)
+    powermeter.set_range(0)
 
     tisp = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
