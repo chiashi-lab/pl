@@ -141,8 +141,8 @@ class Application(tkinter.Frame):
             self.logger.log(f"start power control at {centerwavelength} for {targetpower}")
             poslog = pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=self.logger, NDinitpos=self.mypowerdict.get_nearest(centerwavelength, targetpower))
             self.mypowerdict.add(centerwavelength, targetpower, self.NDfilter.get_position())
-            plt.plot(poslog)
-            plt.show()
+            #plt.plot(poslog)
+            #plt.show()
         except Exception as e:
             print(e)
             self.msg.set(f"波長の切替とパワーの調整に失敗しました\n{e}")
