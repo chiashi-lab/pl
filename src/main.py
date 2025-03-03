@@ -183,6 +183,11 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
     logger.log(f"integration time:{integrationtime}")
+    wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+    logger.log("")
+    logger.log("excited wavelength list")
+    for wavelength in wavelengthlist:
+        logger.log(str(wavelength))
     logger.log("")
 
     if not os.path.exists(path):
@@ -212,7 +217,7 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
     tisp_linear_actuator = zaber_linear_actuator()
     spectrometer = thorlabspectrometer()
 
-    for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
+    for wavelength in wavelengthlist:
         logger.log(f"start wavelength control at {wavelength}")
         pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
         logger.log(f"start power control at {wavelength} for {targetpower}")
@@ -319,6 +324,11 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
     logger.log(f"integration time:{integrationtime}")
+    wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+    logger.log("")
+    logger.log("wave length list")
+    for wavelength in wavelengthlist:
+        logger.log(str(wavelength))
     logger.log("")
     logger.log(f"start position:{startpos}")
     logger.log(f"end position:{endpos}")
@@ -396,7 +406,7 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
             logger.log(f"obejctive lens is moving to {height_func(posidx)}")
             objective_lens.move_to(height_func(posidx))
 
-        for wavelength in np.arange(minwavelength, maxwavelength+stepwavelength, stepwavelength):
+        for wavelength in wavelengthlist:
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
             logger.log(f"start power control at {wavelength} for {targetpower}")
