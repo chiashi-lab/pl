@@ -97,7 +97,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
 
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
-            acc += error * dt
+            acc += (error + prev) * dt /2
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
@@ -149,7 +149,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
         logger.log(f"current step: {nowstep}")
         if nowwavelength < targetwavelength - eps or targetwavelength + eps < nowwavelength:#目標波長に到達していない場合
             error = nowwavelength - targetwavelength
-            acc += error * dt
+            acc += (error + prev) * dt /2
             diff = (error - prev) / dt
             tostep = nowstep + Kp * error + Ki * acc + Kd * diff
             logger.log("move start")
