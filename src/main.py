@@ -7,6 +7,7 @@ from driver.focus_adjuster_driver import Focus_adjuster
 from driver.zaber import zaber_linear_actuator
 from logger import Logger
 import config
+from power_dict import PowerDict
 import time
 import datetime
 import func
@@ -16,7 +17,7 @@ import pandas as pd
 import warnings
 
 
-def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 30, NDinitpos:int = config.NDINITPOS) -> None:
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 40, NDinitpos:int = config.NDINITPOS) -> list:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -24,12 +25,13 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         wavelength(int): 現在の波長[nm]
         powermeter(juno): パワーメーターの自作ドライバークラス
         NDfilter(ThorlabStage): NDフィルターがついているthorlabステージの自作ドライバークラス
-        eps(float): 目標パワーの許容誤差割合[無次元]
+        eps(float): 目標パワーの許容誤差[W]
     return:
         None
     '''
     # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
-    r = config.EXCITEPOWERPIDNORMALIZATION / targetpower #正規化項
+    poslog =[]
+    r = config.EXCITEPOWERPIDNORMALIZATION
     Kp = config.EXCITEPOWERPIDKP * r
     Ki = config.EXCITEPOWERPIDKI * r
     Kd = config.EXCITEPOWERPIDKD * r
@@ -39,14 +41,16 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     prev = 0.0
     if NDinitpos != config.NDINITPOS:
         NDfilter.move_to(NDinitpos)
+        poslog.append(NDinitpos)
     elif NDinitpos == config.NDINITPOS and NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(NDinitpos)
-    time.sleep(2)#最初の熱緩和待機時間
+        poslog.append(NDinitpos)
+    time.sleep(2)#最初の熱緩和待機時間.初回はやや長めに待つ
     # PID制御first
     logger.log("PID power control fist start")
     for i in range(max_retry):
         logger.log(f"first {i}th retry of PID power control")
-        time.sleep(2)#毎回の熱緩和待機時間
+        time.sleep(2)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
@@ -56,7 +60,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         flag = False
         if nowpower < targetpower - eps or targetpower + eps < nowpower:
             error = nowpower - targetpower
-            acc += error * dt
+            acc += (error + prev) * dt /2
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
@@ -66,11 +70,12 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
+            poslog.append(tostep)
             logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
-            logger.log("Already at target power")
+            logger.log("first Already at target power")
             flag = True
             break
     
@@ -80,7 +85,6 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         return
     
     # PID制御second
-    time.sleep(2)
     for i in range(max_retry):
         logger.log(f"second {i}th retry of PID power control")
         time.sleep(3)
@@ -103,12 +107,13 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
+            poslog.append(tostep)
             logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
             logger.log("Already at target power")
-            return
+            return poslog
 
 def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> None:
     '''
@@ -196,38 +201,51 @@ def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwave
 
     flipshut = FlipMount()
     flipshut.close()
+    logger.log("flipshut is closed")
+
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
+    logger.log("shutter is closed")
+
+    mypowerdict = PowerDict()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
     logger.log(f"stage is at {NDfilter.get_position()}")
 
     flipshut.open()
+    logger.log("flipshut is opened")
 
     powermeter = juno()
     powermeter.open()
     powermeter.set_range(0)
+    logger.log("powermeter is opened")
 
     symphony = Symphony()
     symphony.Initialize()
     symphony.set_exposuretime(integrationtime)
     symphony.set_config_savetofiles(path)
+    logger.log("symphony is initialized")
 
     tisp_linear_actuator = zaber_linear_actuator()
+    logger.log("TiSap actuator is initialized")
+
     spectrometer = thorlabspectrometer()
+    logger.log("spectrometer is initialized")
 
     for wavelength in wavelengthlist:
         logger.log(f"start wavelength control at {wavelength}")
         pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
         logger.log(f"start power control at {wavelength} for {targetpower}")
-        pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=mypowerdict.get_nearest(wavelength, targetpower))
+        mypowerdict.add(wavelength, targetpower, NDfilter.get_position())
         logger.log(f"start to get PL spectra at {wavelength}nm")
         shut.open(2)
         symphony.start_exposure()
         time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
         shut.close(2)
         os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
+        logger.log(f"PL spectra at {wavelength}nm is saved")
     
     shut.close(2)
     flipshut.close()
@@ -324,6 +342,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
     logger.log(f"maximum excite center wavelength:{maxwavelength}")
     logger.log(f"excite center wavelength step:{stepwavelength}")
     logger.log(f"integration time:{integrationtime}")
+    logger.log(f"sweep is {sweep}")
+
     wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
     logger.log("")
     logger.log("wave length list")
@@ -344,44 +364,61 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
 
     flipshut = FlipMount()
     flipshut.close()
+    logger.log("flipshut is closed")
+
     shut = shutter(config.SHUTTERCOMPORT)
     shut.close(2)
+    logger.log("shutter is closed")
+
+    mypowerdict = PowerDict()
 
     NDfilter = ThorlabStage(home=True)
     NDfilter.move_to(0, block=True)
     logger.log(f"stage is at {NDfilter.get_position()}")
 
     flipshut.open()
+    logger.log("flipshut is opened")
 
     powermeter = juno()
     powermeter.open()
     powermeter.set_range(0)
+    logger.log("powermeter is opened")
 
     symphony = Symphony()
     symphony.Initialize()
     symphony.set_exposuretime(integrationtime)
     symphony.set_config_savetofiles(path)
+    logger.log("symphony is initialized")
 
     priorstage = Proscan(config.PRIORCOMPORT)
+    logger.log("priorstage is initialized")
 
     tisp_linear_actuator = zaber_linear_actuator()
+    logger.log("TiSap actuator is initialized")
+
     spectrometer = thorlabspectrometer()
+    logger.log("spectrometer is initialized")
 
     if check_autofocus:
-        logger.log(f"setting up for autofocus")
-        pid_control_wavelength(targetwavelength=700, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-        pid_control_power(targetpower=1*0.001, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        logger.log("setting up for autofocus")
+        logger.log("wave length is moving to 750nm")
+        pid_control_wavelength(targetwavelength=750, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
+        logger.log("power is moving to 0.001W")
+        pid_control_power(targetpower=0.001, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+        mypowerdict.add(750, 0.001, NDfilter.get_position())
+
         objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+        logger.log("arduino is initialized")
         diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
 
-        logger.log(f"start autofocus at start position")
-        logger.log(f"stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
+        logger.log("start autofocus at start position")
+        logger.log("stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
         priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
         shut.open(2)
         start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
         shut.close(2)
 
-        logger.log(f"start autofocus at end position")
+        logger.log("start autofocus at end position")
         logger.log(f"stage is moving to {endpos[0]+diff_vec[0], endpos[1]+diff_vec[1]}")
         priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
         shut.open(2)
@@ -410,7 +447,8 @@ def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavele
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
             logger.log(f"start power control at {wavelength} for {targetpower}")
-            pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=mypowerdict.get_nearest(wavelength, targetpower))
+            mypowerdict.add(wavelength, targetpower, NDfilter.get_position())
             logger.log(f"start to get PL spectra at {wavelength}")
             shut.open(2)
             symphony.start_exposure()

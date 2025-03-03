@@ -74,8 +74,9 @@ thoalbas社製のNDフィルター部ステージを制御するためにpylabli
 NDフィルターの向きは下図参照
 ![NDfilter](docs/ndfilter-diagram.png)
 
-## 励起光パワー計測用のパワーメータの制御
-ophir社製のパワーメーターを制御にはophirの公式マニュアルを参考にCOMオブジェクトを使用している。
+## 励起光パワー計測用のパワーメータ3A-FSの制御
+ophir社製のパワーメーター3A-FSの制御にはophirの公式マニュアルを参考にCOMオブジェクトを使用している。
+パワーメータ自体は3A-FSであるが，同社のjunoというインターフェースデバイスを介してPCと通信している。
 
 [OphirManual](docs/OphirLMMeasurement_COM_Object_0.pdf)
 
