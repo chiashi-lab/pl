@@ -35,7 +35,7 @@ class Logger:
             self._log_scroll.config(state="disabled")
 
     def log(self, message: str) -> None:
-        self._log_without_return("\n" + message)
+        self._log_without_return("\n" + datetime.datetime.now().strftime("%d %H:%M:%S") + " ; " + message)
 
 
 if __name__ == "__main__":

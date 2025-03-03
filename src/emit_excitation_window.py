@@ -78,7 +78,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.set_button["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or wavelength < 400 or wavelength > 850:
+        if power < 0.0 or power > 4.0 or wavelength < 700 or wavelength > 850:
             self.msg.set("正しい値を入力して下さい")
             self.set_button["state"] = tkinter.NORMAL
             return
