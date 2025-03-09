@@ -4,7 +4,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import scan_ple
+from main import Scan_PLE_Measurement
 from driver.prior import Proscan
 import config
 import func
@@ -12,6 +12,7 @@ import datetime
 import gc
 import os
 import logger
+import numpy as np
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
@@ -105,6 +106,10 @@ class Application(tkinter.Frame):
         self.entry_numberofsteps.insert(tkinter.END, '1')
         self.entry_numberofsteps.place(x=170, y=400)
 
+        self.button_calc_measurement_interval = tkinter.Button(text=u'計算', width=7)
+        self.button_calc_measurement_interval.bind("<1>", self.calc_measurement_interval)
+        self.button_calc_measurement_interval.place(x=400, y=400)
+
         self.autofocus = tkinter.BooleanVar()
         self.checkbox_autofocus = tkinter.Checkbutton(text=u'オートフォーカス', variable=self.autofocus)
         self.checkbox_autofocus.place(x=10, y=440)
@@ -123,6 +128,8 @@ class Application(tkinter.Frame):
         self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=600)
 
+        self.scan_ple_measurement_obj = Scan_PLE_Measurement()
+
     def get_path(self, event):
         if self.button_path["state"] == tkinter.DISABLED:
             return
@@ -133,6 +140,29 @@ class Application(tkinter.Frame):
         self.entry_path.insert(tkinter.END, file)
 
         self.button_path["state"] = tkinter.NORMAL
+        return
+    
+    def calc_measurement_interval(self, event):
+        if self.button_calc_measurement_interval["state"] == tkinter.DISABLED:
+            return
+        self.button_calc_measurement_interval["state"] = tkinter.DISABLED
+        try:
+            numberofsteps = int(self.entry_numberofsteps.get())
+            startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
+            endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
+        except Exception as e:
+            print(e)
+            self.msg.set(f"値を正しく入力してください\n{e}")
+            self.button_calc_measurement_interval["state"] = tkinter.NORMAL
+            return
+        if numberofsteps < 2:
+            self.msg.set("測定箇所は2箇所以上必要です")
+            self.button_calc_measurement_interval["state"] = tkinter.NORMAL
+            return
+        distance = np.linalg.norm(np.array(startpos) - np.array(endpos)) / 100 #umに変換
+        interval = distance / (numberofsteps - 1)
+        self.msg.set(f"測定間隔は{interval:.2f}umです")
+        self.button_calc_measurement_interval["state"] = tkinter.NORMAL
         return
     
     def call_pack_scan_ple(self, event):
@@ -160,6 +190,10 @@ class Application(tkinter.Frame):
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return
+        if numberofsteps < 2:
+            self.msg.set("測定箇所は2箇所以上必要です")
+            self.button_start["state"] = tkinter.NORMAL
+            return
         if not os.path.exists(path):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
@@ -175,7 +209,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
+            self.scan_ple_measurement_obj.scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
