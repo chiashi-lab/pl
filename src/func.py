@@ -15,7 +15,8 @@ def waittime4exposure(exposure:float)->float:
     return linear(float(exposure), 1.05, 5.0)
 
 def ndstep2ratio(ndstep:int)->float:
-    return 2.9526e-12 * ndstep ** 2 + 2.4736
+    a, b, c = 4.36756476e+05, 2.68052560e+00, 4.82142858e-06
+    return (c * ndstep - a * c) * (ndstep > a) + b
 
 if __name__ == '__main__':
     def pre(wavelength: int) -> float:
