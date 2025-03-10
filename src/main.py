@@ -167,89 +167,120 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     logger.log(f"current wavelength: {nowwavelength}")
     return
 
-def single_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, logger:Logger) -> None:
-    '''
-    PLEスペクトルを取得する関数
-    args:
-        targetpower(float): 目標パワー[W]
-        minwavelength(int): 最小励起中心波長[nm]
-        maxwavelength(int): 最大励起中心波長[nm]
-        stepwavelength(int): 中心励起波長のステップ[nm]
-        wavelengthwidth(int): 励起波長の幅[nm]
-        integrationtime(int): 露光時間[s]
-        path(str): データを保存するディレクトリのパス
-    return:
-        None
-    '''
-    logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    logger.log("Experiment Condition")
-    logger.log(f"targetpower:{targetpower}")
-    logger.log(f"minimum excite center wavelength:{minwavelength}")
-    logger.log(f"maximum excite center wavelength:{maxwavelength}")
-    logger.log(f"excite center wavelength step:{stepwavelength}")
-    logger.log(f"integration time:{integrationtime}")
-    wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
-    logger.log("")
-    logger.log("excited wavelength list")
-    for wavelength in wavelengthlist:
-        logger.log(str(wavelength))
-    logger.log("")
-
-    if not os.path.exists(path):
-        os.makedirs(path)
-        logger.log(f"make dir at {path}")
-
-    flipshut = FlipMount()
-    flipshut.close()
-    logger.log("flipshut is closed")
-
-    shut = shutter(config.SHUTTERCOMPORT)
-    shut.close(2)
-    logger.log("shutter is closed")
-
-    mypowerdict = PowerDict()
-
-    NDfilter = ThorlabStage(home=True)
-    NDfilter.move_to(0, block=True)
-    logger.log(f"stage is at {NDfilter.get_position()}")
-
-    flipshut.open()
-    logger.log("flipshut is opened")
-
-    powermeter = juno()
-    powermeter.open()
-    powermeter.set_range(0)
-    logger.log("powermeter is opened")
-
-    symphony = Symphony()
-    symphony.Initialize()
-    symphony.set_exposuretime(integrationtime)
-    symphony.set_config_savetofiles(path)
-    logger.log("symphony is initialized")
-
-    tisp_linear_actuator = zaber_linear_actuator()
-    logger.log("TiSap actuator is initialized")
-
-    spectrometer = thorlabspectrometer()
-    logger.log("spectrometer is initialized")
-
-    for wavelength in wavelengthlist:
-        logger.log(f"start wavelength control at {wavelength}")
-        pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-        logger.log(f"start power control at {wavelength} for {targetpower}")
-        pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=mypowerdict.get_nearest(wavelength, targetpower))
-        mypowerdict.add(wavelength, targetpower, NDfilter.get_position())
-        logger.log(f"start to get PL spectra at {wavelength}nm")
-        shut.open(2)
-        symphony.start_exposure()
-        time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
-        shut.close(2)
-        os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
-        logger.log(f"PL spectra at {wavelength}nm is saved")
+class Single_Ple_Measurement():
+    def __init_(self) -> None:
+        self.reset()
     
-    shut.close(2)
-    flipshut.close()
-    logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None 
+        self.NDfilter = None
+        self.powermeter = None
+        self.symphony = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+        self.logger = None
+
+    def single_ple(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, logger:Logger) -> None:
+        '''
+        PLEスペクトルを取得する関数
+        args:
+            targetpower(float): 目標パワー[W]
+            minwavelength(int): 最小励起中心波長[nm]
+            maxwavelength(int): 最大励起中心波長[nm]
+            stepwavelength(int): 中心励起波長のステップ[nm]
+            wavelengthwidth(int): 励起波長の幅[nm]
+            integrationtime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+        return:
+            None
+        '''
+        self.targetpower = targetpower
+        self.minwavelength = minwavelength
+        self.maxwavelength = maxwavelength
+        self.stepwavelength = stepwavelength
+        self.integrationtime = integrationtime
+        self.path = path
+        self.logger = logger
+
+        self.logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("Experiment Condition")
+        self.logger.log(f"targetpower:{targetpower}")
+        self.logger.log(f"minimum excite center wavelength:{minwavelength}")
+        self.logger.log(f"maximum excite center wavelength:{maxwavelength}")
+        self.logger.log(f"excite center wavelength step:{stepwavelength}")
+        self.logger.log(f"integration time:{integrationtime}")
+        self.wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+        self.logger.log("")
+        self.logger.log("excited wavelength list")
+        for wavelength in self.wavelengthlist:
+            self.logger.log(str(wavelength))
+        self.logger.log("")
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
+
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
+
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
+
+        self.mypowerdict = PowerDict()
+
+        if self.NDfilter is None:
+            self.NDfilter = ThorlabStage(home=True)
+        self.NDfilter.move_to(0, block=True)
+        self.logger.log(f"stage is at {self.NDfilter.get_position()}")
+
+        if self.flipshut is None:
+            self.flipshut.open()
+        self.logger.log("flipshut is opened")
+
+        if self.powermeter is None:
+            self.powermeter = juno()
+        self.powermeter.open()
+        self.powermeter.set_range(0)
+        self.logger.log("powermeter is opened")
+
+        if self.symphony is None:
+            self.symphony = Symphony()
+        self.symphony.Initialize()
+        self.symphony.set_exposuretime(integrationtime)
+        self.symphony.set_config_savetofiles(path)
+        self.logger.log("symphony is initialized")
+
+        if self.tisp_linear_actuator is None:
+            self.tisp_linear_actuator = zaber_linear_actuator()
+        self.logger.log("TiSap actuator is initialized")
+
+        if self.spectrometer is None:
+            self.spectrometer = thorlabspectrometer()
+        self.logger.log("spectrometer is initialized")
+
+        for wavelength in self.wavelengthlist:
+            self.logger.log(f"start wavelength control at {wavelength}")
+            pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            self.logger.log(f"start power control at {wavelength} for {targetpower}")
+            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(wavelength, targetpower))
+            self.mypowerdict.add(wavelength, targetpower, self.NDfilter.get_position())
+            self.logger.log(f"start to get PL spectra at {wavelength}nm")
+            self.shut.open(2)
+            self.symphony.start_exposure()
+            time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
+            self.shut.close(2)
+            os.rename(os.path.join(path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"{wavelength}.txt"))
+            self.logger.log(f"PL spectra at {wavelength}nm is saved")
+        
+        self.shut.close(2)
+        self.flipshut.close()
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
     start_time = time.time()
@@ -311,175 +342,195 @@ def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str,
     logger.log(f"autofocus take {time.time()- start_time}sec")
     return optimal
 
-def scan_ple(targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, sweep:bool, logger:Logger) -> None:
-    '''
-    args:
-        targetpower(float): 目標パワー[W]
-        minwavelength(int): 最小励起中心波長[nm]
-        maxwavelength(int): 最大励起中心波長[nm]
-        stepwavelength(int): 中心励起波長のステップ[nm]
-        wavelengthwidth(int): 励起波長の幅[nm]
-        integrationtime(int): 露光時間[s]
-        path(str): データを保存するディレクトリのパス
-        startpos(tuple): 移動開始位置[x,y]
-        endpos(tuple): 移動終了位置[x,y]
-        numberofsteps(int): 移動ステップ数
-    return:
-        None
-    '''
-    poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
-    poslist = list(poslist)
-    poslist = [[int(x) for x in y] for y in poslist]
+class Scan_PLE_Measurement():
+    def __init__(self) -> None:
+        self.reset()
 
-    slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
-    slit_orthogonal_vector = np.array([-slit_vector[1], slit_vector[0]])
-    movepos_when_focus = slit_orthogonal_vector / np.linalg.norm(slit_orthogonal_vector) * 10000
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.symphony = None
+        self.priorstage = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
 
-    logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    logger.log("Experiment Condition")
-    logger.log(f"targetpower:{targetpower}")
-    logger.log(f"minimum excite center wavelength:{minwavelength}")
-    logger.log(f"maximum excite center wavelength:{maxwavelength}")
-    logger.log(f"excite center wavelength step:{stepwavelength}")
-    logger.log(f"integration time:{integrationtime}")
-    logger.log(f"sweep is {sweep}")
+    def scan_ple(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, sweep:bool, logger:Logger) -> None:
+        '''
+        args:
+            targetpower(float): 目標パワー[W]
+            minwavelength(int): 最小励起中心波長[nm]
+            maxwavelength(int): 最大励起中心波長[nm]
+            stepwavelength(int): 中心励起波長のステップ[nm]
+            wavelengthwidth(int): 励起波長の幅[nm]
+            integrationtime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+            startpos(tuple): 移動開始位置[x,y]
+            endpos(tuple): 移動終了位置[x,y]
+            numberofsteps(int): 移動ステップ数
+        return:
+            None
+        '''
+        self.poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+        self.poslist = list(self.poslist)
+        self.poslist = [[int(x) for x in y] for y in self.poslist]
 
-    wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
-    logger.log("")
-    logger.log("wave length list")
-    for wavelength in wavelengthlist:
-        logger.log(str(wavelength))
-    logger.log("")
-    logger.log(f"start position:{startpos}")
-    logger.log(f"end position:{endpos}")
-    logger.log(f"number of steps:{numberofsteps}")
-    logger.log("")
-    for i in range(numberofsteps):
-        logger.log(f"position {i}:{poslist[0][i], poslist[1][i]}")
-    logger.log("")
+        self.slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+        self.slit_orthogonal_vector = np.array([-self.slit_vector[1], self.slit_vector[0]])
+        movepos_when_focus = self.slit_orthogonal_vector / np.linalg.norm(self.slit_orthogonal_vector) * 10000
 
-    if not os.path.exists(path):
-        os.makedirs(path)
-        logger.log(f"make dir at {path}")
+        self.logger = logger
 
-    flipshut = FlipMount()
-    flipshut.close()
-    logger.log("flipshut is closed")
+        self.logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("Experiment Condition")
+        self.logger.log(f"targetpower:{targetpower}")
+        self.logger.log(f"minimum excite center wavelength:{minwavelength}")
+        self.logger.log(f"maximum excite center wavelength:{maxwavelength}")
+        self.logger.log(f"excite center wavelength step:{stepwavelength}")
+        self.logger.log(f"integration time:{integrationtime}")
+        self.logger.log(f"sweep is {sweep}")
 
-    shut = shutter(config.SHUTTERCOMPORT)
-    shut.close(2)
-    logger.log("shutter is closed")
+        self.wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+        self.logger.log("")
+        self.logger.log("wave length list")
+        for wavelength in self.wavelengthlist:
+            logger.log(str(wavelength))
+        self.logger.log("")
+        self.logger.log(f"start position:{startpos}")
+        self.logger.log(f"end position:{endpos}")
+        self.logger.log(f"number of steps:{numberofsteps}")
+        self.logger.log("")
+        for i in range(numberofsteps):
+            self.logger.log(f"position {i}:{self.poslist[0][i], self.poslist[1][i]}")
+        self.logger.log("")
 
-    mypowerdict = PowerDict()
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
 
-    NDfilter = ThorlabStage(home=True)
-    NDfilter.move_to(0, block=True)
-    logger.log(f"stage is at {NDfilter.get_position()}")
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
 
-    flipshut.open()
-    logger.log("flipshut is opened")
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
 
-    powermeter = juno()
-    powermeter.open()
-    powermeter.set_range(0)
-    logger.log("powermeter is opened")
+        self.mypowerdict = PowerDict()
 
-    symphony = Symphony()
-    symphony.Initialize()
-    symphony.set_exposuretime(integrationtime)
-    symphony.set_config_savetofiles(path)
-    logger.log("symphony is initialized")
+        if self.NDfilter is None:
+            self.NDfilter = ThorlabStage(home=True)
+        self.NDfilter.move_to(0, block=True)
+        self.logger.log(f"stage is at {self.NDfilter.get_position()}")
 
-    priorstage = Proscan(config.PRIORCOMPORT)
-    logger.log("priorstage is initialized")
+        self.flipshut.open()
+        self.logger.log("flipshut is opened")
 
-    tisp_linear_actuator = zaber_linear_actuator()
-    logger.log("TiSap actuator is initialized")
+        self.powermeter = juno()
+        self.powermeter.open()
+        self.powermeter.set_range(0)
+        self.logger.log("powermeter is opened")
 
-    spectrometer = thorlabspectrometer()
-    logger.log("spectrometer is initialized")
+        self.symphony = Symphony()
+        self.symphony.Initialize()
+        self.symphony.set_exposuretime(integrationtime)
+        self.symphony.set_config_savetofiles(path)
+        self.logger.log("symphony is initialized")
 
-    if check_autofocus:
-        logger.log("setting up for autofocus")
-        logger.log("wave length is moving to 750nm")
-        pid_control_wavelength(targetwavelength=750, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-        logger.log("power is moving to 0.001W")
-        pid_control_power(targetpower=0.001, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
-        mypowerdict.add(750, 0.001, NDfilter.get_position())
+        self.priorstage = Proscan(config.PRIORCOMPORT)
+        self.logger.log("priorstage is initialized")
 
-        objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
-        logger.log("arduino is initialized")
-        diff_vec = slit_vector / np.linalg.norm(slit_vector) * 1000 #10um
+        self.tisp_linear_actuator = zaber_linear_actuator()
+        self.logger.log("TiSap actuator is initialized")
 
-        logger.log("start autofocus at start position")
-        logger.log("stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
-        priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
-        shut.open(2)
-        start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
-        shut.close(2)
-
-        logger.log("start autofocus at end position")
-        logger.log(f"stage is moving to {endpos[0]+diff_vec[0], endpos[1]+diff_vec[1]}")
-        priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
-        shut.open(2)
-        end_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
-        shut.close(2)
-
-        height_func = func.make_linear_from_two_points(0, start_height, numberofsteps-1, end_height)
-        symphony.set_exposuretime(integrationtime)
-
-
-    for posidx in range(numberofsteps):
-        logger.log(f"stage is moving to {posidx}:{poslist[0][posidx], poslist[1][posidx]}")
-        priorstage.move_to(poslist[0][posidx], poslist[1][posidx])
-
-        savedirpath = path+"/"+ f"pos{posidx}_x{poslist[0][posidx]}_y{poslist[1][posidx]}"
-        if not os.path.exists(savedirpath):
-            os.makedirs(savedirpath)
-            logger.log(f"make dir at {savedirpath}")
-        symphony.set_config_savetofiles(savedirpath)
+        self.spectrometer = thorlabspectrometer()
+        self.logger.log("spectrometer is initialized")
 
         if check_autofocus:
-            logger.log(f"obejctive lens is moving to {height_func(posidx)}")
-            objective_lens.move_to(height_func(posidx))
+            self.logger.log("setting up for autofocus")
+            self.logger.log("wave length is moving to 750nm")
+            pid_control_wavelength(targetwavelength=750, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            self.logger.log("power is moving to 0.001W")
+            pid_control_power(targetpower=0.001, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            self.mypowerdict.add(750, 0.001, self.NDfilter.get_position())
 
-        for wavelength in wavelengthlist:
-            logger.log(f"start wavelength control at {wavelength}")
-            pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=tisp_linear_actuator, spectrometer=spectrometer, logger=logger)
-            logger.log(f"start power control at {wavelength} for {targetpower}")
-            pid_control_power(targetpower=targetpower, powermeter=powermeter, NDfilter=NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=mypowerdict.get_nearest(wavelength, targetpower))
-            mypowerdict.add(wavelength, targetpower, NDfilter.get_position())
-            logger.log(f"start to get PL spectra at {wavelength}")
-            shut.open(2)
-            symphony.start_exposure()
-            if sweep:
-                comeandgo(pos1=(poslist[0][posidx], poslist[1][posidx]), pos2=(poslist[0][posidx+1], poslist[1][posidx+1]), exposuretime=func.waittime4exposure(integrationtime), priorstage=priorstage)
-            else:
-                time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
-            shut.close(2)
-            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
-    shut.close(2)
-    flipshut.close()
+            self.objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+            self.logger.log("arduino is initialized")
+            diff_vec = self.slit_vector / np.linalg.norm(self.slit_vector) * 100 * 10 #10um
 
-    logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+            self.logger.log("start autofocus at start position")
+            self.logger.log("stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
+            self.priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
+            self.shut.open(2)
+            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.shut.close(2)
 
-def comeandgo(pos1:tuple, pos2:tuple, exposuretime:float, priorstage:Proscan)->None:
-    '''
-    2点間を往復しながら露光する関数
-    '''
-    starttime = time.time()
-    while True:
-        nowtime = time.time()
-        if nowtime - starttime > exposuretime:
-            break
+            logger.log("start autofocus at end position")
+            logger.log(f"stage is moving to {endpos[0]+diff_vec[0], endpos[1]+diff_vec[1]}")
+            self.priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
+            self.shut.open(2)
+            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.shut.close(2)
 
-        priorstage.move_to(pos1[0], pos1[1])
+            self.height_func = func.make_linear_from_two_points(0, self.start_height, numberofsteps-1, self.end_height)
+            self.symphony.set_exposuretime(integrationtime)
 
-        nowtime = time.time()
-        if nowtime - starttime > exposuretime:
-            break
 
-        priorstage.move_to(pos2[0], pos2[1])
+        for posidx in range(numberofsteps):
+            logger.log(f"stage is moving to {posidx}:{self.poslist[0][posidx], self.poslist[1][posidx]}")
+            self.priorstage.move_to(self.poslist[0][posidx], self.poslist[1][posidx])
+
+            savedirpath = os.path.join(path, f"pos{posidx}_x{self.poslist[0][posidx]}_y{self.poslist[1][posidx]}")
+            if not os.path.exists(savedirpath):
+                os.makedirs(savedirpath)
+                self.logger.log(f"make dir at {savedirpath}")
+            self.symphony.set_config_savetofiles(savedirpath)
+
+            if check_autofocus:
+                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.objective_lens.move_to(self.height_func(posidx))
+
+            for wavelength in self.wavelengthlist:
+                logger.log(f"start wavelength control at {wavelength}")
+                pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+                logger.log(f"start power control at {wavelength} for {targetpower}")
+                pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(wavelength, targetpower))
+                self.mypowerdict.add(wavelength, targetpower, self.NDfilter.get_position())
+                self.logger.log(f"start to get PL spectra at {wavelength}")
+                self.shut.open(2)
+                self.symphony.start_exposure()
+                if sweep:
+                    self.comeandgo(pos1=(self.poslist[0][posidx], self.poslist[1][posidx]), pos2=(self.poslist[0][posidx+1], self.poslist[1][posidx+1]), exposuretime=func.waittime4exposure(integrationtime))
+                else:
+                    time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
+                self.shut.close(2)
+                os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
+        self.shut.close(2)
+        self.flipshut.close()
+
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+    def comeandgo(self, pos1:tuple, pos2:tuple, exposuretime:float) -> None:
+        '''
+        2点間を往復しながら露光する関数
+        '''
+        starttime = time.time()
+        while True:
+            nowtime = time.time()
+            if nowtime - starttime > exposuretime:
+                break
+
+            self.priorstage.move_to(pos1[0], pos1[1])
+
+            nowtime = time.time()
+            if nowtime - starttime > exposuretime:
+                break
+
+            self.priorstage.move_to(pos2[0], pos2[1])
 
 def autofocus_test_Si(path):
     #autofocus test on Si

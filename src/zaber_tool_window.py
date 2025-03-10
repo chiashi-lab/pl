@@ -64,9 +64,9 @@ class Application(tkinter.Frame):
         self.scale_position.configure(state="disabled")
         self.button_set_position.configure(state="disabled")
         position = self.positon_var.get()
-        self.msg.set(f"zaber is moving to {position}")
+        self.msg.set(f"zaber is moving to {position:.2f}")
         if position < 14.0:
-            res = messagebox.askyesno("zaber", f"ソケットが外れる可能性があります．\n本当に{position}に移動しますか？")
+            res = messagebox.askyesno("zaber", f"ソケットが外れる可能性があります．\n本当に{position:.2f}に移動しますか？")
             if not res:
                 self.scale_position.configure(state="normal")
                 self.button_set_position.configure(state="normal")
@@ -86,7 +86,7 @@ class Application(tkinter.Frame):
         position = self.positon_var.get()
         self.zaber_linear_actuator._move_to(position)
         moved_position = self.zaber_linear_actuator.get_position()
-        self.msg.set(f"zaber is moved to {moved_position}")
+        self.msg.set(f"zaber is moved to {moved_position:.2f}")
         self.positon_var.set(moved_position)
         self.scale_position.configure(state="normal")
         self.button_set_position.configure(state="normal")

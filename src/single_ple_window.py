@@ -5,7 +5,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import single_ple
+from main import Single_Ple_Measurement
 import func
 import datetime
 import logger
@@ -84,6 +84,8 @@ class Application(tkinter.Frame):
         self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=400)
 
+        self.single_ple_measurement_obj = Single_Ple_Measurement()
+
     def call_get_path(self, event)->None:
         if self.button_savefolderpath["state"] == tkinter.DISABLED:
             return
@@ -128,7 +130,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            single_ple(power, minWL, maxWL, stepWL, exposure, savefolderpath, self.logger)
+            self.single_ple_measurement_obj.single_ple(power, minWL, maxWL, stepWL, exposure, savefolderpath, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
