@@ -17,7 +17,7 @@ import pandas as pd
 import warnings
 
 
-def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 40, NDinitpos:int = config.NDINITPOS) -> list:
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 50, NDinitpos:int = config.NDINITPOS) -> list:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -31,7 +31,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     '''
     # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
     poslog =[]
-    r = config.EXCITEPOWERPIDNORMALIZATION
+    r = config.EXCITEPOWERPIDNORMALIZATION / (targetpower * 1000)
     Kp = config.EXCITEPOWERPIDKP * r
     Ki = config.EXCITEPOWERPIDKI * r
     Kd = config.EXCITEPOWERPIDKD * r
