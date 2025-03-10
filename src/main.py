@@ -17,7 +17,9 @@ import pandas as pd
 import warnings
 
 
-def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 40, NDinitpos:int = config.NDINITPOS) -> list:
+from typing import List, Tuple
+
+def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 40, NDinitpos:int = config.NDINITPOS) -> Tuple[List, bool]:
     '''
     PID制御を用いて目標パワーに制御する関数
     args:
@@ -27,7 +29,8 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         NDfilter(ThorlabStage): NDフィルターがついているthorlabステージの自作ドライバークラス
         eps(float): 目標パワーの許容誤差[W]
     return:
-        None
+        poslog(List): NDフィルターの位置のログ
+        bool: 目標パワーに到達したかどうか
     '''
     # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
     poslog =[]
@@ -82,7 +85,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     if not flag:
         logger.log("cant choone power")
         warnings.warn("cant choone power")
-        return
+        return poslog, False
     
     # PID制御second
     for i in range(max_retry):
@@ -113,7 +116,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             prev = error
         else:
             logger.log("Already at target power")
-            return poslog
+            return poslog, True
 
 def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> None:
     '''
@@ -378,8 +381,12 @@ class Scan_PLE_Measurement():
         self.poslist = [[int(x) for x in y] for y in self.poslist]
 
         self.slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+        self.slit_1um_vector = self.slit_vector / np.linalg.norm(self.slit_vector) * 100
+        self.slit_10um_vector = self.slit_1um_vector * 10
+
         self.slit_orthogonal_vector = np.array([-self.slit_vector[1], self.slit_vector[0]])
-        movepos_when_focus = self.slit_orthogonal_vector / np.linalg.norm(self.slit_orthogonal_vector) * 10000
+        self.slit_orthogonal_1um_vector = self.slit_orthogonal_vector / np.linalg.norm(self.slit_orthogonal_vector) * 100
+        self.slit_orthogonal_10um_vector = self.slit_orthogonal_1um_vector * 10
 
         self.logger = logger
 
@@ -460,18 +467,17 @@ class Scan_PLE_Measurement():
 
             self.objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
             self.logger.log("arduino is initialized")
-            diff_vec = self.slit_vector / np.linalg.norm(self.slit_vector) * 100 * 10 #10um
 
             self.logger.log("start autofocus at start position")
-            self.logger.log("stage is moving to {startpos[0]-diff_vec[0], startpos[1]-diff_vec[1]}")
-            self.priorstage.move_to(startpos[0]-diff_vec[0], startpos[1]-diff_vec[1])
+            self.logger.log(f"stage is moving to {startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
+            self.priorstage.move_to(*(startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
             self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
 
             logger.log("start autofocus at end position")
-            logger.log(f"stage is moving to {endpos[0]+diff_vec[0], endpos[1]+diff_vec[1]}")
-            self.priorstage.move_to(endpos[0]+diff_vec[0], endpos[1]+diff_vec[1])
+            logger.log(f"stage is moving to {endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
+            self.priorstage.move_to(*(endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
             self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
@@ -504,7 +510,7 @@ class Scan_PLE_Measurement():
                 self.shut.open(2)
                 self.symphony.start_exposure()
                 if sweep:
-                    self.comeandgo(pos1=(self.poslist[0][posidx], self.poslist[1][posidx]), pos2=(self.poslist[0][posidx+1], self.poslist[1][posidx+1]), exposuretime=func.waittime4exposure(integrationtime))
+                    self.comeandgo(pos1=(self.poslist - 0.5 * self.slit_1um_vector), pos2=(self.poslist + 0.5 * self.slit_1um_vector), exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後0.5umを往復しながら計測
                 else:
                     time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
                 self.shut.close(2)
@@ -521,13 +527,13 @@ class Scan_PLE_Measurement():
         starttime = time.time()
         while True:
             nowtime = time.time()
-            if nowtime - starttime > exposuretime:
+            if nowtime - starttime >= exposuretime:
                 break
 
             self.priorstage.move_to(pos1[0], pos1[1])
 
             nowtime = time.time()
-            if nowtime - starttime > exposuretime:
+            if nowtime - starttime >= exposuretime:
                 break
 
             self.priorstage.move_to(pos2[0], pos2[1])
