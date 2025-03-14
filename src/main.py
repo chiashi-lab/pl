@@ -354,7 +354,6 @@ class Scan_PLE_Measurement():
             minwavelength(int): 最小励起中心波長[nm]
             maxwavelength(int): 最大励起中心波長[nm]
             stepwavelength(int): 中心励起波長のステップ[nm]
-            wavelengthwidth(int): 励起波長の幅[nm]
             integrationtime(int): 露光時間[s]
             path(str): データを保存するディレクトリのパス
             startpos(tuple): 移動開始位置[x,y]
@@ -475,10 +474,12 @@ class Scan_PLE_Measurement():
 
 
         for posidx in range(numberofsteps):
-            logger.log(f"stage is moving to {posidx}:{self.poslist[0][posidx], self.poslist[1][posidx]}")
-            self.priorstage.move_to(self.poslist[0][posidx], self.poslist[1][posidx])
+            nowposx = self.poslist[0][posidx]
+            nowposy = self.poslist[1][posidx]
+            logger.log(f"stage is moving to {posidx}:{nowposx, nowposy}")
+            self.priorstage.move_to(nowposx, nowposy)
 
-            savedirpath = os.path.join(path, f"pos{posidx}_x{self.poslist[0][posidx]}_y{self.poslist[1][posidx]}")
+            savedirpath = os.path.normpath(path, f"pos{posidx}_x{nowposx}_y{nowposy}")
             if not os.path.exists(savedirpath):
                 os.makedirs(savedirpath)
                 self.logger.log(f"make dir at {savedirpath}")
@@ -498,7 +499,11 @@ class Scan_PLE_Measurement():
                 self.shut.open(2)
                 self.symphony.start_exposure()
                 if sweep:
-                    self.comeandgo(pos1=(self.poslist - self.slit_1um_vector), pos2=(self.poslist + self.slit_1um_vector), exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後1umを往復しながら計測
+                    pos1 = [nowposx, nowposy] - self.slit_orthogonal_1um_vector
+                    pos1 = [int(x) for x in pos1]
+                    pos2 = [nowposx, nowposy] + self.slit_orthogonal_1um_vector
+                    pos2 = [int(x) for x in pos2]
+                    self.comeandgo(pos1=pos1, pos2=pos2, exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後1umを往復しながら計測
                 else:
                     time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
                 self.shut.close(2)
@@ -507,6 +512,246 @@ class Scan_PLE_Measurement():
         self.flipshut.close()
 
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+    def comeandgo(self, pos1:tuple, pos2:tuple, exposuretime:float) -> None:
+        '''
+        2点間を往復しながら露光する関数
+        '''
+        starttime = time.time()
+        while True:
+            nowtime = time.time()
+            if nowtime - starttime >= exposuretime:
+                break
+
+            self.priorstage.move_to(pos1[0], pos1[1])
+
+            nowtime = time.time()
+            if nowtime - starttime >= exposuretime:
+                break
+
+            self.priorstage.move_to(pos2[0], pos2[1])
+
+class dev_Scan_PLE_Measurement():
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.symphony = None
+        self.priorstage = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+
+    def scan_ple(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, searchwavelength:int, integrationtime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, sweep:bool, logger:Logger) -> None:
+        '''
+        args:
+            targetpower(float): 目標パワー[W]
+            minwavelength(int): 最小励起中心波長[nm]
+            maxwavelength(int): 最大励起中心波長[nm]
+            stepwavelength(int): 中心励起波長のステップ[nm]
+            searchwavelength(int): 探索波長[nm]
+            integrationtime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+            startpos(tuple): 移動開始位置[x,y]
+            endpos(tuple): 移動終了位置[x,y]
+            numberofsteps(int): 移動ステップ数
+        return:
+            None
+        '''
+        self.prev_spectra = None
+        self.prev_prev_spectra = None
+
+        self.ple_poslist = []
+
+        self.poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+        self.poslist = list(self.poslist)
+        self.poslist = [[int(x) for x in y] for y in self.poslist]
+
+        self.slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+        self.slit_1um_vector = self.slit_vector / np.linalg.norm(self.slit_vector) * 100
+        self.slit_10um_vector = self.slit_1um_vector * 10
+
+        self.slit_orthogonal_vector = np.array([-self.slit_vector[1], self.slit_vector[0]])
+        self.slit_orthogonal_1um_vector = self.slit_orthogonal_vector / np.linalg.norm(self.slit_orthogonal_vector) * 100
+        self.slit_orthogonal_10um_vector = self.slit_orthogonal_1um_vector * 10
+
+        self.logger = logger
+
+        self.logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("Experiment Condition")
+        self.logger.log(f"integration time:{integrationtime}")
+        self.logger.log(f"sweep is {sweep}")
+        self.logger.log(f"targetpower:{targetpower}")
+        self.logger.log(f"search wavelength:{searchwavelength}")
+
+        self.logger.log(f"minimum excite center wavelength:{minwavelength}")
+        self.logger.log(f"maximum excite center wavelength:{maxwavelength}")
+        self.logger.log(f"excite center wavelength step:{stepwavelength}")
+        self.wavelengthlist = np.arange(minwavelength, maxwavelength + stepwavelength, stepwavelength)
+        self.logger.log("")
+        self.logger.log("wave length list")
+        for wavelength in self.wavelengthlist:
+            logger.log(str(wavelength))
+        self.logger.log("")
+        self.logger.log(f"start position:{startpos}")
+        self.logger.log(f"end position:{endpos}")
+        self.logger.log(f"number of steps:{numberofsteps}")
+        self.logger.log(f"position interval:{np.linalg.norm(self.slit_vector)/(numberofsteps-1)}" if numberofsteps > 1 else "position interval:0")
+        self.logger.log("")
+        for i in range(numberofsteps):
+            self.logger.log(f"position {i}:{self.poslist[0][i], self.poslist[1][i]}")
+        self.logger.log("")
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
+
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
+
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
+
+        self.mypowerdict = PowerDict()
+
+        if self.NDfilter is None:
+            self.NDfilter = ThorlabStage(home=True)
+        self.NDfilter.move_to(0, block=True)
+        self.logger.log(f"stage is at {self.NDfilter.get_position()}")
+
+        self.flipshut.open()
+        self.logger.log("flipshut is opened")
+
+        self.powermeter = juno()
+        self.powermeter.open()
+        self.powermeter.set_range(0)
+        self.logger.log("powermeter is opened")
+
+        self.symphony = Symphony()
+        self.symphony.Initialize()
+        self.symphony.set_exposuretime(integrationtime)
+        self.symphony.set_config_savetofiles(path)
+        self.logger.log("symphony is initialized")
+
+        self.priorstage = Proscan(config.PRIORCOMPORT)
+        self.logger.log("priorstage is initialized")
+
+        self.tisp_linear_actuator = zaber_linear_actuator()
+        self.logger.log("TiSap actuator is initialized")
+
+        self.spectrometer = thorlabspectrometer()
+        self.logger.log("spectrometer is initialized")
+
+        if check_autofocus:
+            self.logger.log("setting up for autofocus")
+            self.logger.log("wave length is moving to 750nm")
+            pid_control_wavelength(targetwavelength=750, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            self.logger.log("power is moving to 0.001W")
+            pid_control_power(targetpower=0.001, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            self.mypowerdict.add(750, 0.001, self.NDfilter.get_position())
+
+            self.objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+            self.logger.log("arduino is initialized")
+
+            self.logger.log("start autofocus at start position")
+            self.logger.log(f"stage is moving to {startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
+            self.priorstage.move_to(*(startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector))
+            self.shut.open(2)
+            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.shut.close(2)
+
+            logger.log("start autofocus at end position")
+            logger.log(f"stage is moving to {endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
+            self.priorstage.move_to(*(endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector))
+            self.shut.open(2)
+            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.shut.close(2)
+
+            self.height_func = func.make_linear_from_two_points(0, self.start_height, numberofsteps-1, self.end_height)
+            self.symphony.set_exposuretime(integrationtime)
+
+
+        for posidx in range(numberofsteps):
+            nowposx = self.poslist[0][posidx]
+            nowposy = self.poslist[1][posidx]
+            logger.log(f"stage is moving to {posidx}:{nowposx, nowposy}")
+            self.priorstage.move_to(nowposx, nowposy)
+
+            savedirpath = os.path.join(path, f"pos{posidx}_x{nowposx}_y{nowposy}")
+            if not os.path.exists(savedirpath):
+                os.makedirs(savedirpath)
+                self.logger.log(f"make dir at {savedirpath}")
+            self.symphony.set_config_savetofiles(savedirpath)
+
+            if check_autofocus:
+                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.objective_lens.move_to(self.height_func(posidx))
+
+            logger.log(f"start wavelength control at {searchwavelength}")
+            pid_control_wavelength(targetwavelength=searchwavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            logger.log(f"start power control at {searchwavelength} for {targetpower}")
+            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(searchwavelength, targetpower))
+            self.mypowerdict.add(searchwavelength, targetpower, self.NDfilter.get_position())
+            self.logger.log(f"start to get PL spectra at {searchwavelength}")
+            self.shut.open(2)
+            self.symphony.start_exposure()
+            if sweep:
+                pos1 = [nowposx, nowposy] - self.slit_orthogonal_1um_vector
+                pos1 = [int(x) for x in pos1]
+                pos2 = [nowposx, nowposy] + self.slit_orthogonal_1um_vector
+                pos2 = [int(x) for x in pos2]
+                self.comeandgo(pos1=pos1, pos2=pos2, exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後1umを往復しながら計測
+            else:
+                time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
+            self.shut.close(2)
+            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
+
+            df = pd.read_csv(os.path.join(savedirpath, f"{wavelength}.txt"), comment='#', header=None, sep=None, engine='python')
+            self.now_spectra = df[1].to_numpy()
+            if self.prev_spectra and self.prev_prev_spectra:# 直前2回のスペクトルが取得されている場合（=最初の二回以外）に直前2回のスペクトルの平均と今回のスペクトルの平均の差を計算
+                avg_now_spectra = np.mean(self.now_spectra[:300])
+                avg_prev_spectra = np.mean(self.prev_spectra[:300])
+                avg_prev_prev_spectra = np.mean(self.prev_prev_spectra[:300])
+                diff_now2prev = np.abs(avg_now_spectra - ((avg_prev_spectra + avg_prev_prev_spectra) / 2))
+
+                if diff_now2prev > 90:# 直前2回のスペクトルの平均との差が大きい場合
+                    logger.log(f"SWCNT like spectra detected at{nowposx, nowposy}")
+                    self.ple_poslist.append([nowposx, nowposy])
+                    logger.log(f"diff_now2prev:{diff_now2prev}")
+                    logger.log("start to get PLE spectra")
+
+                    for wavelength in self.wavelengthlist:
+                        logger.log(f"start wavelength control at {wavelength}")
+                        pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+                        logger.log(f"start power control at {wavelength} for {targetpower}")
+                        pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(wavelength, targetpower))
+                        self.mypowerdict.add(wavelength, targetpower, self.NDfilter.get_position())
+                        self.logger.log(f"start to get PL spectra at {wavelength}")
+                        self.shut.open(2)
+                        self.symphony.start_exposure()
+                        if sweep:
+                            self.comeandgo(pos1=pos1, pos2=pos2, exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後1umを往復しながら計測
+                        else:
+                            time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
+                        self.shut.close(2)
+                        os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))#最初に取得したスペクトルを上書きする可能性があるので注意
+            self.prev_prev_spectra = self.prev_spectra
+            self.prev_spectra = self.now_spectra
+        self.shut.close(2)
+        self.flipshut.close()
+
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("ple position list")
+        for pos in self.ple_poslist:
+            self.logger.log(pos)
 
     def comeandgo(self, pos1:tuple, pos2:tuple, exposuretime:float) -> None:
         '''
