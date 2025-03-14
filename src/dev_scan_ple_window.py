@@ -4,7 +4,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import Scan_PLE_Measurement
+from main import dev_Scan_PLE_Measurement
 from driver.prior import Proscan
 import config
 import func
@@ -19,14 +19,14 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master.geometry("600x900")
-        self.master.title(u"PLEスペクトルのマッピング測定君")
+        self.master.title(u"PLEスペクトルの高速マッピング測定君")
         self.create_widgets()
 
     def create_widgets(self):
         self.label_minwavelength = tkinter.Label(text=u'励起光最短中心波長')
         self.label_minwavelength.place(x=10, y=10)
         self.entry_minwavelength = tkinter.Entry(width=7)
-        self.entry_minwavelength.insert(tkinter.END, '785')
+        self.entry_minwavelength.insert(tkinter.END, '710')
         self.entry_minwavelength.place(x=190, y=10)
         self.unit_minwavelength = tkinter.Label(text=u'nm')
         self.unit_minwavelength.place(x=250, y=10)
@@ -34,7 +34,7 @@ class Application(tkinter.Frame):
         self.label_maxwavelength = tkinter.Label(text=u'励起光最長中心波長')
         self.label_maxwavelength.place(x=10, y=50)
         self.entry_maxwavelength = tkinter.Entry(width=7)
-        self.entry_maxwavelength.insert(tkinter.END, '785')
+        self.entry_maxwavelength.insert(tkinter.END, '850')
         self.entry_maxwavelength.place(x=190, y=50)
         self.unit_maxwavelength = tkinter.Label(text=u'nm')
         self.unit_maxwavelength.place(x=250, y=50)
@@ -42,7 +42,7 @@ class Application(tkinter.Frame):
         self.label_stepwavelength = tkinter.Label(text=u'励起光中心波長間隔')
         self.label_stepwavelength.place(x=10, y=90)
         self.entry_stepwavelength = tkinter.Entry(width=7)
-        self.entry_stepwavelength.insert(tkinter.END, '1')
+        self.entry_stepwavelength.insert(tkinter.END, '20')
         self.entry_stepwavelength.place(x=190, y=90)
         self.unit_stepwavelength = tkinter.Label(text=u'nm')
         self.unit_stepwavelength.place(x=250, y=90)
@@ -51,14 +51,22 @@ class Application(tkinter.Frame):
         self.button_calcwl.place(x=410, y=90)
         self.button_calcwl.bind("<1>", self.calcwl)
 
+        self.label_searchwavelength = tkinter.Label(text=u'探索波長')
+        self.label_searchwavelength.place(x=10, y=130)
+        self.entry_searchwavelength = tkinter.Entry(width=7)
+        self.entry_searchwavelength.insert(tkinter.END, '785')
+        self.entry_searchwavelength.place(x=190, y=130)
+        self.unit_searchwavelength = tkinter.Label(text=u'nm')
+        self.unit_searchwavelength.place(x=250, y=130)
+
         self.sweep = tkinter.BooleanVar()
         self.checkbox_sweep = tkinter.Checkbutton(text=u'スイープ', variable=self.sweep)
-        self.checkbox_sweep.place(x=10, y=130)
+        self.checkbox_sweep.place(x=300, y=440)
 
         self.label_integrationtime = tkinter.Label(text=u'露光時間')
         self.label_integrationtime.place(x=10, y=170)
-        self.entry_integrationtime = tkinter.Entry(width=7, text='120')
-        self.entry_integrationtime.insert(tkinter.END, '120')
+        self.entry_integrationtime = tkinter.Entry(width=7, text='60')
+        self.entry_integrationtime.insert(tkinter.END, '60')
         self.entry_integrationtime.place(x=190, y=170)
         self.unit_integrationtime = tkinter.Label(text=u'秒')
         self.unit_integrationtime.place(x=250, y=170)
@@ -66,7 +74,7 @@ class Application(tkinter.Frame):
         self.label_targetpower = tkinter.Label(text=u'サンプル照射パワー')
         self.label_targetpower.place(x=10, y=210)
         self.entry_targetpower = tkinter.Entry(width=7)
-        self.entry_targetpower.insert(tkinter.END, '2')
+        self.entry_targetpower.insert(tkinter.END, '1')
         self.entry_targetpower.place(x=190, y=210)
         self.unit_targetpower = tkinter.Label(text=u'mW')
         self.unit_targetpower.place(x=250, y=210)
@@ -132,7 +140,7 @@ class Application(tkinter.Frame):
         self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=600)
 
-        self.scan_ple_measurement_obj = Scan_PLE_Measurement()
+        self.scan_ple_measurement_obj = dev_Scan_PLE_Measurement()
 
     def get_path(self, event):
         if self.button_path["state"] == tkinter.DISABLED:
@@ -166,6 +174,7 @@ class Application(tkinter.Frame):
         self.msg.set(f"励起光波長は{list(np.arange(minWL, maxWL + stepWL, stepWL))}nmです")
         self.button_calcwl["state"] = tkinter.NORMAL
         return
+
     
     def calc_measurement_interval(self, event):
         if self.button_calc_measurement_interval["state"] == tkinter.DISABLED:
@@ -199,6 +208,7 @@ class Application(tkinter.Frame):
             minWL = int(self.entry_minwavelength.get())
             maxWL = int(self.entry_maxwavelength.get())
             stepWL = int(self.entry_stepwavelength.get())
+            searchWL = int(self.entry_searchwavelength.get())
             exposure = int(self.entry_integrationtime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
@@ -211,7 +221,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_start["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
+        if power < 0.0 or power > 4.0 or minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL or searchWL < 700 or searchWL > 850:
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return
@@ -223,10 +233,10 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep))
+        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, searchWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep))
         thread1.start()
 
-    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool, sweep:bool)->None:
+    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, searchWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool, sweep:bool)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -234,7 +244,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            self.scan_ple_measurement_obj.scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
+            self.scan_ple_measurement_obj.scan_ple(power, minWL, maxWL, stepWL, searchWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")

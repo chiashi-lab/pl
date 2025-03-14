@@ -9,6 +9,7 @@ from main import Single_Ple_Measurement
 import func
 import datetime
 import logger
+import numpy as np
 
 class Application(tkinter.Frame):
     def __init__(self, master=None):
@@ -44,6 +45,10 @@ class Application(tkinter.Frame):
         self.entry_stepWL.place(x=190, y=90)
         self.unit_stepWL = tkinter.Label(text=u'nm')
         self.unit_stepWL.place(x=250, y=90)
+
+        self.button_calcwl = tkinter.Button(text=u'計算', width=10)
+        self.button_calcwl.place(x=410, y=90)
+        self.button_calcwl.bind("<1>", self.calcwl)
 
         self.label_exposure = tkinter.Label(text=u'露光時間')
         self.label_exposure.place(x=10, y=170)
@@ -94,6 +99,27 @@ class Application(tkinter.Frame):
         self.entry_savefolderpath.delete(0,tkinter.END)
         self.entry_savefolderpath.insert(tkinter.END, file)
         self.button_savefolderpath["state"] = tkinter.NORMAL
+
+    def calcwl(self, event) -> None:
+        if self.button_calcwl["state"] == tkinter.DISABLED:
+            return
+        self.button_calcwl["state"] = tkinter.DISABLED
+        try:
+            minWL = int(self.entry_minWL.get())
+            maxWL = int(self.entry_maxWL.get())
+            stepWL = int(self.entry_stepWL.get())
+        except Exception as e:
+            print(e)
+            self.msg.set(f"数字を入力してください\n{e}")
+            self.button_calcwl["state"] = tkinter.NORMAL
+            return
+        if minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or minWL > maxWL:
+            self.msg.set("正しい値を入力してください")
+            self.button_calcwl["state"] = tkinter.NORMAL
+            return
+        self.msg.set(f"励起光波長は{list(np.arange(minWL, maxWL + stepWL, stepWL))}nmです")
+        self.button_calcwl["state"] = tkinter.NORMAL
+        return
     
     def call_pack_single_ple(self, event)->None:
         if self.button_start["state"] == tkinter.DISABLED:
