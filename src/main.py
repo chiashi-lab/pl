@@ -16,7 +16,6 @@ import os
 import pandas as pd
 import warnings
 
-
 from typing import List, Tuple
 
 def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage, eps:float = 0.1, logger:Logger = None, max_retry:int = 50, NDinitpos:int = config.NDINITPOS) -> Tuple[List, bool]:
@@ -67,14 +66,9 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
-            logger.log("move start")
-            logger.log(f"error: {error}")
-            logger.log(f"acc: {acc}")
-            logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
             poslog.append(tostep)
-            logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
@@ -104,21 +98,16 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             diff = (error - prev) / dt
 
             tostep = nowndstep + Kp * error + Ki * acc + Kd * diff
-            logger.log("move start")
-            logger.log(f"error: {error}")
-            logger.log(f"acc: {acc}")
-            logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             NDfilter.move_to(tostep)
             poslog.append(tostep)
-            logger.log("move end")
             logger.log(f"now step: {NDfilter.get_position()}\n")
             prev = error
         else:
             logger.log("Already at target power")
             return poslog, True
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> None:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> Tuple[List, bool]:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
@@ -139,6 +128,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     acc = 0.0
     diff = 0.0
     prev = 0.0
+    poslog = []
 
     logger.log(f"wavelength control start for {targetwavelength}nm")
     TiSap_actuator.move_to((1268 - targetwavelength) / 22.7) # 事前に取得したリニアアクチュエータ位置と波長の関係から一次関数の関係にあることがわかっている(tisp.ipynbにフィッティング結果がある)．このフィッティング式から目標波長に対応するアクチュエータ位置を計算して移動する.この処理はフィードバック制御ではない
@@ -155,20 +145,17 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
             acc += (error + prev) * dt /2
             diff = (error - prev) / dt
             tostep = nowstep + Kp * error + Ki * acc + Kd * diff
-            logger.log("move start")
-            logger.log(f"error: {error}")
-            logger.log(f"acc: {acc}")
-            logger.log(f"diff: {diff}")
             logger.log(f"target step: {tostep}")
             TiSap_actuator.move_to(tostep)
             prev = error
+            poslog.append(tostep)
         else:#目標波長に到達したら終了
             logger.log("Already at target wavelength")
-            return
+            return poslog, True
     # max_retry回繰り返しても目標波長に到達しなかった場合
     logger.log(f"Failed to control wavelength by {max_retry} times")
     logger.log(f"current wavelength: {nowwavelength}")
-    return
+    return poslog, False
 
 class Single_Ple_Measurement():
     def __init_(self) -> None:
@@ -408,6 +395,7 @@ class Scan_PLE_Measurement():
         self.logger.log(f"start position:{startpos}")
         self.logger.log(f"end position:{endpos}")
         self.logger.log(f"number of steps:{numberofsteps}")
+        self.logger.log(f"position interval:{np.linalg.norm(self.slit_vector)/(numberofsteps-1)}" if numberofsteps > 1 else "position interval:0")
         self.logger.log("")
         for i in range(numberofsteps):
             self.logger.log(f"position {i}:{self.poslist[0][i], self.poslist[1][i]}")
@@ -510,7 +498,7 @@ class Scan_PLE_Measurement():
                 self.shut.open(2)
                 self.symphony.start_exposure()
                 if sweep:
-                    self.comeandgo(pos1=(self.poslist - 0.5 * self.slit_1um_vector), pos2=(self.poslist + 0.5 * self.slit_1um_vector), exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後0.5umを往復しながら計測
+                    self.comeandgo(pos1=(self.poslist - self.slit_1um_vector), pos2=(self.poslist + self.slit_1um_vector), exposuretime=func.waittime4exposure(integrationtime)) #計測地点の前後1umを往復しながら計測
                 else:
                     time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
                 self.shut.close(2)
