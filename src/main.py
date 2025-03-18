@@ -712,11 +712,11 @@ class dev_Scan_PLE_Measurement():
             else:
                 time.sleep(func.waittime4exposure(integrationtime))#sympnoyとの時刻ずれを考慮して，露光時間よりも長めに待つ
             self.shut.close(2)
-            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{wavelength}.txt"))
+            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"{searchwavelength}.txt"))
 
-            df = pd.read_csv(os.path.join(savedirpath, f"{wavelength}.txt"), comment='#', header=None, sep=None, engine='python')
+            df = pd.read_csv(os.path.join(savedirpath, f"{searchwavelength}.txt"), comment='#', header=None, sep=None, engine='python')
             self.now_spectra = df[1].to_numpy()
-            if self.prev_spectra and self.prev_prev_spectra:# 直前2回のスペクトルが取得されている場合（=最初の二回以外）に直前2回のスペクトルの平均と今回のスペクトルの平均の差を計算
+            if self.prev_spectra is not None and self.prev_prev_spectra is not None and self.now_spectra is not None:# 直前2回のスペクトルが取得されている場合（=最初の二回以外）に直前2回のスペクトルの平均と今回のスペクトルの平均の差を計算
                 avg_now_spectra = np.mean(self.now_spectra[:300])
                 avg_prev_spectra = np.mean(self.prev_spectra[:300])
                 avg_prev_prev_spectra = np.mean(self.prev_prev_spectra[:300])
