@@ -1,5 +1,6 @@
 from pywinauto.application import Application
 import time
+import os
 import sys
 sys.path.append('../')
 import config
@@ -852,16 +853,30 @@ child_window(title="MFC_CCDExample - [CCD Component Version 3.5.7.20]", class_na
     def print(self) -> None:
         print(self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"].print_control_identifiers())
 
-    def set_exposuretime(self, time: int) -> None:
-        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(time))
+    def set_exposuretime(self, exposuretime: int | float) -> None:
+        self.exposuretime = exposuretime
+        self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Integration Time:Edit"].set_text(str(self.exposuretime))
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Set Params"].click()
 
     def set_config_savetofiles(self, path: str) -> None:
+        self.savefolderpath = path
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["Save to Files"].click()
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["FilePath:Edit"].set_text(path)
     
-    def start_exposure(self) -> None:
+    def start_exposure(self, block: bool = True) -> None:
+        """
+        args:
+            block: bool
+                if True, the function will block until the exposure is done.
+                if False, the function will return immediately.
+        """
+        if block and os.path.exists(os.path.join(self.savefolderpath, "IMAGE0001_0001_AREA1_1.txt")):
+            os.remove(os.path.join(self.savefolderpath, "IMAGE0001_0001_AREA1_1.txt"))#もしも既にファイルがあれば削除する．（削除しなかったとしても今回の測定で上書きされてしまうから削除しても問題ない）
         self.app["MFC_CCDExample - [CCD Component Version 3.5.7.20]"]["GO"].click()
+        if block:
+            time.sleep(self.exposuretime + 1)
+            while not os.path.exists(os.path.join(self.savefolderpath, "IMAGE0001_0001_AREA1_1.txt")):
+                time.sleep(1)
 
 
 if __name__ == "__main__":

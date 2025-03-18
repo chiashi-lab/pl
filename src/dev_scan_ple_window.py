@@ -63,13 +63,13 @@ class Application(tkinter.Frame):
         self.checkbox_sweep = tkinter.Checkbutton(text=u'スイープ', variable=self.sweep)
         self.checkbox_sweep.place(x=300, y=440)
 
-        self.label_integrationtime = tkinter.Label(text=u'露光時間')
-        self.label_integrationtime.place(x=10, y=170)
-        self.entry_integrationtime = tkinter.Entry(width=7, text='60')
-        self.entry_integrationtime.insert(tkinter.END, '60')
-        self.entry_integrationtime.place(x=190, y=170)
-        self.unit_integrationtime = tkinter.Label(text=u'秒')
-        self.unit_integrationtime.place(x=250, y=170)
+        self.label_exposuretime = tkinter.Label(text=u'露光時間')
+        self.label_exposuretime.place(x=10, y=170)
+        self.entry_exposuretime = tkinter.Entry(width=7, text='60')
+        self.entry_exposuretime.insert(tkinter.END, '60')
+        self.entry_exposuretime.place(x=190, y=170)
+        self.unit_exposuretime = tkinter.Label(text=u'秒')
+        self.unit_exposuretime.place(x=250, y=170)
 
         self.label_targetpower = tkinter.Label(text=u'サンプル照射パワー')
         self.label_targetpower.place(x=10, y=210)
@@ -209,7 +209,7 @@ class Application(tkinter.Frame):
             maxWL = int(self.entry_maxwavelength.get())
             stepWL = int(self.entry_stepwavelength.get())
             searchWL = int(self.entry_searchwavelength.get())
-            exposure = int(self.entry_integrationtime.get())
+            exposure = int(self.entry_exposuretime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
