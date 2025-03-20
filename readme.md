@@ -1,5 +1,5 @@
 # PLの制御
-python == 3.11.9
+pythonで3.11.9動作確認済み
 ![overview](docs/pl-diagram.png)
 
 1. レーザ前ミラーとシャッターの起動。二つで光路を遮断
@@ -37,7 +37,7 @@ python == 3.11.9
 │   ├── func.py...main関数等で使う数式を記述している
 │   ├── logger.py...ログを記録するためのクラス定義
 │   ├── main.py...メインスクリプト．計測の中心となる部分の関数を記述している
-|   ├── scan_ple_sweep_window.py...PLEスペクトルのマッピング測定をsweepしながら行うためのGUI．このスクリプトを実行するとGUIが立ち上がる
+|   ├── dev_scan_ple__window.py...PLEスペクトルのマッピング測定を行うためのGUI．このスクリプトを実行するとGUIが立ち上がる．最新機能が反映される．
 │   ├── scan_ple_window.py...PLEスペクトルのマッピング測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── single_ple_window.py...PLEスペクトル測定のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   └──driver
