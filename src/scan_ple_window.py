@@ -154,6 +154,8 @@ class Application(tkinter.Frame):
             minWL = int(self.entry_minwavelength.get())
             maxWL = int(self.entry_maxwavelength.get())
             stepWL = int(self.entry_stepwavelength.get())
+            wavelengthlist = np.arange(minWL, maxWL + stepWL, stepWL)
+            wavelengthlist = wavelengthlist.tolist()
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
@@ -163,7 +165,7 @@ class Application(tkinter.Frame):
             self.msg.set("正しい値を入力してください")
             self.button_calcwl["state"] = tkinter.NORMAL
             return
-        self.msg.set(f"励起光波長は{list(np.arange(minWL, maxWL + stepWL, stepWL))}nmです")
+        self.msg.set(f"励起光波長は{wavelengthlist}nmです")
         self.button_calcwl["state"] = tkinter.NORMAL
         return
     
