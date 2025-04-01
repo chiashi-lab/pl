@@ -275,6 +275,7 @@ class Single_Ple_Measurement():
 def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
     start_time = time.time()
     symphony.set_exposuretime(exposuretime)
+    symphony.set_config_savetofiles(savedirpath)
     center_dense_search = objective_lens.position
     # sparse search
     if range_sparse_search:
@@ -744,7 +745,7 @@ class dev_Scan_PLE_Measurement():
                 avg_prev_prev_spectra = np.mean(self.prev_prev_spectra[:300])
                 diff_now2prev = np.abs(avg_now_spectra - ((avg_prev_spectra + avg_prev_prev_spectra) / 2))
 
-                if diff_now2prev > 90:# 直前2回のスペクトルの平均との差が大きい場合
+                if diff_now2prev > 50:# 直前2回のスペクトルの平均との差が大きい場合
                     logger.log(f"SWCNT like spectra detected at{nowposx, nowposy}")
                     self.ple_poslist.append([nowposx, nowposy])
                     logger.log(f"diff_now2prev:{diff_now2prev}")

@@ -207,7 +207,7 @@ if __name__ == "__main__":
     print(Thorlabs.list_kinesis_devices())
     
     stage = ThorlabStage(home=True)
-    stage.move_to(500000,block=True)
+    stage.move_to(0,block=True)
     print(f"moved{stage.get_position()}")
 
     #flip = FlipMount()
