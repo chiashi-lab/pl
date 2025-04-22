@@ -159,7 +159,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     return poslog, False
 
 class Single_Ple_Measurement():
-    def __init_(self) -> None:
+    def __init__(self) -> None:
         self.reset()
     
     def reset(self) -> None:

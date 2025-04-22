@@ -32,7 +32,7 @@ CCS200DLLPATH = "C:/Program Files/IVI Foundation/VISA/Win64/Bin/TLCCS_64.dll"
 
 ZABERPORT = 'COM9'
 ZABERMINLIMIT = 14.0
-ZABERMAXLIMIT = 25.2
+ZABERMAXLIMIT = 24.8#長すぎると複屈折フィルターのピストンクランク機構の可動範囲を超えてしまい機械的に壊れるのでリミットを設定している
 
 EXCITEWAVELENGTHPIDKP = 0.015
 EXCITEWAVELENGTHPIDKI = 0.015

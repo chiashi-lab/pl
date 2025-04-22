@@ -2,6 +2,7 @@ import tkinter
 from tkinter import ttk, messagebox
 import time
 import sys
+import config
 sys.coinit_flags = 2
 import threading
 from driver.zaber import zaber_linear_actuator
@@ -19,11 +20,11 @@ class Application(tkinter.Frame):
         self.zaber_linear_actuator = zaber_linear_actuator()
         if self.zaber_linear_actuator._check_home():
             self.msg.set("zaber is homed")
-            self.positon_var.set(self.zaber_linear_actuator.get_position())
         else:
             self.msg.set("zaber is not homed")
             self.scale_position.configure(state="disabled")
             self.button_set_position.configure(state="disabled")
+        self.positon_var.set(self.zaber_linear_actuator.get_position())
 
     def create_widgets(self):
         self.msg = tkinter.StringVar(value="")
@@ -67,6 +68,13 @@ class Application(tkinter.Frame):
         self.msg.set(f"zaber is moving to {position:.2f}")
         if position < 14.0:
             res = messagebox.askyesno("zaber", f"ソケットが外れる可能性があります．\n本当に{position:.2f}に移動しますか？")
+            if not res:
+                self.scale_position.configure(state="normal")
+                self.button_set_position.configure(state="normal")
+                return
+            
+        if position > config.ZABERMAXLIMIT:
+            res = messagebox.askyesno("zaber", f"複屈折フィルター破壊の恐れがあります．\n本当に{position:.2f}に移動しますか？")
             if not res:
                 self.scale_position.configure(state="normal")
                 self.button_set_position.configure(state="normal")
