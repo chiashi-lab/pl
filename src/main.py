@@ -108,7 +108,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
             logger.log("Already at target power")
             return poslog, True
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 2.0, max_retry:int = 40) -> Tuple[List, bool]:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 1.0, max_retry:int = 40) -> Tuple[List, bool]:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
@@ -230,8 +230,7 @@ class Single_Ple_Measurement():
         self.NDfilter.move_to(0, block=True)
         self.logger.log(f"stage is at {self.NDfilter.get_position()}")
 
-        if self.flipshut is None:
-            self.flipshut.open()
+        self.flipshut.open()
         self.logger.log("flipshut is opened")
 
         if self.powermeter is None:
