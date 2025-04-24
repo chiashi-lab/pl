@@ -28,6 +28,7 @@ PyQt5_sip
 pyqtgraph
 pyserial
 python-dateutil
+pythonnet
 pytz
 pyusb
 PyVISA
