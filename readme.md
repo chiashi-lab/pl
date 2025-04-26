@@ -122,3 +122,6 @@ thorlabs社製のレーザー前ミラーを制御するためにpylablibを使�
 ## サンプルステージ
 
 prior社製のサンプルステージを制御してマッピング測定を行うためにpyserialを用いてシリアル通信を行っている
+
+## NIRカメラ
+some code are copied from [https://github.com/sliakat/SpeReadPy](https://github.com/sliakat/SpeReadPy) very thnaks to [@sliakat](https://github.com/sliakat)

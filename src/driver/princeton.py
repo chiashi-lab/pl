@@ -1,3 +1,7 @@
+from read_spe import SpeReference
+import matplotlib.pyplot as plt
+import cv2
+import numpy as np
 import time
 # Import the .NET class library
 import clr
@@ -24,7 +28,7 @@ from PrincetonInstruments.LightField.AddIns import DeviceType
 from PrincetonInstruments.LightField.AddIns import SensorTemperatureStatus
 
 class PrincetonCamera():
-    def __init__(self, camera_name):
+    def __init__(self):
 
         self._exposure_time = None
         self._file_name = None
@@ -102,4 +106,21 @@ class PrincetonCamera():
                     time.sleep(self.exposure_time)
                     while self.experiment.IsRunning:
                         time.sleep(1)
-                return
+
+    def convert_spe2tiff(self, spe_filename: str, tiff_filename: str) -> None:
+        # Converts the SPE file to TIFF format
+        spe_file = SpeReference(spe_filename)
+        data = spe_file.get_data()[0][0,:,:]
+        data = data.astype(np.float32)
+        data = cv2.medianBlur(data, 3)
+        plt.imsave(tiff_filename, data, cmap='gray')
+
+
+if __name__ == "__main__":
+    camera = PrincetonCamera()
+    camera.exposure_time = 0.1  # Set exposure time to 100 ms
+    camera.file_name = "test_image.spe"  # Set file name for the image
+    camera.online_export()  # Enable online export
+    camera.acquire()  # Acquire the image
+    camera.convert_spe2tiff("test_image.spe", "test_image.tiff")  # Convert SPE to TIFF
+    print("Image acquired and converted to TIFF.")
