@@ -59,14 +59,14 @@ class PrincetonCamera():
 
     @property
     def exposure_time(self) -> int:
-        # Returns the exposure time, in s
+        # Returns the exposure time, in ms
         if self._exposure_time is None:
             self._exposure_time = self._get_value(CameraSettings.ShutterTimingExposureTime)
         return self._exposure_time
 
     @exposure_time.setter
     def exposure_time(self, value: float):
-        # Sets the exposure time, in s
+        # Sets the exposure time, in ms
         self._exposure_time = value
         self._set_value(CameraSettings.ShutterTimingExposureTime, value)
 
@@ -107,9 +107,11 @@ class PrincetonCamera():
         current = self.experiment.GetValue(CameraSettings.SensorTemperatureStatus)
         return (current == SensorTemperatureStatus.Locked)
 
-    def online_export(self):
-        self._set_value(ExperimentSettings.OnlineExportEnabled, True)
-        self._set_value(ExperimentSettings.OnlineExportFormat, AddIns.ExportFileType.Tiff)
+    def online_export(self, enabled: bool = True) -> None:
+        #オンラインエクスポートするデータも同名のファイル名だと自動処理が中断、マウスで上書きするかどうか選択する必要があるので注意
+        self._set_value(ExperimentSettings.OnlineExportEnabled, enabled)
+        if enabled:
+            self._set_value(ExperimentSettings.OnlineExportFormat, AddIns.ExportFileType.Tiff)
 
     def acquire(self, block: bool = True, num_trials: int = 10) -> None:
         # Starts the acquisition
@@ -120,7 +122,7 @@ class PrincetonCamera():
             else:
                 self.experiment.Acquire()
                 if block:
-                    time.sleep(self.exposure_time)
+                    time.sleep(self.exposure_time/1000)
                     while self.experiment.IsRunning:
                         time.sleep(1)
                 return
@@ -137,7 +139,7 @@ class PrincetonCamera():
 if __name__ == "__main__":
     camera = PrincetonCamera()
     camera.experiment.Load("Exp-5000ms")
-    camera.exposure_time = 0.1  # Set exposure time to 100 ms
+    camera.exposure_time = 5000  # Set exposure time to 5000ms
     camera.file_name = "test_image"  # Set file name for the image
     camera.online_export()  # Enable online export
     print(camera.file_name)  # Print the file name
