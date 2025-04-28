@@ -86,14 +86,14 @@ class PrincetonCamera():
     @property
     def folder_path(self) -> str:
         if self._folder_path is None:
-            self._folder_path = self._get_value(ExperimentSettings.FileNameGenerationBaseFilePath)
+            self._folder_path = self._get_value(ExperimentSettings.FileNameGenerationDirectory)
         return self._folder_path
 
     @folder_path.setter
     def folder_path(self, value: str):
         # Sets the folder path
         self._folder_path = value
-        self._set_value(ExperimentSettings.FileNameGenerationBaseFileName, value)
+        self._set_value(ExperimentSettings.FileNameGenerationDirectory, value)
 
     @property
     def temperature(self):
