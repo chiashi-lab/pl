@@ -41,7 +41,7 @@ class PrincetonCamera():
         print("Loaded experiment: " + self.experiment.Name)
 
     def __del__(self):
-        self.auto.Dispose()
+        self.auto.Dispose
 
     def _set_value(self, setting, value: float) -> None:
         # Returns the value of the setting
@@ -80,6 +80,9 @@ class PrincetonCamera():
     @file_name.setter
     def file_name(self, value: str):
         # Sets the file name
+        """
+        既に存在するファイル名を指定した場合、自動処理が中断しマウスで上書きするかどうか選択する必要があるので注意
+        """
         self._file_name = value
         self._set_value(ExperimentSettings.FileNameGenerationBaseFileName, Path.GetFileName(value))
 
