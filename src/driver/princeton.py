@@ -133,7 +133,7 @@ class PrincetonCamera():
 
 if __name__ == "__main__":
     camera = PrincetonCamera()
-    camera.experiment.Load("Exp-500ms")
+    camera.experiment.Load("Exp-5000ms")
     camera.exposure_time = 0.1  # Set exposure time to 100 ms
     camera.file_name = "test_image"  # Set file name for the image
     camera.online_export()  # Enable online export
