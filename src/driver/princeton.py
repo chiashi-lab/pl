@@ -33,6 +33,7 @@ class PrincetonCamera():
 
         self._exposure_time = None
         self._file_name = None
+        self._folder_path = None
 
         self.auto = Automation(True, List[String]())
         self.experiment = self.auto.LightFieldApplication.Experiment
@@ -43,10 +44,18 @@ class PrincetonCamera():
         self.auto.Dispose()
 
     def _set_value(self, setting, value: float) -> None:
-        self.experiment.SetValue(setting, value)
+        # Returns the value of the setting
+        if self.experiment.Exists(setting):
+            self.experiment.SetValue(setting, value)
+        else:
+            raise ValueError(f"Setting {setting} does not exist in the experiment.")
 
     def _get_value(self, setting) -> float|int:
-        return self.experiment.GetValue(setting)
+        # Returns the value of the setting
+        if self.experiment.Exists(setting):
+            return self.experiment.GetValue(setting)
+        else:
+            raise ValueError(f"Setting {setting} does not exist in the experiment.")
 
     @property
     def exposure_time(self) -> int:
@@ -73,6 +82,18 @@ class PrincetonCamera():
         # Sets the file name
         self._file_name = value
         self._set_value(ExperimentSettings.FileNameGenerationBaseFileName, Path.GetFileName(value))
+
+    @property
+    def folder_path(self) -> str:
+        if self._folder_path is None:
+            self._folder_path = self._get_value(ExperimentSettings.FileNameGenerationBaseFilePath)
+        return self._folder_path
+
+    @folder_path.setter
+    def folder_path(self, value: str):
+        # Sets the folder path
+        self._folder_path = value
+        self._set_value(ExperimentSettings.FileNameGenerationBaseFileName, value)
 
     @property
     def temperature(self):
@@ -112,9 +133,15 @@ class PrincetonCamera():
 
 if __name__ == "__main__":
     camera = PrincetonCamera()
+    camera.experiment.Load("Exp-500ms")
     camera.exposure_time = 0.1  # Set exposure time to 100 ms
-    camera.file_name = "test_image.spe"  # Set file name for the image
+    camera.file_name = "test_image"  # Set file name for the image
     camera.online_export()  # Enable online export
+    print(camera.file_name)  # Print the file name
+    print("Exposure time: ", camera.exposure_time)  # Print the exposure time
+    print("Folder path: ", camera.folder_path)  # Print the folder path
+    print("Temperature: ", camera.temperature)  # Print the temperature
+    print("Temperature status: ", camera.temperature_status)  # Print the temperature status
     camera.acquire()  # Acquire the image
-    camera.convert_spe2tiff("test_image.spe", "test_image_filtered.tiff")  # Convert SPE to TIFF
+    camera.convert_spe2tiff(os.path.join(camera.folder_path, (camera.file_name + ".spe")), "test_image_filtered.tiff")  # Convert SPE to TIFF
     print("Image acquired and converted to TIFF.")
