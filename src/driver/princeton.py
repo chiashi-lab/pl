@@ -67,8 +67,9 @@ class PrincetonCamera():
     @exposure_time.setter
     def exposure_time(self, value: float):
         # Sets the exposure time, in ms
-        self._exposure_time = value
-        self._set_value(CameraSettings.ShutterTimingExposureTime, value)
+        # Caution! int cause error
+        self._exposure_time = float(value)
+        self._set_value(CameraSettings.ShutterTimingExposureTime, self._exposure_time)
 
     @property
     def file_name(self) -> int:
