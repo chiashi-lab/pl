@@ -21,6 +21,7 @@ clr.AddReference('PrincetonInstruments.LightFieldViewV5')
 clr.AddReference('PrincetonInstruments.LightField.AutomationV5')
 clr.AddReference('PrincetonInstruments.LightFieldAddInSupportServices')
 # PI imports
+import PrincetonInstruments.LightField.AddIns as AddIns
 from PrincetonInstruments.LightField.Automation import Automation
 from PrincetonInstruments.LightField.AddIns import ExperimentSettings
 from PrincetonInstruments.LightField.AddIns import CameraSettings
@@ -42,18 +43,10 @@ class PrincetonCamera():
         self.auto.Dispose()
 
     def _set_value(self, setting, value: float) -> None:
-        # Returns the value of the setting
-        if self.experiment.Exists(setting):
-            self.experiment.SetValue(setting, value)
-        else:
-            raise ValueError(f"Setting {setting} does not exist in the experiment.")
+        self.experiment.SetValue(setting, value)
 
     def _get_value(self, setting) -> float|int:
-        # Returns the value of the setting
-        if self.experiment.Exists(setting):
-            return self.experiment.GetValue(setting)
-        else:
-            raise ValueError(f"Setting {setting} does not exist in the experiment.")
+        return self.experiment.GetValue(setting)
 
     @property
     def exposure_time(self) -> int:
@@ -92,7 +85,7 @@ class PrincetonCamera():
 
     def online_export(self):
         self._set_value(ExperimentSettings.OnlineExportEnabled, True)
-        self._set_value(ExperimentSettings.OnlineExportFormat, AddIns.ExportFileFormat.Tiff)
+        self._set_value(ExperimentSettings.OnlineExportFormat, AddIns.ExportFileType.Tiff)
 
     def acquire(self, block: bool = True, num_trials: int = 10) -> None:
         # Starts the acquisition
@@ -106,6 +99,7 @@ class PrincetonCamera():
                     time.sleep(self.exposure_time)
                     while self.experiment.IsRunning:
                         time.sleep(1)
+                return
 
     def convert_spe2tiff(self, spe_filename: str, tiff_filename: str) -> None:
         # Converts the SPE file to TIFF format
@@ -122,5 +116,5 @@ if __name__ == "__main__":
     camera.file_name = "test_image.spe"  # Set file name for the image
     camera.online_export()  # Enable online export
     camera.acquire()  # Acquire the image
-    camera.convert_spe2tiff("test_image.spe", "test_image.tiff")  # Convert SPE to TIFF
+    camera.convert_spe2tiff("test_image.spe", "test_image_filtered.tiff")  # Convert SPE to TIFF
     print("Image acquired and converted to TIFF.")
