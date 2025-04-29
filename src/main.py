@@ -133,7 +133,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     poslog = []
 
     logger.log(f"wavelength control start for {targetwavelength}nm")
-    TiSap_actuator.move_to((1268 - targetwavelength) / 22.7) # 事前に取得したリニアアクチュエータ位置と波長の関係から一次関数の関係にあることがわかっている(tisp.ipynbにフィッティング結果がある)．このフィッティング式から目標波長に対応するアクチュエータ位置を計算して移動する.この処理はフィードバック制御ではない
+    TiSap_actuator.move_to(func.wavelength2tisp_pos(targetwavelength)) # 事前に取得したリニアアクチュエータ位置と波長の関係から一次関数の関係にあることがわかっている(tisp.ipynbにフィッティング結果がある)．このフィッティング式から目標波長に対応するアクチュエータ位置を計算して移動する.この処理はフィードバック制御ではない
 
     # ここからPID制御
     for i in range(max_retry):
