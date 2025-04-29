@@ -14,6 +14,7 @@ mpmath
 networkx
 numba
 numpy
+opencv-python
 packaging
 pandas
 pillow
@@ -28,6 +29,7 @@ PyQt5_sip
 pyqtgraph
 pyserial
 python-dateutil
+pythonnet
 pytz
 pyusb
 PyVISA

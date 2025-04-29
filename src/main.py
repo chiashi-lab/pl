@@ -5,6 +5,7 @@ from driver.sigmakoki import shutter
 from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.focus_adjuster_driver import Focus_adjuster
 from driver.zaber import zaber_linear_actuator
+from driver.princeton import PrincetonCamera
 from logger import Logger
 import config
 from power_dict import PowerDict
@@ -814,6 +815,62 @@ def autofocus_test_Si(path):
     start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=exposuretime, logger=logger, range_dense_search=100, range_sparse_search=400)
     logger.log(f"autofocus at start position:{start_height}")
     logger.log(f"focus take {time.time()-stime}")
+
+class dev_Scan_image_Measurement():
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.symphony = None
+        self.priorstage = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+
+    def scan_image(self, exposuretime:int, path:str, startpos:tuple, endpos:tuple, startfocuspoint:int, endfocuspoint:int, numberofsteps:int, logger:Logger) -> None:
+        '''
+        args:
+            exposuretime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+            startpos(tuple): 移動開始位置[x,y]
+            endpos(tuple): 移動終了位置[x,y]
+            startfocuspoint(int): 移動開始位置での焦点位置
+            endfocuspoint(int): 移動終了位置での焦点位置
+            numberofsteps(int): 移動ステップ数
+        return:
+            None
+        '''
+        self.poslist =[np.linspace(startpos[0], endpos[0], numberofsteps), np.linspace(startpos[1], endpos[1], numberofsteps)]
+        self.poslist = list(self.poslist)
+        self.poslist = [[int(x) for x in y] for y in self.poslist]
+
+        self.slit_vector = np.array([endpos[0]-startpos[0], endpos[1]-startpos[1]])
+        self.slit_1um_vector = self.slit_vector / np.linalg.norm(self.slit_vector) * 100
+        self.slit_10um_vector = self.slit_1um_vector * 10
+
+        self.slit_orthogonal_vector = np.array([-self.slit_vector[1], self.slit_vector[0]])
+        self.slit_orthogonal_1um_vector = self.slit_orthogonal_vector / np.linalg.norm(self.slit_orthogonal_vector) * 100
+        self.slit_orthogonal_10um_vector = self.slit_orthogonal_1um_vector * 10
+
+        self.logger = logger
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
+
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
+
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
 
 if __name__ == "__main__":
     autofocus_test_Si(input("path:"))
