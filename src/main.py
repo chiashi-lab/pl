@@ -831,13 +831,15 @@ class dev_Scan_image_Measurement():
         self.tisp_linear_actuator = None
         self.spectrometer = None
 
-    def scan_image(self, exposuretime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, check_autofocus:bool, logger:Logger) -> None:
+    def scan_image(self, exposuretime:int, path:str, startpos:tuple, endpos:tuple, startfocuspoint:int, endfocuspoint:int, numberofsteps:int, logger:Logger) -> None:
         '''
         args:
             exposuretime(int): 露光時間[s]
             path(str): データを保存するディレクトリのパス
             startpos(tuple): 移動開始位置[x,y]
             endpos(tuple): 移動終了位置[x,y]
+            startfocuspoint(int): 移動開始位置での焦点位置
+            endfocuspoint(int): 移動終了位置での焦点位置
             numberofsteps(int): 移動ステップ数
         return:
             None
@@ -869,10 +871,6 @@ class dev_Scan_image_Measurement():
             self.shut = shutter(config.SHUTTERCOMPORT)
         self.shut.close(2)
         self.logger.log("shutter is closed")
-
-        if check_autofocus:
-            if not os.path.exists(os.path.join(path, "autofocus_log_startpos")):
-                os.makedirs(os.path.join(path, "autofocus_log_startpos"))
 
 if __name__ == "__main__":
     autofocus_test_Si(input("path:"))
