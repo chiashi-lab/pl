@@ -1,3 +1,7 @@
+import sys
+import os
+if os.path.exists(os.path.dirname(__file__)):
+    sys.path.append(os.path.dirname(__file__))
 from read_spe import SpeReference
 import matplotlib.pyplot as plt
 import cv2
@@ -5,10 +9,6 @@ import numpy as np
 import time
 # Import the .NET class library
 import clr
-# Import python sys module
-import sys
-# Import os module
-import os
 # Import System.IO for saving and opening files
 from System.IO import *
 # Import c compatible List and String
