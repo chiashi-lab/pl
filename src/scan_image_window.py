@@ -108,8 +108,12 @@ class Application(tkinter.Frame):
 
         self.pos = tkinter.IntVar()
         self.pos.set(0)
-        self.label_pos = ttk.Label(textvariable=self.pos)
-        self.label_pos.place(x=700, y=130)
+        self.label_zpos = ttk.Label(textvariable=self.pos)
+        self.label_zpos.place(x=700, y=130)
+        self.label_zpos_text = tkinter.Label(text=u'現在のZ位置')
+        self.label_zpos_text.place(x=570, y=130)
+        self.label_zpos_unit = tkinter.Label(text=u'um/4')
+        self.label_zpos_unit.place(x=800, y=130)
 
         self.button_5micro = ttk.Button(text="5um", command=self.call_move_5um)
         self.button_5micro.place(x=700, y=10)
@@ -136,6 +140,7 @@ class Application(tkinter.Frame):
         self.entry_startzpos.place(x=700, y=310)
         self.button_startzpos = tkinter.Button(text=u'取得', width=5)
         self.button_startzpos.bind("<1>", self.get_zpos_start)
+        self.button_startzpos.place(x=800, y=310)
 
         self.label_endzpos = tkinter.Label(text=u'終了点Z位置')
         self.label_endzpos.place(x=570, y=360)
@@ -144,6 +149,7 @@ class Application(tkinter.Frame):
         self.entry_endzpos.place(x=700, y=360)
         self.button_endzpos = tkinter.Button(text=u'取得', width=5)
         self.button_endzpos.bind("<1>", self.get_zpos_end)
+        self.button_endzpos.place(x=800, y=360)
 
         self.scan_image_measurement_obj = dev_Scan_image_Measurement()
 
