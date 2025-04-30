@@ -488,7 +488,7 @@ class Scan_PLE_Measurement():
             logger.log(f"stage is moving to {posidx}:{nowposx, nowposy}")
             self.priorstage.move_to(nowposx, nowposy)
 
-            savedirpath = os.path.normpath(path, f"pos{posidx}_x{nowposx}_y{nowposy}")
+            savedirpath = os.path.join(path, f"pos{posidx}_x{nowposx}_y{nowposy}")
             if not os.path.exists(savedirpath):
                 os.makedirs(savedirpath)
                 self.logger.log(f"make dir at {savedirpath}")
