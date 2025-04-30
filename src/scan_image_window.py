@@ -160,7 +160,7 @@ class Application(tkinter.Frame):
 
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
         self.entry_path.delete(0, tkinter.END)
-        self.entry_path.insert(tkinter.END, file)
+        self.entry_path.insert(tkinter.END, file.replace("/", "\\"))
 
         self.button_path["state"] = tkinter.NORMAL
         return
