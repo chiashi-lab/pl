@@ -219,38 +219,38 @@ class Application(tkinter.Frame):
     def call_move_5um(self) -> None:
         if self.button_5micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(4 * 5))
+        thread = threading.Thread(target=self.move, args=(4 * 5,))
         thread.start()
 
     def call_move_1um(self) -> None:
         if self.button_1micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(4 * 1))
+        thread = threading.Thread(target=self.move, args=(4 * 1,))
         thread.start()
 
     def call_move_quarter(self) -> None:
         
         if self.button_quarter["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(1))
+        thread = threading.Thread(target=self.move, args=(1,))
         thread.start()
 
     def call_move_m_quarter(self) -> None:
         if self.button_m_quarter["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(-1))
+        thread = threading.Thread(target=self.move, args=(-1,))
         thread.start()
 
     def call_move_m_1micro(self) -> None:
         if self.button_m_1micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(-4 * 1))
+        thread = threading.Thread(target=self.move, args=(-4 * 1,))
         thread.start()
 
     def call_move_m_5um(self) -> None:
         if self.button_m_5micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(-4 * 5))
+        thread = threading.Thread(target=self.move, args=(-4 * 5,))
         thread.start()
 
     def move(self, move_value: int) -> None:
