@@ -22,8 +22,7 @@ class Application(tkinter.Frame):
         self.master.geometry("900x900")
         self.master.title(u"PLイメージののマッピング測定君")
         self.create_widgets()
-        #self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
-        self.focus_adjuster = None
+        self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
 
     def create_widgets(self):#arduino操作コントローラーの追加
         self.label_wavelength = tkinter.Label(text=u'励起光中心波長')
