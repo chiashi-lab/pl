@@ -947,5 +947,9 @@ class dev_Scan_image_Measurement():
             self.shut.open(2)
             self.camera.acquire(block=True)
             self.shut.close(2)
+
+        self.shut.close(2)
+        self.flipshut.close()
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 if __name__ == "__main__":
     autofocus_test_Si(input("path:"))
