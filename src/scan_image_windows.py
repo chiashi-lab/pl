@@ -6,6 +6,7 @@ from tkinter import filedialog, scrolledtext
 import threading
 from main import dev_Scan_image_Measurement
 from driver.prior import Proscan
+from driver.focus_adjuster_driver import Focus_adjuster
 import config
 import func
 import datetime
@@ -18,9 +19,11 @@ class Application(tkinter.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
-        self.master.geometry("600x900")
+        self.master.geometry("900x900")
         self.master.title(u"PLイメージののマッピング測定君")
         self.create_widgets()
+        #self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+        self.focus_adjuster = None
 
     def create_widgets(self):#arduino操作コントローラーの追加
         self.label_wavelength = tkinter.Label(text=u'励起光中心波長')
@@ -104,7 +107,46 @@ class Application(tkinter.Frame):
         self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=600)
 
-        self.scan_ple_measurement_obj = Scan_PLE_Measurement()
+        self.pos = tkinter.IntVar()
+        self.pos.set(0)
+        self.label_pos = ttk.Label(textvariable=self.pos)
+        self.label_pos.place(x=700, y=130)
+
+        self.button_5micro = ttk.Button(text="5um", command=self.call_move_5um)
+        self.button_5micro.place(x=700, y=10)
+
+        self.button_1micro = ttk.Button(text="1um", command=self.call_move_1um)
+        self.button_1micro.place(x=700, y=50)
+
+        self.button_quarter = ttk.Button(text="1/4um", command=self.call_move_quarter)
+        self.button_quarter.place(x=700, y=90)
+
+        self.button_m_quarter = ttk.Button(text="-1/4um", command=self.call_move_m_quarter)
+        self.button_m_quarter.place(x=700, y=160)
+
+        self.button_m_1micro = ttk.Button(text="-1um", command=self.call_move_m_1micro)
+        self.button_m_1micro.place(x=700, y=200)
+
+        self.button_m_5micro = ttk.Button(text="-5um", command=self.call_move_m_5um)
+        self.button_m_5micro.place(x=700, y=240)
+
+        self.label_startzpos = tkinter.Label(text=u'開始点Z位置')
+        self.label_startzpos.place(x=570, y=310)
+        self.entry_startzpos = tkinter.Entry(width=5)
+        self.entry_startzpos.insert(tkinter.END, '0')
+        self.entry_startzpos.place(x=700, y=310)
+        self.button_startzpos = tkinter.Button(text=u'取得', width=5)
+        self.button_startzpos.bind("<1>", self.get_zpos_start)
+
+        self.label_endzpos = tkinter.Label(text=u'終了点Z位置')
+        self.label_endzpos.place(x=570, y=360)
+        self.entry_endzpos = tkinter.Entry(width=5)
+        self.entry_endzpos.insert(tkinter.END, '0')
+        self.entry_endzpos.place(x=700, y=360)
+        self.button_endzpos = tkinter.Button(text=u'取得', width=5)
+        self.button_endzpos.bind("<1>", self.get_zpos_end)
+
+        self.scan_image_measurement_obj = dev_Scan_image_Measurement()
 
     def get_path(self, event):
         if self.button_path["state"] == tkinter.DISABLED:
@@ -140,29 +182,109 @@ class Application(tkinter.Frame):
         self.msg.set(f"測定間隔は{interval:.2f}umです")
         self.button_calc_measurement_interval["state"] = tkinter.NORMAL
         return
+
+    def get_zpos_start(self, event):
+        if self.button_startzpos["state"] == tkinter.DISABLED:
+            return
+        self.button_startzpos["state"] = tkinter.DISABLED
+        self.button_endzpos["state"] = tkinter.DISABLED
+        try:
+            zpos = self.focus_adjuster.position
+        except Exception as e:
+            print(e)
+            self.msg.set(f"Z位置を取得中にエラーが発生しました\n{e}")
+        else:
+            self.entry_startzpos.delete(0, tkinter.END)
+            self.entry_startzpos.insert(tkinter.END, str(zpos))
+            self.msg.set("開始点Z位置を取得しました")
+        self.button_startzpos["state"] = tkinter.NORMAL
+        self.button_endzpos["state"] = tkinter.NORMAL
+
+    def get_zpos_end(self, event):
+        if self.button_endzpos["state"] == tkinter.DISABLED:
+            return
+        self.button_startzpos["state"] = tkinter.DISABLED
+        self.button_endzpos["state"] = tkinter.DISABLED
+        try:
+            zpos = self.focus_adjuster.position
+        except Exception as e:
+            print(e)
+            self.msg.set(f"Z位置を取得中にエラーが発生しました\n{e}")
+        else:
+            self.entry_endzpos.delete(0, tkinter.END)
+            self.entry_endzpos.insert(tkinter.END, str(zpos))
+            self.msg.set("終了点Z位置を取得しました")
+        self.button_startzpos["state"] = tkinter.NORMAL
+        self.button_endzpos["state"] = tkinter.NORMAL
+
+    def call_move_5um(self) -> None:
+        if self.button_5micro["state"] == "disabled":
+            return
+        self.button_5micro.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(4 * 5, self.button_5micro))
+        thread.start()
+
+    def call_move_1um(self) -> None:
+        if self.button_1micro["state"] == "disabled":
+            return
+        self.button_1micro.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(4 * 1, self.button_1micro))
+        thread.start()
+
+    def call_move_quarter(self) -> None:
+        
+        if self.button_quarter["state"] == "disabled":
+            return
+        self.button_quarter.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(1, self.button_quarter))
+        thread.start()
+
+    def call_move_m_quarter(self) -> None:
+        if self.button_m_quarter["state"] == "disabled":
+            return
+        self.button_m_quarter.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(-1, self.button_m_quarter))
+        thread.start()
+
+    def call_move_m_1micro(self) -> None:
+        if self.button_m_1micro["state"] == "disabled":
+            return
+        self.button_m_1micro.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(-4 * 1, self.button_m_1micro))
+        thread.start()
+
+    def call_move_m_5um(self) -> None:
+        if self.button_m_5micro["state"] == "disabled":
+            return
+        self.button_m_5micro.configure(state="disabled")
+        thread = threading.Thread(target=self.move, args=(-4 * 5, self.button_m_5micro))
+        thread.start()
+
+    def move(self, move_value: int, button: tkinter.Button) -> None:
+        self.focus_adjuster.move_by(move_value, block=True)
+        self.pos.set(self.focus_adjuster.position)
+        button.configure(state="normal")
     
     def call_pack_scan_ple(self, event):#変更
         if self.button_start["state"] == tkinter.DISABLED:
             return
         self.button_start["state"] = tkinter.DISABLED
         try:
+            wl = int(self.entry_wavelength.get())
             power = float(self.entry_targetpower.get()) * 0.001
-            minWL = int(self.entry_minwavelength.get())
-            maxWL = int(self.entry_maxwavelength.get())
-            stepWL = int(self.entry_stepwavelength.get())
             exposure = int(self.entry_exposuretime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
             numberofsteps = int(self.entry_numberofsteps.get())
-            autofocus = bool(self.autofocus.get())
-            sweep = bool(self.sweep.get())
+            startzpos = int(self.entry_startzpos.get())
+            endzpos = int(self.entry_endzpos.get())
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_start["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or exposure < 0 or exposure > 1000 or minWL > maxWL:
+        if power < 0.0 or power > 4.0 or wl < 700 or wl > 850 or exposure < 0:
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return
@@ -174,18 +296,18 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep))
+        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos))
         thread1.start()
 
-    def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool, sweep:bool)->None:
+    def pack_scan_ple(self, power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos):
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
+        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) + 5) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
         self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            self.scan_ple_measurement_obj.scan_ple(power, minWL, maxWL, stepWL, exposure, path, startpos, endpos, numberofsteps, autofocus, sweep, self.logger)
+            self.scan_image_measurement_obj.scan_image(power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos, self.focus_adjuster, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
