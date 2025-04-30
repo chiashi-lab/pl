@@ -50,51 +50,57 @@ class Application(tkinter.Frame):
     def call_move_5um(self) -> None:
         if self.button_5micro["state"] == "disabled":
             return
-        self.button_5micro.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(4 * 5, self.button_5micro))
+        thread = threading.Thread(target=self.move, args=(4 * 5))
         thread.start()
 
     def call_move_1um(self) -> None:
         if self.button_1micro["state"] == "disabled":
             return
-        self.button_1micro.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(4 * 1, self.button_1micro))
+        thread = threading.Thread(target=self.move, args=(4 * 1))
         thread.start()
 
     def call_move_quarter(self) -> None:
         
         if self.button_quarter["state"] == "disabled":
             return
-        self.button_quarter.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(1, self.button_quarter))
+        thread = threading.Thread(target=self.move, args=(1))
         thread.start()
 
     def call_move_m_quarter(self) -> None:
         if self.button_m_quarter["state"] == "disabled":
             return
-        self.button_m_quarter.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(-1, self.button_m_quarter))
+        thread = threading.Thread(target=self.move, args=(-1))
         thread.start()
 
     def call_move_m_1micro(self) -> None:
         if self.button_m_1micro["state"] == "disabled":
             return
-        self.button_m_1micro.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(-4 * 1, self.button_m_1micro))
+        thread = threading.Thread(target=self.move, args=(-4 * 1))
         thread.start()
 
     def call_move_m_5um(self) -> None:
         if self.button_m_5micro["state"] == "disabled":
             return
-        self.button_m_5micro.configure(state="disabled")
-        thread = threading.Thread(target=self.move, args=(-4 * 5, self.button_m_5micro))
+        thread = threading.Thread(target=self.move, args=(-4 * 5))
         thread.start()
 
-    def move(self, move_value: int, button: tkinter.Button) -> None:
+    def move(self, move_value: int) -> None:
+        self.button_5micro.configure(state="disabled")
+        self.button_1micro.configure(state="disabled")
+        self.button_quarter.configure(state="disabled")
+        self.button_m_quarter.configure(state="disabled")
+        self.button_m_1micro.configure(state="disabled")
+        self.button_m_5micro.configure(state="disabled")
+
         self.focus_adjuster.move_by(move_value, block=True)
         self.pos.set(self.focus_adjuster.position)
-        button.configure(state="normal")
 
+        self.button_5micro.configure(state="normal")
+        self.button_1micro.configure(state="normal")
+        self.button_quarter.configure(state="normal")
+        self.button_m_quarter.configure(state="normal")
+        self.button_m_1micro.configure(state="normal")
+        self.button_m_5micro.configure(state="normal")
 
 if __name__ == "__main__":
     root = tkinter.Tk()
