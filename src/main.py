@@ -921,7 +921,7 @@ class dev_Scan_image_Measurement():
         self.camera.online_export(enabled=True)
         self.camera.folder_path = path
         self.logger.log("camera is initialized")
-        self.logger.log("caemera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
+        self.logger.log("camera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
 
         for posidx in range(numberofsteps):
             nowposx = self.poslist[0][posidx]

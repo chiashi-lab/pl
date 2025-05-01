@@ -20,7 +20,7 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master.geometry("900x900")
-        self.master.title(u"PLイメージののマッピング測定君")
+        self.master.title(u"PLイメージのマッピング測定君")
         self.create_widgets()
         self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
 
