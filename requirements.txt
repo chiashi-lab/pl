@@ -43,6 +43,7 @@ six
 sympy
 threadpoolctl
 torch
+timm
 typing_extensions
 tzdata
 zaber_motion
