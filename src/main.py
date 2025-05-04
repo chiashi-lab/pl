@@ -831,11 +831,12 @@ class dev_Scan_image_Measurement():
         self.spectrometer = None
         self.camera = None
 
-    def scan_image(self, targetpower:float, wavelength:int, exposuretime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, startzpos:int, endzpos:int, focusadjuster:Focus_adjuster, logger:Logger) -> None:
+    def scan_image(self, targetpower:float, wavelength:int, experimentname:str, exposuretime:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, startzpos:int, endzpos:int, focusadjuster:Focus_adjuster, logger:Logger) -> None:
         '''
         args:
             power(float): 目標パワー[W]
             wavelength(int): 中心励起波長[nm]
+            experimentname(str): Light Fieldで読み込む実験名
             exposuretime(int): 露光時間[s]
             path(str): データを保存するディレクトリのパス
             startpos(tuple): 移動開始位置[x,y]
@@ -875,8 +876,10 @@ class dev_Scan_image_Measurement():
         self.logger.log(f"start z position:{startzpos}")
         self.logger.log(f"end z position:{endzpos}")
         self.logger.log("")
+        self.logger.log("position list")
+        self.logger.log("index, x, y, distance")
         for i in range(numberofsteps):
-            self.logger.log(f"position {i}:{self.poslist[0][i], self.poslist[1][i]}")
+            self.logger.log(f"{i}, {self.poslist[0][i]}, {self.poslist[1][i]}, {np.linalg.norm(np.array([self.poslist[0][i], self.poslist[1][i]]) - np.array(startpos)) / 100}")
         self.logger.log("")
 
         if not os.path.exists(path):
@@ -899,9 +902,6 @@ class dev_Scan_image_Measurement():
         self.NDfilter.move_to(0, block=True)
         self.logger.log(f"stage is at {self.NDfilter.get_position()}")
 
-        self.flipshut.open()
-        self.logger.log("flipshut is opened")
-
         self.powermeter = juno()
         self.powermeter.open()
         self.powermeter.set_range(0)
@@ -917,11 +917,19 @@ class dev_Scan_image_Measurement():
         self.logger.log("spectrometer is initialized")
 
         self.camera = PrincetonCamera()
-        self.camera.experiment.Load(config.PRINCETONCAMERAEXPNAME)
+        self.camera.experiment.Load(experimentname)
         self.camera.online_export(enabled=True)
         self.camera.folder_path = path
         self.logger.log("camera is initialized")
+        self.logger.log(f"Loaded experiment: {experimentname}")
+        if int(self.camera.exposure_time) != int(exposuretime):
+            self.logger.log(f"camera exposure time and your exposure time is different. camera exposure time is {self.camera.exposure_time}ms")
+        else:
+            self.logger.log(f"camera exposure time and your exposure time is same. camera exposure time is {self.camera.exposure_time}ms")
         self.logger.log("camera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
+
+        self.flipshut.open()
+        self.logger.log("flipshut is opened")
 
         for posidx in range(numberofsteps):
             nowposx = self.poslist[0][posidx]
@@ -929,7 +937,7 @@ class dev_Scan_image_Measurement():
             logger.log(f"stage is moving to {posidx}:{nowposx, nowposy}")
             self.priorstage.move_to(nowposx, nowposy)
 
-            file_name = f"pos{posidx}_x{nowposx}_y{nowposy}"
+            file_name = f"pos{posidx}_x{nowposx}_y{nowposy}_dist{np.linalg.norm(np.array([nowposx, nowposy]) - np.array(startpos)) / 100}_z{self.height_func(posidx)}.txt"
             if os.path.exists(os.path.join(path, file_name)):
                 os.remove(os.path.join(path, file_name))
             self.camera.file_name = file_name
