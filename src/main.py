@@ -937,7 +937,7 @@ class dev_Scan_image_Measurement():
             logger.log(f"stage is moving to {posidx}:{nowposx, nowposy}")
             self.priorstage.move_to(nowposx, nowposy)
 
-            file_name = f"pos{posidx}_x{nowposx}_y{nowposy}_dist{np.linalg.norm(np.array([nowposx, nowposy]) - np.array(startpos)) / 100}_z{self.height_func(posidx)}.txt"
+            file_name = f"pos{posidx}_x{nowposx}_y{nowposy}_dist{np.linalg.norm(np.array([nowposx, nowposy]) - np.array(startpos)) / 100}_z{self.height_func(posidx)}"
             if os.path.exists(os.path.join(path, file_name)):
                 os.remove(os.path.join(path, file_name))
             self.camera.file_name = file_name
