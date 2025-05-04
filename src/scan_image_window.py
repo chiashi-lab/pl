@@ -35,7 +35,7 @@ class Application(tkinter.Frame):
 
         self.label_LFexpName = tkinter.Label(text=u'LFのexp名')
         self.label_LFexpName.place(x=10, y=50)
-        self.entry_LFexpName = tkinter.Entry(width=10)
+        self.entry_LFexpName = tkinter.Entry(width=25)
         self.entry_LFexpName.insert(tkinter.END, 'Exp-5000ms')
         self.entry_LFexpName.place(x=190, y=50)
 
