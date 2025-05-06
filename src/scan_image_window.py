@@ -33,6 +33,12 @@ class Application(tkinter.Frame):
         self.unit_wavelength = tkinter.Label(text=u'nm')
         self.unit_wavelength.place(x=250, y=10)
 
+        self.label_LFexpName = tkinter.Label(text=u'LFのexp名')
+        self.label_LFexpName.place(x=10, y=50)
+        self.entry_LFexpName = tkinter.Entry(width=25)
+        self.entry_LFexpName.insert(tkinter.END, 'Exp-5000ms')
+        self.entry_LFexpName.place(x=190, y=50)
+
         self.label_exposuretime = tkinter.Label(text=u'露光時間')
         self.label_exposuretime.place(x=10, y=170)
         self.entry_exposuretime = tkinter.Entry(width=7, text='120')
@@ -282,8 +288,9 @@ class Application(tkinter.Frame):
             return
         self.button_start["state"] = tkinter.DISABLED
         try:
-            wl = int(self.entry_wavelength.get())
             power = float(self.entry_targetpower.get()) * 0.001
+            wl = int(self.entry_wavelength.get())
+            expname = str(self.entry_LFexpName.get())
             exposure = int(self.entry_exposuretime.get())
             path = self.entry_path.get()
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
@@ -308,10 +315,10 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos))
+        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, wl, expname, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos))
         thread1.start()
 
-    def pack_scan_ple(self, power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos):
+    def pack_scan_ple(self, power, wl, expname, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos):
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure/1000) + 5) * numberofsteps + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -319,7 +326,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            self.scan_image_measurement_obj.scan_image(power, wl, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos, self.focus_adjuster, self.logger)
+            self.scan_image_measurement_obj.scan_image(power, wl, expname, exposure, path, startpos, endpos, numberofsteps, startzpos, endzpos, self.focus_adjuster, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")
