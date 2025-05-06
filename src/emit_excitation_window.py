@@ -151,7 +151,7 @@ class Application(tkinter.Frame):
             return
         self.pb.stop()
         self.set_button["state"] = tkinter.NORMAL
-        self.msg.set(f"中心波長: {centerwavelength} nm, 目標パワー: {targetpower*1000} mWを照射中")
+        self.msg.set(f"手動シャッター操作で照射してください.波長:{centerwavelength}nm,パワー:{targetpower*1000}mW")
 
 if __name__ == "__main__":
     root = tkinter.Tk()
