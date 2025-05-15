@@ -20,8 +20,9 @@ def test_symphony(savedir):
         symphony.set_exposuretime(exposure_time)
         symphony.set_config_savetofiles(savedir_exposure)
         time.sleep(5)
-        print(f"length{7200 / exposure_time}")
-        for i in range(7200 / exposure_time):
+        counts = int(7200 / exposure_time)
+        print(f"length{counts}")
+        for i in range(counts):
             print(f"exposure {i}")
             symphony.start_exposure(block=True)
             os.rename(os.path.join(savedir_exposure, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedir_exposure, f"{i}.txt"))
