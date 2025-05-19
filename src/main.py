@@ -450,8 +450,8 @@ class Scan_PLE_Measurement():
             self.logger.log("wave length is moving to 750nm")
             pid_control_wavelength(targetwavelength=750, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
             self.logger.log("power is moving to 0.001W")
-            pid_control_power(targetpower=0.001, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
-            self.mypowerdict.add(750, 0.001, self.NDfilter.get_position())
+            pid_control_power(targetpower=0.003, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            self.mypowerdict.add(750, 0.003, self.NDfilter.get_position())
 
             self.objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
             self.logger.log("arduino is initialized")
@@ -464,7 +464,7 @@ class Scan_PLE_Measurement():
             self.logger.log(f"stage is moving to {startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
             self.priorstage.move_to(*(startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
-            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_startpos_path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_startpos_path, exposuretime=3, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
 
             autofocuslog_endpos_path = os.path.join(path, "autofocus_log_endpos")
@@ -475,7 +475,7 @@ class Scan_PLE_Measurement():
             logger.log(f"stage is moving to {endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
             self.priorstage.move_to(*(endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
-            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_endpos_path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_endpos_path, exposuretime=3, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
 
             self.height_func = func.make_linear_from_two_points(0, self.start_height, numberofsteps-1, self.end_height)
@@ -669,8 +669,8 @@ class dev_Scan_PLE_Measurement():
             self.logger.log("wave length is moving to 750nm")
             pid_control_wavelength(targetwavelength=750, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
             self.logger.log("power is moving to 0.001W")
-            pid_control_power(targetpower=0.001, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
-            self.mypowerdict.add(750, 0.001, self.NDfilter.get_position())
+            pid_control_power(targetpower=0.003, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger)
+            self.mypowerdict.add(750, 0.003, self.NDfilter.get_position())
 
             self.objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
             self.logger.log("arduino is initialized")
@@ -683,7 +683,7 @@ class dev_Scan_PLE_Measurement():
             self.logger.log(f"stage is moving to {startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
             self.priorstage.move_to(*(startpos - self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
-            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_startpos_path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.start_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_startpos_path, exposuretime=3, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
 
             autofocuslog_endpos_path = os.path.join(path, "autofocus_log_endpos")
@@ -694,7 +694,7 @@ class dev_Scan_PLE_Measurement():
             logger.log(f"stage is moving to {endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector}")
             self.priorstage.move_to(*(endpos + self.slit_10um_vector + self.slit_orthogonal_10um_vector))
             self.shut.open(2)
-            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_endpos_path, exposuretime=5, logger=logger, range_dense_search=100, range_sparse_search=400)
+            self.end_height = autofocus(objective_lens=self.objective_lens, symphony=self.symphony, savedirpath=autofocuslog_endpos_path, exposuretime=3, logger=logger, range_dense_search=100, range_sparse_search=400)
             self.shut.close(2)
 
             self.height_func = func.make_linear_from_two_points(0, self.start_height, numberofsteps-1, self.end_height)
@@ -795,26 +795,6 @@ class dev_Scan_PLE_Measurement():
 
             self.priorstage.move_to(pos2[0], pos2[1])
 
-def autofocus_test_Si(path):
-    #autofocus test on Si
-    exposuretime = 3
-    logger = Logger(log_file_path=os.path.join(path, "log.txt"))
-
-    shut = shutter(config.SHUTTERCOMPORT)
-    shut.close(2)
-
-    symphony = Symphony()
-    symphony.Initialize()
-    symphony.set_config_savetofiles(path)
-    symphony.set_exposuretime(exposuretime)
-    logger.log(f"exposuretime:{exposuretime}")
-
-    stime = time.time()
-    objective_lens = Focus_adjuster(config.AUTOFOCUSCOMPORT)
-    shut.open(2)
-    start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=exposuretime, logger=logger, range_dense_search=100, range_sparse_search=400)
-    logger.log(f"autofocus at start position:{start_height}")
-    logger.log(f"focus take {time.time()-stime}")
 
 class dev_Scan_image_Measurement():
     def __init__(self) -> None:
@@ -959,5 +939,3 @@ class dev_Scan_image_Measurement():
         self.shut.close(2)
         self.flipshut.close()
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-if __name__ == "__main__":
-    autofocus_test_Si(input("path:"))
