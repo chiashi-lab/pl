@@ -29,3 +29,7 @@ def autofocus_test_Si(path):
     start_height = autofocus(objective_lens=objective_lens, symphony=symphony, savedirpath=path, exposuretime=exposuretime, logger=logger, range_dense_search=100, range_sparse_search=400)
     logger.log(f"autofocus at start position:{start_height}")
     logger.log(f"focus take {time.time()-stime}")
+
+if __name__ == "__main__":
+    path = input("Please input the path to save the data: ").strip('"')
+    autofocus_test_Si(path)
