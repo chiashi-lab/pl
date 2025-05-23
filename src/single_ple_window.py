@@ -50,6 +50,11 @@ class Application(tkinter.Frame):
         self.button_calcwl.place(x=410, y=90)
         self.button_calcwl.bind("<1>", self.calcwl)
 
+        self.background = tkinter.BooleanVar()
+        self.background.set(False)
+        self.checkbutton_background = tkinter.Checkbutton(text=u'都度バックグラウンド取得', variable=self.background)
+        self.checkbutton_background.place(x=10, y=130)
+
         self.label_exposure = tkinter.Label(text=u'露光時間')
         self.label_exposure.place(x=10, y=170)
         self.entry_exposure = tkinter.Entry(width=7, text='120')
@@ -132,6 +137,7 @@ class Application(tkinter.Frame):
             minWL = int(self.entry_minWL.get())
             maxWL = int(self.entry_maxWL.get())
             stepWL = int(self.entry_stepWL.get())
+            background = bool(self.background.get())
             exposure = int(self.entry_exposure.get())
             savefolderpath = self.entry_savefolderpath.get()
         except Exception as e:
@@ -147,10 +153,10 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, exposure, savefolderpath))
+        thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, background, exposure, savefolderpath))
         thread1.start()
     
-    def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, savefolderpath:str)->None:
+    def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, background:bool, exposure:int, savefolderpath:str)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) + 120)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
@@ -158,7 +164,7 @@ class Application(tkinter.Frame):
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            self.single_ple_measurement_obj.single_ple(power, minWL, maxWL, stepWL, exposure, savefolderpath, self.logger)
+            self.single_ple_measurement_obj.single_ple(power, minWL, maxWL, stepWL, background, exposure, savefolderpath, self.logger)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")

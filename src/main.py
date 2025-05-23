@@ -174,7 +174,7 @@ class Single_Ple_Measurement():
         self.spectrometer = None
         self.logger = None
 
-    def single_ple(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, exposuretime:int, path:str, logger:Logger) -> None:
+    def single_ple(self, targetpower:float, minwavelength:int, maxwavelength:int, stepwavelength:int, background:bool, exposuretime:int, path:str, logger:Logger) -> None:
         '''
         PLEスペクトルを取得する関数
         args:
@@ -182,6 +182,7 @@ class Single_Ple_Measurement():
             minwavelength(int): 最小励起中心波長[nm]
             maxwavelength(int): 最大励起中心波長[nm]
             stepwavelength(int): 中心励起波長のステップ[nm]
+            background(bool): バックグラウンドを都度取得するかどうか
             wavelengthwidth(int): 励起波長の幅[nm]
             exposuretime(int): 露光時間[s]
             path(str): データを保存するディレクトリのパス
@@ -192,6 +193,7 @@ class Single_Ple_Measurement():
         self.minwavelength = minwavelength
         self.maxwavelength = maxwavelength
         self.stepwavelength = stepwavelength
+        self.background = background
         self.exposuretime = exposuretime
         self.path = path
         self.logger = logger
@@ -267,7 +269,14 @@ class Single_Ple_Measurement():
             self.shut.close(2)
             os.rename(os.path.join(self.path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(self.path, f"{wavelength}.txt"))
             self.logger.log(f"PL spectra at {wavelength}nm is saved")
-        
+
+            if background:
+                self.logger.log(f"start to get background spectra at {wavelength}nm")
+                self.shut.close(2)
+                self.symphony.start_exposure(block=True)
+                os.rename(os.path.join(self.path, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(self.path, f"background_{wavelength}.txt"))
+                self.logger.log(f"background spectra at {wavelength}nm is saved")
+
         self.shut.close(2)
         self.flipshut.close()
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
