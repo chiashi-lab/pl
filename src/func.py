@@ -21,6 +21,11 @@ def ndstep2ratio(ndstep:int)->float:
     a, b = 2.95260088e-12, 2.47359842e+00
     return a * ndstep ** 2 + b
 
+def get_h_m_s(sec: int | float) -> tuple[int, int, int]:
+    m, s = divmod(sec, 60)
+    h, m = divmod(m, 60)
+    return int(h), int(m), int(s)
+
 if __name__ == '__main__':
     def pre(wavelength: int) -> float:
         return linear(float(wavelength), -0.0039, 9.3265)

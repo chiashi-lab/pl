@@ -71,7 +71,7 @@ class Application(tkinter.Frame):
         self.unit_power = tkinter.Label(text=u'mW')
         self.unit_power.place(x=250, y=210)
 
-        self.label_savefolderpath = tkinter.Label(text=u'保存先')
+        self.label_savefolderpath = tkinter.Label(text=u'保存先フォルダ')
         self.label_savefolderpath.place(x=10, y=260)
         self.entry_savefolderpath = tkinter.Entry(width=40)
         self.entry_savefolderpath.insert(tkinter.END, 'C:\\Users\\optics\\individual')
@@ -109,6 +109,8 @@ class Application(tkinter.Frame):
         if self.button_calcwl["state"] == tkinter.DISABLED:
             return
         self.button_calcwl["state"] = tkinter.DISABLED
+
+        # 入力値のバリデーション
         try:
             minWL = int(self.entry_minWL.get())
             maxWL = int(self.entry_maxWL.get())
@@ -124,7 +126,22 @@ class Application(tkinter.Frame):
             self.msg.set("正しい値を入力してください")
             self.button_calcwl["state"] = tkinter.NORMAL
             return
-        self.msg.set(f"励起光波長は{wavelenghlist}nmです")
+
+        # 計測時間の計算
+        pred_h, pred_m, pred_s = None, None, None
+        try:
+            exposure = int(self.entry_exposure.get())
+            background = bool(self.background.get())
+            pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure) * (2 if background else 1) + 60) * len(wavelenghlist) + 80)
+        except Exception as e:
+            pass
+        if pred_h is None and pred_m is None and pred_s is None:
+            msg = "計測にかかる時間は不明です"
+        else:
+            msg = f"計測にかかる時間は約{pred_h}時間{pred_m}分{pred_s}秒です"
+        
+        # 波長リストと計測時間の表示
+        self.msg.set(f"励起光波長は{wavelenghlist}nmです\n{msg}")
         self.button_calcwl["state"] = tkinter.NORMAL
         return
     
@@ -132,6 +149,8 @@ class Application(tkinter.Frame):
         if self.button_start["state"] == tkinter.DISABLED:
             return
         self.button_start["state"] = tkinter.DISABLED
+
+        # 入力値のバリデーション
         try:
             power = float(self.entry_power.get()) * 0.001
             minWL = int(self.entry_minWL.get())
@@ -140,6 +159,7 @@ class Application(tkinter.Frame):
             background = bool(self.background.get())
             exposure = int(self.entry_exposure.get())
             savefolderpath = self.entry_savefolderpath.get()
+            _  = np.arange(minWL, maxWL + stepWL, stepWL)  # 波長リストの計算
         except Exception as e:
             print(e)
             self.msg.set(f"数字を入力してください\n{e}")
@@ -153,12 +173,14 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
+
+        # スレッドを使用して計測を開始
         thread1 = threading.Thread(target=self.pack_single_ple, args=(power, minWL, maxWL, stepWL, background, exposure, savefolderpath))
         thread1.start()
     
     def pack_single_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, background:bool, exposure:int, savefolderpath:str)->None:
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) + 120)#120秒はなんとなくの初期化時間
+        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) * (2 if background else 1) + 60) * len(np.arange(minWL, maxWL + stepWL, stepWL)) + 80)#120秒はなんとなくの初期化時間
         self.button_start["state"] = tkinter.DISABLED
         self.logger = logger.Logger(log_file_path=os.path.join(savefolderpath, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
