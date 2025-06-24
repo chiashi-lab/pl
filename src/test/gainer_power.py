@@ -234,7 +234,7 @@ class Application(tkinter.Frame):
             pid_control_wavelength(targetwavelength=centerwavelength, TiSap_actuator=self.tisp, spectrometer=self.spectrometer, logger=self.logger)
 
             self.logger.log(f"start power control at {centerwavelength} for {targetpower}")
-            poslog = pid_control_power(
+            poslog, _ = pid_control_power(
                 targetpower=targetpower,
                 powermeter=self.powermeter,
                 NDfilter=self.NDfilter,
