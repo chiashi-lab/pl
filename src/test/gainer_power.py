@@ -214,7 +214,8 @@ class Application(tkinter.Frame):
         self.entry_power["state"] = "normal"
         self.label_power["state"] = "normal"
         self.unit_power["state"] = "normal"
-        # --- ここからゲイン入力欄の有効化 ---
+        self.entry_wavelength["state"] = "normal"
+        self.label_wavelength["state"] = "normal"
         self.entry_kp["state"] = "normal"
         self.label_kp["state"] = "normal"
         self.entry_ki["state"] = "normal"
