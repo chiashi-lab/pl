@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import time
 import func
 
-def pid_control_power(targetpower: float, powermeter, NDfilter, eps: float, logger: Logger, NDinitpos: float, max_retry: int = 40) -> None:
+def pid_control_power(targetpower: float, powermeter, NDfilter, eps: float, logger: Logger, NDinitpos: float, e_kp, e_ki, e_kd, max_retry: int = 40) -> None:
     """
     PID制御でNDフィルターを動かして目標パワーに調整する関数
     args:
@@ -33,9 +33,9 @@ def pid_control_power(targetpower: float, powermeter, NDfilter, eps: float, logg
     # パワーメータの値が安定するまで待機時間が必要なので，波長やパワーを変更した後には待機時間を設ける
     poslog =[]
     r = config.EXCITEPOWERPIDNORMALIZATION / (targetpower * 1000)
-    Kp = config.EXCITEPOWERPIDKP * r
-    Ki = config.EXCITEPOWERPIDKI * r
-    Kd = config.EXCITEPOWERPIDKD * r
+    Kp = r * float(e_kp.get())
+    Ki = r * float(e_ki.get())
+    Kd = r * float(e_kd.get())
     dt = 1.0
     acc = 0.0
     diff = 0.0
@@ -241,10 +241,13 @@ class Application(tkinter.Frame):
                 eps=targetpower*config.EPSRATIO,
                 logger=self.logger,
                 NDinitpos=self.mypowerdict.get_nearest(centerwavelength, targetpower),
+                e_kp = self.entry_kp,
+                e_ki = self.entry_ki,
+                e_kd = self.entry_kd
             )
             self.mypowerdict.add(centerwavelength, targetpower, self.NDfilter.get_position())
-            #plt.plot(poslog)
-            #plt.show()
+            plt.plot(poslog)
+            plt.show()
         except Exception as e:
             print(e)
             self.msg.set(f"波長の切替とパワーの調整に失敗しました\n{e}")
