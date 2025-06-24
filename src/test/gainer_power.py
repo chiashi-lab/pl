@@ -40,18 +40,22 @@ def pid_control_power(targetpower: float, powermeter, NDfilter, eps: float, logg
     acc = 0.0
     diff = 0.0
     prev = 0.0
+    prev_ndpos = NDfilter.get_position()
     if NDinitpos != config.NDINITPOS:
         NDfilter.move_to(NDinitpos)
         poslog.append(NDinitpos)
     elif NDinitpos == config.NDINITPOS and NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(NDinitpos)
         poslog.append(NDinitpos)
-    time.sleep(2)#最初の熱緩和待機時間.初回はやや長めに待つ
+
+    if abs(prev_ndpos - NDfilter.get_position()) > 1.0e5: #NDフィルターの位置が大きく変わるとレーザーパワーも大きく変わりレンジを跨ぐ際に計測値が不安定になるので長めに待つ
+        time.sleep(3)
+    time.sleep(2)#最初の熱緩和待機時間.初回はやや長めに待つ################################################
     # PID制御first
     logger.log("PID power control fist start")
     for i in range(max_retry):
         logger.log(f"first {i}th retry of PID power control")
-        time.sleep(3)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
+        time.sleep(2)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．########################################
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
