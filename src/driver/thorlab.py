@@ -225,8 +225,8 @@ class thorlabspectrometer:
         #この実装だとサチって最大値が複数ある場合に正しく動作しない
         """
         for _ in range(10):#露光時間の調整は10回まで行う
-            spectrum = self.get_spectrum()
-            n_maxvalue = np.count_nonzero(np.array(spectrum)  == np.max(spectrum))
+            spectrum = np.array(self.get_spectrum())
+            n_maxvalue = np.count_nonzero(spectrum == np.max(spectrum))
             if n_maxvalue <= 1:#最大値が一つだけならサチっていない
                 peakindex = np.argmax(spectrum)
                 peakwavelength = self.wavelengths_corrected[peakindex]
