@@ -44,6 +44,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
 
     # ここからPID制御
     for i in range(max_retry):
+        time.sleep(0.05)  #分光器やアクチュエータが落ち着くまで若干待つ#########################
         nowstep = TiSap_actuator.get_position()
         nowwavelength = spectrometer.get_peak()
         logger.log(f"{i}th retry of PID wavelength control")
