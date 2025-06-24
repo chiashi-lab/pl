@@ -150,7 +150,7 @@ class Application(tkinter.Frame):
             self.msg.set("正しい値を入力して下さい")
             self.set_button["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.choonepower, args=(wavelength))
+        thread1 = threading.Thread(target=self.choonepower, args=(wavelength,))
         thread1.start()
 
     def initialize(self):
@@ -188,7 +188,7 @@ class Application(tkinter.Frame):
         self.pb.stop()
         self.msg.set("初期化完了．値を設定してセットを押してください")
 
-    def choonepower(self, targetpower, centerwavelength):
+    def choonepower(self, centerwavelength):
         self.msg.set("波長の切替とパワーの調整中...")
         self.pb.start(10)
         try:
@@ -206,7 +206,7 @@ class Application(tkinter.Frame):
             return
         self.pb.stop()
         self.set_button["state"] = tkinter.NORMAL
-        self.msg.set(f"手動シャッター操作で照射してください.波長:{centerwavelength}nm,パワー:{targetpower*1000}mW")
+        self.msg.set(f"手動シャッター操作で照射してください.波長:{centerwavelength}nm")
 
 if __name__ == "__main__":
     root = tkinter.Tk()
