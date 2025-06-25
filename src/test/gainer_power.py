@@ -245,12 +245,11 @@ class Application(tkinter.Frame):
                 NDfilter=self.NDfilter,
                 eps=targetpower*config.EPSRATIO,
                 logger=self.logger,
-                NDinitpos=self.mypowerdict.get_nearest(centerwavelength, targetpower),
+                NDinitpos=None,
                 e_kp = self.entry_kp,
                 e_ki = self.entry_ki,
                 e_kd = self.entry_kd
             )
-            self.mypowerdict.add(centerwavelength, targetpower, self.NDfilter.get_position())
             plt.plot(poslog)
             plt.show()
         except Exception as e:

@@ -57,7 +57,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     logger.log("PID power control fist start")
     for i in range(max_retry):
         logger.log(f"first {i}th retry of PID power control")
-        time.sleep(3)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
+        time.sleep(2)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
