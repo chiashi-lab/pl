@@ -16,7 +16,7 @@ import time
 import func
 from typing import List, Tuple
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, e_kp, e_ki, e_kd, eps:float = 0.5, max_retry:int = 40) -> Tuple[List, bool]:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, e_kp, e_ki, e_kd, eps:float = 0.2, max_retry:int = 40) -> Tuple[List, bool]:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
