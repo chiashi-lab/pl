@@ -43,18 +43,21 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     acc = 0.0
     diff = 0.0
     prev = 0.0
+    prev_ndpos = NDfilter.get_position()
     if NDinitpos != config.NDINITPOS:
         NDfilter.move_to(NDinitpos)
         poslog.append(NDinitpos)
     elif NDinitpos == config.NDINITPOS and NDfilter.get_position() < config.NDINITPOS:##ポジションが0に近いときは，透過率が高すぎてPID制御に時間がかかりすぎるので，透過率を下げる
         NDfilter.move_to(NDinitpos)
         poslog.append(NDinitpos)
+    if abs(prev_ndpos - NDfilter.get_position()) > 1.0e5:
+        time.sleep(3) #NDフィルターの位置が大きく変わった場合は，安定するまで長めに待機時間を設ける
     time.sleep(2)#最初の熱緩和待機時間.初回はやや長めに待つ
     # PID制御first
     logger.log("PID power control fist start")
     for i in range(max_retry):
         logger.log(f"first {i}th retry of PID power control")
-        time.sleep(3)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
+        time.sleep(2)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
@@ -86,7 +89,7 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
     # PID制御second
     for i in range(max_retry):
         logger.log(f"second {i}th retry of PID power control")
-        time.sleep(3)
+        time.sleep(3)#毎回の熱緩和待機時間.3A-FSの公称応答時間は1.8sである．2nd resolverでは長めに待機時間を設けている
         nowndstep = NDfilter.get_position()
         measuredpower = powermeter.get_latestdata()
         nowpower = measuredpower * func.ndstep2ratio(nowndstep)
@@ -108,8 +111,13 @@ def pid_control_power(targetpower:float, powermeter:juno, NDfilter:ThorlabStage,
         else:
             logger.log("Already at target power")
             return poslog, True
+    # max_retry回繰り返しても目標パワーに到達しなかった場合
+    logger.log(f"Failed to control power by {max_retry} times")
+    logger.log(f"current power: {nowpower}")
+    logger.log(f"current ND filter position: {nowndstep}")
+    return poslog, False
 
-def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 0.5, max_retry:int = 40) -> Tuple[List, bool]:
+def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_actuator, spectrometer:thorlabspectrometer, logger:Logger, eps:float = 0.2, max_retry:int = 40) -> Tuple[List, bool]:
     '''
     PID制御を用いて目標波長に制御する関数
     args:
@@ -137,6 +145,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
 
     # ここからPID制御
     for i in range(max_retry):
+        time.sleep(0.05)  # 分光器やアクチュエータが落ち着くまで若干待つ
         nowstep = TiSap_actuator.get_position()
         nowwavelength = spectrometer.get_peak()
         logger.log(f"{i}th retry of PID wavelength control")

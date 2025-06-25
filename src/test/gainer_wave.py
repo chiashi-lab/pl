@@ -29,7 +29,7 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     return:
         None
     '''
-    # PID制御のパラメータ. PIDゲインはsrc/config.pyに記述されている
+    # PID制御のパラメータ. 
     Kp = float(e_kp.get())
     Ki = float(e_ki.get())
     Kd = float(e_kd.get())
