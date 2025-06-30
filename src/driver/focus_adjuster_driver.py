@@ -101,7 +101,7 @@ class Focus_adjuster:
         command is string. "r |steps|" or "l |steps|"
 
         args:
-            steps: int, number of steps to move the motor. steps should be -1000 <= steps <= 1000
+            steps: int, number of steps to move the motor. steps should be -1000 <= steps <= 1000. units are internal steps. 1step =  1/400 rotation = 0.25 um
         return:
             None
         """
@@ -136,7 +136,7 @@ class Focus_adjuster:
         Set the position of the autofocus motor
 
         args:
-            position: int, position to move the autofocus motor
+            position: int, position to move the autofocus motor. units are internal steps. 1step =  1/400 rotation = 0.25 um
         return:
             None
         """

@@ -168,6 +168,80 @@ def pid_control_wavelength(targetwavelength:int, TiSap_actuator:zaber_linear_act
     logger.log(f"current wavelength: {nowwavelength}")
     return poslog, False
 
+def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
+    '''
+    symphonyで検出したSiのPLピークをもとにオートフォーカスを行う関数
+    args:
+        objective_lens(Focus_adjuster): フォーカス調整用の自作ドライバークラス
+        symphony(Symphony): Symphonyカメラの自作ドライバークラス
+        savedirpath(str): データを保存するディレクトリのパス
+        exposuretime(int): 露光時間[s]
+        logger(Logger): 自作ロガークラス
+        range_dense_search(int): 密なサーチ範囲[internal steps]。目標位置から±range_dense_searchの範囲でサーチを行う. range_dense_search = 200の場合は±200 internal steps = 50umの範囲でサーチを行う
+        range_sparse_search(int|None): 疎なサーチ範囲[internal steps]。目標位置から±range_sparse_searchの範囲でサーチを行う。Noneの場合は疎なサーチは行わない range_sparse_search = 400の場合は±400 internal steps = 100umの範囲でサーチを行う
+    return:
+        optimal(int): 最適なフォーカス位置[internal steps]。1step = 0.25um
+    '''
+    start_time = time.time()
+    symphony.set_exposuretime(exposuretime)
+    symphony.set_config_savetofiles(savedirpath)
+    center_dense_search = objective_lens.position
+    # sparse search
+    if range_sparse_search:
+        logger.log("sparse serch start")
+        logger.log(f"pos before search:{objective_lens.position}")
+        maxvl = 0
+        maxpos = 0
+        for pos in range(objective_lens.position - range_sparse_search, objective_lens.position + range_sparse_search + 100, 100):
+            objective_lens.set_rpm(20)
+            objective_lens.move_to(pos)
+            symphony.start_exposure(block=True)
+            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"sparse_{pos}.txt"))
+            df = pd.read_csv(os.path.join(savedirpath, f"sparse_{pos}.txt"), sep='\t', comment='#', header=None)
+            value = df[1].max()
+            logger.log(f"now pos:{pos}, value of Si PL:{value}")
+            if value > maxvl:
+                maxpos = pos
+                maxvl = value
+        logger.log(f"max pos(center dense search):{maxpos}, value of Si PL:{maxvl}")      
+        center_dense_search = maxpos
+    # dense search
+    logger.log("dense search start")
+    min_ol = -1 * range_dense_search + center_dense_search
+    max_ol = range_dense_search + center_dense_search
+    iter_ol = 0
+    while max_ol - min_ol > 5:
+        if iter_ol % 3 == 0:
+            objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
+        iter_ol += 1
+
+        mid1_ol = min_ol + (max_ol - min_ol) / 3
+        mid2_ol = max_ol - (max_ol - min_ol) / 3
+
+        objective_lens.move_to(mid1_ol)
+        symphony.start_exposure(block=True)
+        os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"dense_{mid1_ol}.txt"))
+        df = pd.read_csv(os.path.join(savedirpath, f"dense_{mid1_ol}.txt"), sep='\t', comment='#', header=None)
+        value1_ol = df[1].max()
+        logger.log(f"now pos:{mid1_ol}, value of Si PL:{value1_ol}")
+
+        objective_lens.move_to(mid2_ol)
+        symphony.start_exposure(block=True)
+        os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"dense_{mid2_ol}.txt"))
+        df = pd.read_csv(os.path.join(savedirpath, f"dense_{mid2_ol}.txt"), sep='\t', comment='#', header=None)
+        value2_ol = df[1].max()
+        logger.log(f"now pos:{mid2_ol}, value of Si PL:{value2_ol}")
+
+        if value1_ol < value2_ol:
+            min_ol = mid1_ol
+        else:
+            max_ol = mid2_ol
+    optimal = int((min_ol + max_ol) / 2)
+    objective_lens.move_to(optimal)
+    logger.log(f"autofocus at {optimal}")
+    logger.log(f"autofocus take {time.time()- start_time}sec")
+    return optimal
+
 class Single_Ple_Measurement():
     def __init__(self) -> None:
         self.reset()
@@ -290,66 +364,6 @@ class Single_Ple_Measurement():
         self.flipshut.close()
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
-def autofocus(objective_lens:Focus_adjuster, symphony:Symphony, savedirpath:str, exposuretime:int, logger:Logger, range_dense_search:int = 200, range_sparse_search:int|None = None) -> int:
-    start_time = time.time()
-    symphony.set_exposuretime(exposuretime)
-    symphony.set_config_savetofiles(savedirpath)
-    center_dense_search = objective_lens.position
-    # sparse search
-    if range_sparse_search:
-        logger.log("sparse serch start")
-        logger.log(f"pos before search:{objective_lens.position}")
-        maxvl = 0
-        maxpos = 0
-        for pos in range(objective_lens.position - range_sparse_search, objective_lens.position + range_sparse_search + 100, 100):
-            objective_lens.set_rpm(20)
-            objective_lens.move_to(pos)
-            symphony.start_exposure(block=True)
-            os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"sparse_{pos}.txt"))
-            df = pd.read_csv(os.path.join(savedirpath, f"sparse_{pos}.txt"), sep='\t', comment='#', header=None)
-            value = df[1].max()
-            logger.log(f"now pos:{pos}, value of Si PL:{value}")
-            if value > maxvl:
-                maxpos = pos
-                maxvl = value
-        logger.log(f"max pos(center dense search):{maxpos}, value of Si PL:{maxvl}")      
-        center_dense_search = maxpos
-    # dense search
-    logger.log("dense search start")
-    min_ol = -1 * range_dense_search + center_dense_search
-    max_ol = range_dense_search + center_dense_search
-    iter_ol = 0
-    while max_ol - min_ol > 5:
-        if iter_ol % 3 == 0:
-            objective_lens.set_rpm(objective_lens._clamp(int((max_ol - min_ol)/7), 2, 20))
-        iter_ol += 1
-
-        mid1_ol = min_ol + (max_ol - min_ol) / 3
-        mid2_ol = max_ol - (max_ol - min_ol) / 3
-
-        objective_lens.move_to(mid1_ol)
-        symphony.start_exposure(block=True)
-        os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"dense_{mid1_ol}.txt"))
-        df = pd.read_csv(os.path.join(savedirpath, f"dense_{mid1_ol}.txt"), sep='\t', comment='#', header=None)
-        value1_ol = df[1].max()
-        logger.log(f"now pos:{mid1_ol}, value of Si PL:{value1_ol}")
-
-        objective_lens.move_to(mid2_ol)
-        symphony.start_exposure(block=True)
-        os.rename(os.path.join(savedirpath, "IMAGE0001_0001_AREA1_1.txt"), os.path.join(savedirpath, f"dense_{mid2_ol}.txt"))
-        df = pd.read_csv(os.path.join(savedirpath, f"dense_{mid2_ol}.txt"), sep='\t', comment='#', header=None)
-        value2_ol = df[1].max()
-        logger.log(f"now pos:{mid2_ol}, value of Si PL:{value2_ol}")
-
-        if value1_ol < value2_ol:
-            min_ol = mid1_ol
-        else:
-            max_ol = mid2_ol
-    optimal = int((min_ol + max_ol) / 2)
-    objective_lens.move_to(optimal)
-    logger.log(f"autofocus at {optimal}")
-    logger.log(f"autofocus take {time.time()- start_time}sec")
-    return optimal
 
 class Scan_PLE_Measurement():
     def __init__(self) -> None:
