@@ -5,7 +5,7 @@ sys.path.append('../')
 from driver.horiba import Symphony
 from driver.sigmakoki import shutter
 from driver.focus_adjuster_driver import Focus_adjuster
-from main import autofocus
+from measurment import autofocus
 from logger import Logger
 import config
 

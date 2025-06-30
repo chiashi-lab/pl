@@ -4,7 +4,7 @@ import sys
 sys.coinit_flags = 2
 sys.path.append('../')
 import threading
-from main import pid_control_wavelength
+from measurment import pid_control_wavelength
 from driver.ophir import juno
 from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.sigmakoki import shutter

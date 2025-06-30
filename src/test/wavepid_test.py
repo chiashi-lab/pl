@@ -4,7 +4,7 @@ import os
 import sys
 sys.path.append('../')
 import config
-from main import pid_control_wavelength
+from measurment import pid_control_wavelength
 from driver.zaber import zaber_linear_actuator
 from driver.thorlab import thorlabspectrometer
 from logger import Logger

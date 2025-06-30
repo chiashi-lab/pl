@@ -5,7 +5,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import Single_Ple_Measurement
+from measurment import Single_Ple_Measurement
 import func
 import datetime
 import logger

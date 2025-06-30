@@ -4,7 +4,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from main import dev_Scan_image_Measurement
+from measurment import dev_Scan_image_Measurement
 from driver.prior import Proscan
 from driver.focus_adjuster_driver import Focus_adjuster
 import config

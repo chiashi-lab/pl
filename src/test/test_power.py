@@ -4,7 +4,7 @@ import os
 import sys
 sys.path.append('../')
 import time
-from main import pid_control_wavelength
+from measurment import pid_control_wavelength
 import func
 from driver.ophir import juno
 from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
