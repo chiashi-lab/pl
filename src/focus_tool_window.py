@@ -14,6 +14,7 @@ class Application(tkinter.Frame):
         self.pack()
         self.master = master
         self.master.geometry("500x500")
+        self.master.title(u"Focus Tool")
         self.create_widgets()
         self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
 

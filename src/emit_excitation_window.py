@@ -18,7 +18,7 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master.geometry("500x500")
-        self.master.title(u"励起光制御")
+        self.master.title(u"励起光照射制御")
         self.create_widgets()
     
     def create_widgets(self):
