@@ -145,7 +145,7 @@ class thorlabspectrometer:
         self._wavelengths = self._get_wavelengths()
         #以下の波長校正式はnotebook/002ccs200.ipynbにて算出したもの
         #ArHgランプの輝度スペクトルを基準としている
-        self.wavelengths_corrected = [x + 6.333 for x in self._wavelengths]
+        self.wavelengths_corrected = [1.027356467861465 * x - 15.203576364522963 for x in self._wavelengths]
 
     def __del__(self) -> None:
         self._lib.tlccs_close (self._ccs_handle)
