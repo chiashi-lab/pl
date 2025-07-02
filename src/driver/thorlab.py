@@ -143,7 +143,9 @@ class thorlabspectrometer:
         self._lib.tlccs_init(config.CCS200SPECTROMETERID.encode(), 1, 1, byref(self._ccs_handle))
         self.set_integration_time(0.001)
         self._wavelengths = self._get_wavelengths()
-        self.wavelengths_corrected = [x - 10.931 for x in self._wavelengths]
+        #以下の波長校正式はnotebook/002ccs200.ipynbにて算出したもの
+        #ArHgランプの輝度スペクトルを基準としている
+        self.wavelengths_corrected = [x + 6.333 for x in self._wavelengths]
 
     def __del__(self) -> None:
         self._lib.tlccs_close (self._ccs_handle)
