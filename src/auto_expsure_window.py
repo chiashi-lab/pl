@@ -155,7 +155,7 @@ class MainWindow(tk.Frame):
         self.entry_exposure_time.grid(row=1, column=1)
 
         self.bg_correct = tk.BooleanVar(value=False)
-        self.check_bg_correct = ttk.Checkbutton(frame_map, text=u'bg減算', variable=self.bg_correct, onvalue=True, offvalue=False, font=font_md)
+        self.check_bg_correct = ttk.Checkbutton(frame_map, text=u'bg減算', variable=self.bg_correct, onvalue=True, offvalue=False)
         self.check_bg_correct.grid(row=4, column=0)
 
         self.log_scrolltext = scrolledtext.ScrolledText(self.master, width=60, height=10, font=font_sm)
