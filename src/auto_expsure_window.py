@@ -242,7 +242,7 @@ class MainWindow(tk.Frame):
 
             try:
                 self.pb_exposure["value"] = 0
-                self.pb_exposure.start(int(self.exposure_time.get()) / 100 * 1000) #exp_time[s] / 100[step] * 1000[ms/s] = exp_time_per_step[ms/step]
+                self.pb_exposure.start(interval=int(int(self.exposure_time.get()) / 100 * 1000)) #exp_time[s] / 100[step] * 1000[ms/s] = exp_time_per_step[ms/step]
                 self.symphony.start_exposure(block=True)
                 self.pb_exposure.stop()
                 self.df = pd.read_csv(os.path.join(self.entry_path.get(), "IMAGE0001_0001_AREA1_1.txt"), comment='#', header=None, engine='python', encoding='cp932', sep=None)
