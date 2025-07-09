@@ -226,7 +226,7 @@ class MainWindow(tk.Frame):
         self.pb.start(10)
         if self.symphony is None:
             self.symphony = Symphony()
-        self.symphony.Initialize()
+            self.symphony.Initialize()
         self.symphony.set_exposuretime(self.exposure_time.get())
         self.symphony.set_config_savetofiles(self.entry_path.get())
         time.sleep(2)
