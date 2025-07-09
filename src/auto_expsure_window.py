@@ -132,6 +132,9 @@ class MainWindow(tk.Frame):
         self.pb = ttk.Progressbar(frame_map, orient="horizontal", length=200, mode="indeterminate")
         self.pb.grid(row=5, column=0, columnspan=4)
 
+        self.pb_exposure = ttk.Progressbar(frame_map, orient="horizontal", length=200, mode="determinate")
+        self.pb_exposure.grid(row=7, column=0, columnspan=4)
+
         self.button_start = ttk.Button(frame_map, text=u'開始', width=7, state=tk.NORMAL)
         self.button_start.bind("<1>", self.call_start_measurement)
         self.button_start.grid(row=3, column=0)
@@ -220,6 +223,7 @@ class MainWindow(tk.Frame):
         self.stop_flag = True
 
     def start_measurement(self, event=None) -> None:
+        self.pb.start(10)
         if self.symphony is None:
             self.symphony = Symphony()
         self.symphony.Initialize()
@@ -231,19 +235,22 @@ class MainWindow(tk.Frame):
         while True:
             if self.stop_flag:
                 self.pb.stop()
+                self.pb_exposure.stop()
                 self.logger.log("Measurement stopped by user.")
                 self.stop_flag = False
                 break
 
             try:
-                self.pb.start(10)
+                self.pb_exposure["value"] = 0
+                self.pb_exposure.start(self.exposure_time.get() / 100 * 1000) #exp_time[s] / 100[step] * 1000[ms/s] = exp_time_per_step[ms/step]
                 self.symphony.start_exposure(block=True)
-
+                self.pb_exposure.stop()
                 self.df = pd.read_csv(os.path.join(self.entry_path.get(), "IMAGE0001_0001_AREA1_1.txt"), comment='#', header=None, engine='python', encoding='cp932', sep=None)
                 self.show_spectrum()
             except Exception as e:
                 self.logger.log(f"Error during measurement: {e}")
                 messagebox.showerror("Error", f"Measurement failed: {e}")
+                self.pb_exposure.stop()
                 self.pb.stop()
                 break
 
