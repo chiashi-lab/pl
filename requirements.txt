@@ -41,6 +41,7 @@ scikit-learn
 scipy
 six
 sympy
+tkinterdnd2
 threadpoolctl
 torch
 timm
