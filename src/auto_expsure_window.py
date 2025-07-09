@@ -154,6 +154,10 @@ class MainWindow(tk.Frame):
         self.label_exposure_time.grid(row=1, column=0)
         self.entry_exposure_time.grid(row=1, column=1)
 
+        self.bg_correct = tk.BooleanVar(value=False)
+        self.check_bg_correct = ttk.Checkbutton(frame_map, text=u'bg減算', variable=self.bg_correct, onvalue=True, offvalue=False, font=font_md)
+        self.check_bg_correct.grid(row=4, column=0)
+
         self.log_scrolltext = scrolledtext.ScrolledText(self.master, width=60, height=10, font=font_sm)
         self.log_scrolltext.grid(row=2, column=1)
 
@@ -193,7 +197,7 @@ class MainWindow(tk.Frame):
 
     @update_spec_plot
     def show_spectrum(self) -> None:
-        if self.back_df is not None:
+        if (self.back_df is not None) and self.bg_correct.get():
             self.df[1] = self.df[1] - self.back_df[1]
 
         self.df = self.df.iloc[::-1]
