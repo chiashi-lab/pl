@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 from driver.horiba import Symphony
 import time
 import pandas as pd
-import os
 
 
 font_lg = ('Arial', 24)
@@ -121,7 +120,7 @@ class MainWindow(tk.Frame):
 
         self.label_path = ttk.Label(frame_map, text=u'保存先', font=font_md)
         self.entry_path = tk.Entry(width=40)
-        self.entry_path = tk.Entry(frame_map, width=40, font=font_md)
+        self.entry_path = tk.Entry(frame_map, width=30, font=font_md)
         self.entry_path.insert(tk.END, 'C:\\Users\\optics\\individual')
         self.button_path = ttk.Button(frame_map, text=u'参照', width=10, state=tk.NORMAL)
         self.button_path.bind("<1>", self.get_path)
@@ -133,27 +132,27 @@ class MainWindow(tk.Frame):
         self.pb = ttk.Progressbar(frame_map, orient="horizontal", length=200, mode="indeterminate")
         self.pb.grid(row=5, column=0, columnspan=4)
 
-        self.button_start = ttk.Button(frame_map, text=u'開始', width=10, state=tk.NORMAL)
-        self.button_start.bind("<1>", self.start_measurement)
+        self.button_start = ttk.Button(frame_map, text=u'開始', width=7, state=tk.NORMAL)
+        self.button_start.bind("<1>", self.call_start_measurement)
         self.button_start.grid(row=3, column=0)
-        self.button_stop = ttk.Button(frame_map, text=u'停止', width=10, state=tk.DISABLED)
+        self.button_stop = ttk.Button(frame_map, text=u'停止', width=7, state=tk.DISABLED)
         self.button_stop.bind("<1>", self.stop_measurement)
         self.button_stop.grid(row=3, column=1)
 
-        self.center_wavelength = tk.DoubleVar(value=1300)
+        self.center_wavelength = tk.IntVar(value=1300)
         self.entry_center_wavelength = ttk.Entry(frame_map, textvariable=self.center_wavelength, justify=tk.CENTER, font=font_md, width=6)
         self.label_center_wavelength = ttk.Label(frame_map, text=u'中心波長', font=font_md)
         self.label_center_wavelength.grid(row=2, column=0)
         self.entry_center_wavelength.grid(row=2, column=1)
 
-        self.exposure_time = tk.DoubleVar(value=300)
+        self.exposure_time = tk.IntVar(value=2)
         self.entry_exposure_time = ttk.Entry(frame_map, textvariable=self.exposure_time, justify=tk.CENTER, font=font_md, width=6)
         self.label_exposure_time = ttk.Label(frame_map, text=u'露光時間', font=font_md)
         self.label_exposure_time.grid(row=1, column=0)
         self.entry_exposure_time.grid(row=1, column=1)
 
-        self.log_scrolltext = scrolledtext.ScrolledText(frame_map, width=60, height=10, font=font_sm)
-        self.log_scrolltext.grid(row=7, column=0)
+        self.log_scrolltext = scrolledtext.ScrolledText(self.master, width=60, height=10, font=font_sm)
+        self.log_scrolltext.grid(row=2, column=1)
 
         self.logger = Logger(log_file_path=None, log_scroll=self.log_scrolltext)
 
@@ -210,41 +209,43 @@ class MainWindow(tk.Frame):
             return
         self.button_start["state"] = tk.DISABLED
         self.button_stop["state"] = tk.NORMAL
-        thread1 = threading.Thread(target=self.start_measurement)
-        thread1.start()
+        self.thread1 = threading.Thread(target=self.start_measurement)
+        self.thread1.start()
 
     def stop_measurement(self, event=None) -> None:
         if self.button_stop["state"] == tk.DISABLED:
             return
         self.button_stop["state"] = tk.DISABLED
         self.button_start["state"] = tk.NORMAL
-        self.stop_flag = True 
+        self.stop_flag = True
 
     def start_measurement(self, event=None) -> None:
         if self.symphony is None:
             self.symphony = Symphony()
         self.symphony.Initialize()
+        self.symphony.set_exposuretime(self.exposure_time.get())
         self.symphony.set_config_savetofiles(self.entry_path.get())
+        time.sleep(2)
         self.logger.log("Symphony initialized and configured.")
 
         while True:
             if self.stop_flag:
+                self.pb.stop()
                 self.logger.log("Measurement stopped by user.")
                 self.stop_flag = False
                 break
 
             try:
-                self.symphony.set_exposuretime(self.exposure_time.get())
                 self.pb.start(10)
                 self.symphony.start_exposure(block=True)
 
                 self.df = pd.read_csv(os.path.join(self.entry_path.get(), "IMAGE0001_0001_AREA1_1.txt"), comment='#', header=None, engine='python', encoding='cp932', sep=None)
                 self.show_spectrum()
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to set parameters: {e}")
-                self.logger.log(f"Error setting parameters: {e}")
-                return
-
+                self.logger.log(f"Error during measurement: {e}")
+                messagebox.showerror("Error", f"Measurement failed: {e}")
+                self.pb.stop()
+                break
 
 
 def main():
