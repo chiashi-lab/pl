@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from driver.horiba import Symphony
 import time
 import pandas as pd
+import copy
 
 
 font_lg = ('Arial', 24)
@@ -137,6 +138,10 @@ class MainWindow(tk.Frame):
         self.button_stop = ttk.Button(frame_map, text=u'停止', width=7, state=tk.DISABLED)
         self.button_stop.bind("<1>", self.stop_measurement)
         self.button_stop.grid(row=3, column=1)
+        self.button_save = ttk.Button(frame_map, text=u'保存', width=7, state=tk.DISABLED)
+        self.button_save.bind("<1>", self.save_spectrum)
+        self.button_save.grid(row=3, column=2)
+
 
         self.center_wavelength = tk.IntVar(value=1300)
         self.entry_center_wavelength = ttk.Entry(frame_map, textvariable=self.center_wavelength, justify=tk.CENTER, font=font_md, width=6)
@@ -191,6 +196,21 @@ class MainWindow(tk.Frame):
     def drop_leave(self, event: TkinterDnD.DnDEvent) -> None:
         self.canvas_drop.place_forget()
 
+    def save_spectrum(self, event=None) -> None:
+        if self.button_save["state"] == tk.DISABLED:
+            return
+        self.button_save["state"] = tk.DISABLED
+        savedf = copy.deepcopy(self.df)
+        savepath = filedialog.asksaveasfilename(
+            initialdir=self.entry_path.get(),
+            title="スペクトルデータの保存",
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+        )
+        savedf.to_csv(savepath, index=False, header=False, encoding='cp932')
+        self.logger.log(f"Saved spectrum data to {savepath}")
+        self.button_save["state"] = tk.NORMAL
+
     @update_spec_plot
     def show_spectrum(self) -> None:
         if (self.back_df is not None) and self.bg_correct.get():
@@ -212,6 +232,7 @@ class MainWindow(tk.Frame):
             return
         self.button_start["state"] = tk.DISABLED
         self.button_stop["state"] = tk.NORMAL
+        self.button_save["state"] = tk.NORMAL
         self.thread1 = threading.Thread(target=self.start_measurement)
         self.thread1.start()
 
