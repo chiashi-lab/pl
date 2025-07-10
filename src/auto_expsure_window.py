@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox, filedialog, scrolledtext
@@ -8,12 +7,9 @@ import sys
 sys.coinit_flags = 2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.colors import Normalize
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pandas as pd
 import threading
 from logger import Logger
-import config
 import matplotlib.pyplot as plt
 from driver.horiba import Symphony
 import time
