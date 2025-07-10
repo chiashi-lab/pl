@@ -205,7 +205,7 @@ class MainWindow(tk.Frame):
             initialdir=self.entry_path.get(),
             title="スペクトルデータの保存",
             defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+            filetypes=[("txt files", "*.txt"), ("All files", "*.*")],
         )
         savedf.to_csv(savepath, index=False, header=False, encoding='cp932')
         self.logger.log(f"Saved spectrum data to {savepath}")
