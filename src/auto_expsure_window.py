@@ -204,7 +204,7 @@ class MainWindow(tk.Frame):
         savepath = filedialog.asksaveasfilename(
             initialdir=self.entry_path.get(),
             title="スペクトルデータの保存",
-            defaultextension=".csv",
+            defaultextension=".txt",
             filetypes=[("txt files", "*.txt"), ("All files", "*.*")],
         )
         savedf.to_csv(savepath, index=False, header=False, encoding='cp932')
