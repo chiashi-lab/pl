@@ -38,4 +38,4 @@ EXCITEWAVELENGTHPIDKP = 0.035
 EXCITEWAVELENGTHPIDKI = 0.0001
 EXCITEWAVELENGTHPIDKD = 0.0001
 
-VGC50X_PORT = 'COM7'  # Default port for VGC50X, can be overridden
+VGC50X_PORT = 'COM4'  # Default port for VGC50X, can be overridden
