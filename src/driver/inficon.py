@@ -43,8 +43,9 @@ class VGC50X:
             Response string from the VGC50X.
         """
         for _ in range(max_retry):
-            response = self.serial.readline().strip().decode('utf-8')
+            response = self.serial.readlines()
             if response:
+                response = [line.decode('utf-8').strip() for line in response if line]
                 return response
             time.sleep(0.1)
         raise TimeoutError("Failed to read response from VGC50X after multiple attempts.")
@@ -54,21 +55,25 @@ class VGC50X:
         Start the measurement on the VGC50X.
         """
         self._send_command(f'COM,{interval}')
+
+    def get_pressure(self) -> float:
+        """
+        Get the current pressure reading from the VGC50X.
+
+        Returns:
+            Pressure reading as a float.
+        """
         response = self._read_response()
-        if response != 'OK':
-            raise RuntimeError(f"Failed to start measurement: {response}")
+        try:
+            pressure = float(response[-1].split(',')[1])
+            return pressure
+        except Exception as e:
+            print(f"Error parsing pressure response: {e}")
+            return 0.0
 
 if __name__ == "__main__":
     # Example usage
     vgc50x = VGC50X()
-    try:
-        vgc50x.start_measurement(interval=1)
-        for _ in range(5):
-            time.sleep(1)
-            response = vgc50x._read_response()
-            print(f"Response: {response}")
-
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        vgc50x.serial.close()
+    vgc50x.start_measurement(interval=1)
+    for i in range(5):
+        print(f"Pressure reading {i+1}: {vgc50x.get_pressure()} Pa")
