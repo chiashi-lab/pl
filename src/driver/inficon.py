@@ -53,27 +53,37 @@ class VGC50X:
     def start_measurement(self, interval: int = 1) -> None:
         """
         Start the measurement on the VGC50X.
+        args:
+            interval: Measurement interval.
+                0 : 100 ms
+                1 : 1 s
+                2 : 1 min
         """
+        assert interval in [0, 1, 2], "Interval must be 0, 1, or 2."
         self._send_command(f'COM,{interval}')
 
     def get_pressure(self) -> float:
         """
-        Get the current pressure reading from the VGC50X.
+        Get the latest pressure reading from the VGC50X.
 
         Returns:
-            Pressure reading as a float.
+            Latest pressure reading as a float.
         """
-        response = self._read_response()
         try:
-            pressure = float(response[-1].split(',')[1])
+            response = self._read_response()
+            latest_response = response[-1] if response else ''
+            pressure = float(latest_response.split(',')[1])
             return pressure
         except Exception as e:
             print(f"Error parsing pressure response: {e}")
             return 0.0
 
 if __name__ == "__main__":
-    # Example usage
-    vgc50x = VGC50X()
-    vgc50x.start_measurement(interval=1)
-    for i in range(5):
-        print(f"Pressure reading {i+1}: {vgc50x.get_pressure()} Pa")
+    def test():
+        # Example usage
+        vgc50x = VGC50X()
+        vgc50x.start_measurement(interval=1)
+        for i in range(5):
+            print(f"Pressure reading {i+1}: {vgc50x.get_pressure()} Pa")
+
+    test()
