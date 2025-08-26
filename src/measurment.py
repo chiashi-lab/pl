@@ -1077,7 +1077,7 @@ class dev_Zscan_image_Measurement():
 
             if focusadjuster is not None:
                 self.logger.log(f"obejctive lens is moving to {self.z_poslist[posidx]}")
-                focusadjuster.move_to(self.z_poslist[posidx])
+                focusadjuster.move_to(self.z_poslist[posidx], limit = False)
                 self.logger.log(f"obejctive lens is at {focusadjuster.position}")
 
             logger.log(f"start wavelength control at {wavelength}")
