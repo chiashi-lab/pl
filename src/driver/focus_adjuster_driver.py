@@ -12,7 +12,7 @@ class Focus_adjuster:
         self._rpm = 10
         self._steps_per_rotate = config.STEPS_PER_ROTATE_ST42BYH1004
         self._steps_per_sec = self._rpm * self._steps_per_rotate / 60
-        time.sleep(5)
+        time.sleep(3)
         self.move_by(1, block=True)
         self.move_to(0)
 
@@ -86,7 +86,13 @@ class Focus_adjuster:
         for _ in range(max_retry):
             self._clear_buffer()
             self._send_command("p " + str(rpm) + '\r\n')
-            _, res_value = self._read_command(split_value=True)
+            res_type, res_value = self._read_command(split_value=True)
+
+            if not res_type == 't': # arduinoがエラーを吐いている場合はバッファーをクリアして再度試行
+                time.sleep(1)
+                self._clear_buffer()
+                time.sleep(1)
+                continue
 
             # value returned from the motor should be the same as the set value
             if res_value == rpm:
@@ -105,11 +111,12 @@ class Focus_adjuster:
         return:
             None
         """
+        steps = int(steps)
         if steps < -1000 or steps > 1000:
             warnings.warn("The steps should be between -1000 and 1000")
             steps = self._clamp(steps, -1000, 1000)
         if steps >= 0:
-            command = "u " + str(steps) + '\r\n'
+            command = "u " + str(int(steps)) + '\r\n'
         else:
             command = "d " + str(int(-1 * steps)) + '\r\n'
 
@@ -122,10 +129,17 @@ class Focus_adjuster:
                 return
 
             # if block is true, Wait for the motor to finish moving
-            predicted_wait_time = abs(steps) / self._steps_per_sec
+            predicted_wait_time = (abs(steps) + 1) / self._steps_per_sec # 少し余裕をもって待機する為と0_division_error回避のために1step余分に待つ
             time.sleep(predicted_wait_time)
 
-            _, res_value = self._read_command(split_value=True)
+            res_type, res_value = self._read_command(split_value=True)
+
+            if not res_type == 't': # arduinoがエラーを吐いている場合はバッファーをクリアして再度試行
+                time.sleep(1)
+                self._clear_buffer()
+                time.sleep(1)
+                continue
+
             # value returned from the motor should be the same as the set value
             if self._check_closeness(steps, res_value, 1):
                 self._position += res_value
@@ -137,22 +151,21 @@ class Focus_adjuster:
 
         args:
             position: int, position to move the autofocus motor. units are internal steps. 1step =  1/400 rotation = 0.25 um
-            limit: bool, whether to limit the movement to the valid range
+            limit: bool, whether to limit the movement to the -1000 to 1000 range
         return:
             None
         """
-        if limit:
-            self.move_by(position - self._position, block=True)
-            return
-        else:
+        if not limit:
             move_steps = position - self._position
-            n = abs(move_steps) // 1000
+            n = int(abs(move_steps) // 1000)
             for _ in range(n):
                 if move_steps >= 0:
                     self.move_by(1000, block=True)
                 else:
                     self.move_by(-1000, block=True)
-            self.move_to(position - self._position, limit=False)
+
+        self.move_by(position - self._position, block=True)
+        return
 
 if __name__ == '__main__':
 
@@ -167,6 +180,13 @@ if __name__ == '__main__':
             print("rpm:",obejctive_lens.rpm)
             obejctive_lens.move_to(1000)
             print("pos:",obejctive_lens.position)
+
+    def test2():
+        objective_lens  = Focus_adjuster(config.AUTOFOCUSCOMPORT)
+        objective_lens.move_to(3.3)
+        print(objective_lens.position)
+        objective_lens.move_to(6.3)
+        print(objective_lens.position)
     
     target = -150
     
@@ -213,4 +233,4 @@ if __name__ == '__main__':
         print("result pos:", obejctive_lens.position)
         print("time:", time.time() - starttime)
 
-    test()
+    test2()
