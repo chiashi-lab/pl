@@ -96,8 +96,8 @@ class Application(tkinter.Frame):
         self.label_zpos_unit = tkinter.Label(text=u'um/4')
         self.label_zpos_unit.place(x=800, y=130)
 
-        self.button_100micro = ttk.Button(text="100um", command=self.call_move_100um)
-        self.button_100micro.place(x=700, y=10)
+        self.button_5micro = ttk.Button(text="5um", command=self.call_move_5um)
+        self.button_5micro.place(x=700, y=10)
 
         self.button_1micro = ttk.Button(text="1um", command=self.call_move_1um)
         self.button_1micro.place(x=700, y=50)
@@ -111,23 +111,23 @@ class Application(tkinter.Frame):
         self.button_m_1micro = ttk.Button(text="-1um", command=self.call_move_m_1micro)
         self.button_m_1micro.place(x=700, y=200)
 
-        self.button_m_100micro = ttk.Button(text="-100um", command=self.call_move_m_100um)
-        self.button_m_100micro.place(x=700, y=240)
+        self.button_m_5micro = ttk.Button(text="-5um", command=self.call_move_m_5um)
+        self.button_m_5micro.place(x=700, y=240)
 
         self.label_startzpos = tkinter.Label(text=u'開始点Z位置')
         self.label_startzpos.place(x=570, y=310)
-        self.entry_startzpos = tkinter.Entry(width=5)
+        self.entry_startzpos = tkinter.Entry(width=8)
         self.entry_startzpos.insert(tkinter.END, '0')
-        self.entry_startzpos.place(x=700, y=310)
+        self.entry_startzpos.place(x=690, y=310)
         self.button_startzpos = tkinter.Button(text=u'取得', width=5)
         self.button_startzpos.bind("<1>", self.get_zpos_start)
         self.button_startzpos.place(x=800, y=310)
 
         self.label_endzpos = tkinter.Label(text=u'終了点Z位置')
         self.label_endzpos.place(x=570, y=360)
-        self.entry_endzpos = tkinter.Entry(width=5)
+        self.entry_endzpos = tkinter.Entry(width=8)
         self.entry_endzpos.insert(tkinter.END, '0')
-        self.entry_endzpos.place(x=700, y=360)
+        self.entry_endzpos.place(x=690, y=360)
         self.button_endzpos = tkinter.Button(text=u'取得', width=5)
         self.button_endzpos.bind("<1>", self.get_zpos_end)
         self.button_endzpos.place(x=800, y=360)
@@ -203,10 +203,10 @@ class Application(tkinter.Frame):
         self.button_startzpos["state"] = tkinter.NORMAL
         self.button_endzpos["state"] = tkinter.NORMAL
 
-    def call_move_100um(self) -> None:
-        if self.button_100micro["state"] == "disabled":
+    def call_move_5um(self) -> None:
+        if self.button_5micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(4 * 100,))
+        thread = threading.Thread(target=self.move, args=(4 * 5,))
         thread.start()
 
     def call_move_1um(self) -> None:
@@ -234,30 +234,30 @@ class Application(tkinter.Frame):
         thread = threading.Thread(target=self.move, args=(-4 * 1,))
         thread.start()
 
-    def call_move_m_100um(self) -> None:
-        if self.button_m_100micro["state"] == "disabled":
+    def call_move_m_5um(self) -> None:
+        if self.button_m_5micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(-4 * 100,))
+        thread = threading.Thread(target=self.move, args=(-4 * 5,))
         thread.start()
 
     def move(self, move_value: int) -> None:
-        self.button_100micro.configure(state="disabled")
+        self.button_5micro.configure(state="disabled")
         self.button_1micro.configure(state="disabled")
         self.button_quarter.configure(state="disabled")
         self.button_m_quarter.configure(state="disabled")
         self.button_m_1micro.configure(state="disabled")
-        self.button_m_100micro.configure(state="disabled")
+        self.button_m_5micro.configure(state="disabled")
 
         self.focus_adjuster.move_by(move_value, block=True)
         self.pos.set(self.focus_adjuster.position)
 
-        self.button_100micro.configure(state="normal")
+        self.button_5micro.configure(state="normal")
         self.button_1micro.configure(state="normal")
         self.button_quarter.configure(state="normal")
         self.button_m_quarter.configure(state="normal")
         self.button_m_1micro.configure(state="normal")
-        self.button_m_100micro.configure(state="normal")
-
+        self.button_m_5micro.configure(state="normal")
+    
     def call_pack_scan_ple(self, event):#変更
         if self.button_start["state"] == tkinter.DISABLED:
             return
