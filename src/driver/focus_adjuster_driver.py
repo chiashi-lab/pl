@@ -131,18 +131,28 @@ class Focus_adjuster:
                 self._position += res_value
                 return
 
-    def move_to(self, position: int) -> None:
+    def move_to(self, position: int, limit: bool = True) -> None:
         """
         Set the position of the autofocus motor
 
         args:
             position: int, position to move the autofocus motor. units are internal steps. 1step =  1/400 rotation = 0.25 um
+            limit: bool, whether to limit the movement to the valid range
         return:
             None
         """
-        self.move_by(position - self._position, block=True)
-        return
-
+        if limit:
+            self.move_by(position - self._position, block=True)
+            return
+        else:
+            move_steps = position - self._position
+            n = abs(move_steps) // 1000
+            for _ in range(n):
+                if move_steps >= 0:
+                    self.move_by(1000, block=True)
+                else:
+                    self.move_by(-1000, block=True)
+            self.move_to(position - self._position, limit=False)
 
 if __name__ == '__main__':
 
