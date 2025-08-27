@@ -41,7 +41,7 @@ class Application(tkinter.Frame):
 
         self.label_exposuretime = tkinter.Label(text=u'露光時間')
         self.label_exposuretime.place(x=10, y=170)
-        self.entry_exposuretime = tkinter.Entry(width=7, text='120')
+        self.entry_exposuretime = tkinter.Entry(width=7)
         self.entry_exposuretime.insert(tkinter.END, '5000')
         self.entry_exposuretime.place(x=190, y=170)
         self.unit_exposuretime = tkinter.Label(text=u'ミリ秒')
