@@ -40,7 +40,7 @@ class Application(tkinter.Frame):
 
         self.label_exposuretime = tkinter.Label(text=u'露光時間')
         self.label_exposuretime.place(x=10, y=170)
-        self.entry_exposuretime = tkinter.Entry(width=7)
+        self.entry_exposuretime = tkinter.Entry(width=7, text='120')
         self.entry_exposuretime.insert(tkinter.END, '5000')
         self.entry_exposuretime.place(x=190, y=170)
         self.unit_exposuretime = tkinter.Label(text=u'ミリ秒')
@@ -96,8 +96,8 @@ class Application(tkinter.Frame):
         self.label_zpos_unit = tkinter.Label(text=u'um/4')
         self.label_zpos_unit.place(x=800, y=130)
 
-        self.button_5micro = ttk.Button(text="5um", command=self.call_move_5um)
-        self.button_5micro.place(x=700, y=10)
+        self.button_20micro = ttk.Button(text="20um", command=self.call_move_20um)
+        self.button_20micro.place(x=700, y=10)
 
         self.button_1micro = ttk.Button(text="1um", command=self.call_move_1um)
         self.button_1micro.place(x=700, y=50)
@@ -111,8 +111,8 @@ class Application(tkinter.Frame):
         self.button_m_1micro = ttk.Button(text="-1um", command=self.call_move_m_1micro)
         self.button_m_1micro.place(x=700, y=200)
 
-        self.button_m_5micro = ttk.Button(text="-5um", command=self.call_move_m_5um)
-        self.button_m_5micro.place(x=700, y=240)
+        self.button_m_20micro = ttk.Button(text="-20um", command=self.call_move_m_20um)
+        self.button_m_20micro.place(x=700, y=240)
 
         self.label_startzpos = tkinter.Label(text=u'開始点Z位置')
         self.label_startzpos.place(x=570, y=310)
@@ -203,10 +203,10 @@ class Application(tkinter.Frame):
         self.button_startzpos["state"] = tkinter.NORMAL
         self.button_endzpos["state"] = tkinter.NORMAL
 
-    def call_move_5um(self) -> None:
-        if self.button_5micro["state"] == "disabled":
+    def call_move_20um(self) -> None:
+        if self.button_20micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(4 * 5,))
+        thread = threading.Thread(target=self.move, args=(4 * 20,))
         thread.start()
 
     def call_move_1um(self) -> None:
@@ -234,29 +234,29 @@ class Application(tkinter.Frame):
         thread = threading.Thread(target=self.move, args=(-4 * 1,))
         thread.start()
 
-    def call_move_m_5um(self) -> None:
-        if self.button_m_5micro["state"] == "disabled":
+    def call_move_m_20um(self) -> None:
+        if self.button_m_20micro["state"] == "disabled":
             return
-        thread = threading.Thread(target=self.move, args=(-4 * 5,))
+        thread = threading.Thread(target=self.move, args=(-4 * 20,))
         thread.start()
 
     def move(self, move_value: int) -> None:
-        self.button_5micro.configure(state="disabled")
+        self.button_20micro.configure(state="disabled")
         self.button_1micro.configure(state="disabled")
         self.button_quarter.configure(state="disabled")
         self.button_m_quarter.configure(state="disabled")
         self.button_m_1micro.configure(state="disabled")
-        self.button_m_5micro.configure(state="disabled")
+        self.button_m_20micro.configure(state="disabled")
 
         self.focus_adjuster.move_by(move_value, block=True)
         self.pos.set(self.focus_adjuster.position)
 
-        self.button_5micro.configure(state="normal")
+        self.button_20micro.configure(state="normal")
         self.button_1micro.configure(state="normal")
         self.button_quarter.configure(state="normal")
         self.button_m_quarter.configure(state="normal")
         self.button_m_1micro.configure(state="normal")
-        self.button_m_5micro.configure(state="normal")
+        self.button_m_20micro.configure(state="normal")
     
     def call_pack_scan_ple(self, event):#変更
         if self.button_start["state"] == tkinter.DISABLED:
