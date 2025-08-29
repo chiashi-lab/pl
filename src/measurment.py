@@ -527,7 +527,7 @@ class Scan_PLE_Measurement():
             self.symphony.set_config_savetofiles(savedirpath)
 
             if check_autofocus:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 self.objective_lens.move_to(self.height_func(posidx))
 
             for wavelength in self.wavelengthlist:
@@ -746,7 +746,7 @@ class dev_Scan_PLE_Measurement():
             self.symphony.set_config_savetofiles(savedirpath)
 
             if check_autofocus:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 self.objective_lens.move_to(self.height_func(posidx))
 
             logger.log(f"start wavelength control at {searchwavelength}")
@@ -955,8 +955,130 @@ class dev_Scan_image_Measurement():
             self.camera.file_name = file_name
 
             if focusadjuster is not None:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 focusadjuster.move_to(self.height_func(posidx))
+
+            logger.log(f"start wavelength control at {wavelength}")
+            pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            logger.log(f"start power control at {wavelength} for {targetpower}")
+            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(wavelength, targetpower))
+            self.mypowerdict.add(wavelength, targetpower, self.NDfilter.get_position())
+            self.logger.log(f"start to get PL spectra at {wavelength}")
+            self.shut.open(2)
+            self.camera.acquire(block=True)
+            self.shut.close(2)
+
+        self.shut.close(2)
+        self.flipshut.close()
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+
+class dev_Zscan_image_Measurement():
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+        self.camera = None
+
+    def scan_image(self, targetpower:float, wavelength:int, experimentname:str, exposuretime:int, path:str, numberofsteps:int, startzpos:int, endzpos:int, focusadjuster:Focus_adjuster, logger:Logger) -> None:
+        '''
+        args:
+            power(float): 目標パワー[W]
+            wavelength(int): 中心励起波長[nm]
+            experimentname(str): Light Fieldで読み込む実験名
+            exposuretime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+            numberofsteps(int): 移動ステップ数
+            startzpos(int): z軸の移動開始位置
+            endzpos(int): z軸の移動終了位置
+            focusadjuster(Focus_adjuster): フォーカス調整用のオブジェクト
+            logger(Logger): ロガーオブジェクト
+        return:
+            None
+        '''
+
+        self.z_poslist = np.linspace(startzpos, endzpos, numberofsteps)
+
+        self.logger = logger
+        self.logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("Experiment Condition")
+        self.logger.log(f"targetpower:{targetpower}")
+        self.logger.log(f"wavelength:{wavelength}")
+        self.logger.log(f"exposure time:{exposuretime}")
+        self.logger.log(f"number of steps:{numberofsteps}")
+        self.logger.log(f"start z position:{startzpos}")
+        self.logger.log(f"end z position:{endzpos}")
+        self.logger.log("")
+        self.logger.log("position list")
+        self.logger.log("index, z")
+        self.logger.log("")
+        for i in range(numberofsteps):
+            self.logger.log(f"{i}, {self.z_poslist[i]}")
+        self.logger.log("")
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
+
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
+
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
+        self.mypowerdict = PowerDict()
+
+        if self.NDfilter is None:
+            self.NDfilter = ThorlabStage(home=True)
+        self.NDfilter.move_to(0, block=True)
+        self.logger.log(f"stage is at {self.NDfilter.get_position()}")
+
+        self.powermeter = juno()
+        self.powermeter.open()
+        self.powermeter.set_range(0)
+        self.logger.log("powermeter is opened")
+
+        self.tisp_linear_actuator = zaber_linear_actuator()
+        self.logger.log("TiSap actuator is initialized")
+
+        self.spectrometer = thorlabspectrometer()
+        self.logger.log("spectrometer is initialized")
+
+        self.camera = PrincetonCamera()
+        self.camera.experiment.Load(experimentname)
+        self.camera.online_export(enabled=True)
+        self.camera.folder_path = path
+        self.logger.log("camera is initialized")
+        self.logger.log(f"Loaded experiment: {experimentname}")
+        if int(self.camera.exposure_time) != int(exposuretime):
+            self.logger.log(f"camera exposure time and your exposure time is different. camera exposure time is {self.camera.exposure_time}ms")
+        else:
+            self.logger.log(f"camera exposure time and your exposure time is same. camera exposure time is {self.camera.exposure_time}ms")
+        self.logger.log("camera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
+
+        self.flipshut.open()
+        self.logger.log("flipshut is opened")
+
+        for posidx in range(numberofsteps):
+            file_name = f"pos{posidx}_z{self.z_poslist[posidx]}"
+            if os.path.exists(os.path.join(path, file_name)):
+                os.remove(os.path.join(path, file_name))
+            self.camera.file_name = file_name
+
+            if focusadjuster is not None:
+                self.logger.log(f"objective lens is moving to {self.z_poslist[posidx]}")
+                focusadjuster.move_to(self.z_poslist[posidx], limit = False)
+                self.logger.log(f"objective lens is at {focusadjuster.position}")
 
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
