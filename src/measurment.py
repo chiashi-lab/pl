@@ -527,7 +527,7 @@ class Scan_PLE_Measurement():
             self.symphony.set_config_savetofiles(savedirpath)
 
             if check_autofocus:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 self.objective_lens.move_to(self.height_func(posidx))
 
             for wavelength in self.wavelengthlist:
@@ -746,7 +746,7 @@ class dev_Scan_PLE_Measurement():
             self.symphony.set_config_savetofiles(savedirpath)
 
             if check_autofocus:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 self.objective_lens.move_to(self.height_func(posidx))
 
             logger.log(f"start wavelength control at {searchwavelength}")
@@ -955,7 +955,7 @@ class dev_Scan_image_Measurement():
             self.camera.file_name = file_name
 
             if focusadjuster is not None:
-                self.logger.log(f"obejctive lens is moving to {self.height_func(posidx)}")
+                self.logger.log(f"objective lens is moving to {self.height_func(posidx)}")
                 focusadjuster.move_to(self.height_func(posidx))
 
             logger.log(f"start wavelength control at {wavelength}")
@@ -1076,9 +1076,9 @@ class dev_Zscan_image_Measurement():
             self.camera.file_name = file_name
 
             if focusadjuster is not None:
-                self.logger.log(f"obejctive lens is moving to {self.z_poslist[posidx]}")
+                self.logger.log(f"objective lens is moving to {self.z_poslist[posidx]}")
                 focusadjuster.move_to(self.z_poslist[posidx], limit = False)
-                self.logger.log(f"obejctive lens is at {focusadjuster.position}")
+                self.logger.log(f"objective lens is at {focusadjuster.position}")
 
             logger.log(f"start wavelength control at {wavelength}")
             pid_control_wavelength(targetwavelength=wavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)

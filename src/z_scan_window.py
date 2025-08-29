@@ -216,7 +216,6 @@ class Application(tkinter.Frame):
         thread.start()
 
     def call_move_quarter(self) -> None:
-        
         if self.button_quarter["state"] == "disabled":
             return
         thread = threading.Thread(target=self.move, args=(1,))
