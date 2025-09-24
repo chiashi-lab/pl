@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import ttk, messagebox
+from tkinter import ttk, scrolledtext
 import time
 import sys
 import config
@@ -13,7 +13,7 @@ class Application(tkinter.Frame):
         super().__init__(master)
         self.pack()
         self.master = master
-        self.master.geometry("500x500")
+        self.master.geometry("500x600")
         self.master.title(u"Focus Tool")
         self.create_widgets()
         self.focus_adjuster = Focus_adjuster(config.AUTOFOCUSCOMPORT)
@@ -22,31 +22,41 @@ class Application(tkinter.Frame):
         self.pos = tkinter.IntVar()
         self.pos.set(0)
         self.label_pos = ttk.Label(textvariable=self.pos)
-        self.label_pos.place(x=100, y=130)
+        self.label_pos.place(x=100, y=170)
+
+        self.button_20micro = ttk.Button(text="20um", command=self.call_move_20um)
+        self.button_20micro.place(x=100, y=10)
 
         self.button_5micro = ttk.Button(text="5um", command=self.call_move_5um)
-        self.button_5micro.place(x=100, y=10)
+        self.button_5micro.place(x=100, y=50)
 
         self.button_1micro = ttk.Button(text="1um", command=self.call_move_1um)
-        self.button_1micro.place(x=100, y=50)
+        self.button_1micro.place(x=100, y=90)
 
         self.button_quarter = ttk.Button(text="1/4um", command=self.call_move_quarter)
-        self.button_quarter.place(x=100, y=90)
+        self.button_quarter.place(x=100, y=130)
 
         self.button_m_quarter = ttk.Button(text="-1/4um", command=self.call_move_m_quarter)
-        self.button_m_quarter.place(x=100, y=160)
+        self.button_m_quarter.place(x=100, y=200)
 
         self.button_m_1micro = ttk.Button(text="-1um", command=self.call_move_m_1micro)
-        self.button_m_1micro.place(x=100, y=200)
+        self.button_m_1micro.place(x=100, y=240)
 
         self.button_m_5micro = ttk.Button(text="-5um", command=self.call_move_m_5um)
-        self.button_m_5micro.place(x=100, y=240)
+        self.button_m_5micro.place(x=100, y=280)
 
+        self.button_m_20micro = ttk.Button(text="-20um", command=self.call_move_m_20um)
+        self.button_m_20micro.place(x=100, y=320)
 
-        self.log_scrolltext = tkinter.scrolledtext.ScrolledText(width=60, height=10)
-        self.log_scrolltext.place(x=10, y=360)
-
+        self.log_scrolltext = scrolledtext.ScrolledText(width=60, height=10)
+        self.log_scrolltext.place(x=10, y=400)
         self.logger = logger.Logger(log_file_path=None, log_scroll=self.log_scrolltext)
+
+    def call_move_20um(self) -> None:
+        if self.button_20micro["state"] == "disabled":
+            return
+        thread = threading.Thread(target=self.move, args=(4 * 20,))
+        thread.start()
 
     def call_move_5um(self) -> None:
         if self.button_5micro["state"] == "disabled":
@@ -83,6 +93,12 @@ class Application(tkinter.Frame):
         if self.button_m_5micro["state"] == "disabled":
             return
         thread = threading.Thread(target=self.move, args=(-4 * 5,))
+        thread.start()
+
+    def call_move_m_20um(self) -> None:
+        if self.button_m_20micro["state"] == "disabled":
+            return
+        thread = threading.Thread(target=self.move, args=(-4 * 20,))
         thread.start()
 
     def move(self, move_value: int) -> None:
