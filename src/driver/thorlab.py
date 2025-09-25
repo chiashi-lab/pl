@@ -2,6 +2,7 @@ from pylablib.devices import Thorlabs
 import sys
 sys.path.append('../')
 import config
+import func
 from ctypes import *
 import numpy as np
 
@@ -145,7 +146,7 @@ class thorlabspectrometer:
         self._wavelengths = self._get_wavelengths()
         #以下の波長校正式はnotebook/002ccs200.ipynbにて算出したもの
         #ArHgランプの輝度スペクトルを基準としている
-        self.wavelengths_corrected = [1.1260753279843825 * x - 103.88710434067546 for x in self._wavelengths]
+        self.wavelengths_corrected = [func.ccs200_wavelength_correction(x) for x in self._wavelengths]
 
     def __del__(self) -> None:
         self._lib.tlccs_close (self._ccs_handle)
