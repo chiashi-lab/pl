@@ -86,12 +86,14 @@ ophir社製のパワーメーター3A-FSの制御にはophirの公式マニュ�
 [OphirManual](docs/OphirLMMeasurement_COM_Object_0.pdf)
 
 
-## ~~superchrome~~
+## superchrome
+SCレーザーの故障により使用してない
 ~~[superchromeSDK](docs/SuperChromeSDK.pdf)~~
 
 ~~dll同梱の制御GUIをpywinautoによって直接操作している~~
 
-## ~~分光器 ihR320~~
+## 分光器 ihR320
+pywinautoによって制御可能であるが，制御する必要がないため，使用していない
 
 ~~こちらもpywinautoで直接MonoExampleを操作している~~
 
@@ -118,7 +120,7 @@ thorlabs社製のレーザー前ミラーを制御するためにpylablibを使�
 リニアアクチュエータの安全運用位置の目安は下図参照
 ![linear](docs/ti-sp-linear-act.png)
 
-## オートフォーカス
+## フォーカス調整
 
 オートフォーカス用のarduinoを制御するためにpyserialを用いてシリアル通信を行っている.
 オートフォーカス部分の回路図は下図参照

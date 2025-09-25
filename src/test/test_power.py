@@ -13,7 +13,7 @@ from logger import Logger
 
 
 def get_wavelength_power_relation(save_path):
-    logger = Logger(None, timestamp_flag=True, log_scroll=None)
+    logger = Logger(save_path, timestamp_flag=True, log_scroll=None)
     flipshut = FlipMount()
     flipshut.open()
 
