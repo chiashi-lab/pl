@@ -1,3 +1,5 @@
+from typing import Callable
+
 def linear(x:float, a:float, b:float) -> float:
     return a * x + b
 
@@ -7,7 +9,7 @@ def wavelength2tisp_pos(wavelength:float) -> float:
 def ccs200_wavelength_correction(wavelength:float) -> float:
     return linear(float(wavelength), 1.1260753279843825, -103.88710434067546)
 
-def make_linear_from_two_points(x1:float, y1:float, x2:float, y2:float) -> callable:
+def make_linear_from_two_points(x1:float, y1:float, x2:float, y2:float) -> Callable[[float], float]:
     if x1 == x2:
         a = (y2 - y1) / (x2 - x1 + 1e-10)
     else:
