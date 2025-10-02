@@ -142,7 +142,7 @@ class thorlabspectrometer:
         self._lib = cdll.LoadLibrary(config.CCS200DLLPATH)
         self._ccs_handle = c_int(0)
         self._lib.tlccs_init(config.CCS200SPECTROMETERID.encode(), 1, 1, byref(self._ccs_handle))
-        self.set_integration_time(0.001)
+        self.set_integration_time(config.CCS200_INTEGRATIONTIME)
         self._wavelengths = self._get_wavelengths()
         #以下の波長校正式はnotebook/002ccs200.ipynbにて算出したもの
         #ArHgランプの輝度スペクトルを基準としている
@@ -193,7 +193,7 @@ class thorlabspectrometer:
         return:
             wavelengths(list): corrected wavelengths from the spectrometer
         """
-        return self._wavelengths_corrected
+        return self.wavelengths_corrected
 
     def get_spectrum(self) -> list:
         """
@@ -233,7 +233,7 @@ class thorlabspectrometer:
             if n_maxvalue <= 1:#最大値が一つだけならサチっていない
                 peakindex = np.argmax(spectrum)
                 peakwavelength = self.wavelengths_corrected[peakindex]
-                if peakwavelength < 650 or 950 < peakwavelength: #ピーク波長がチタンサファイアレーザーの利得帯域外なら上手く露光出来ていないので露光時間を延ばす
+                if peakwavelength < config.TISP_LASER_SHORTEST_WAVELENGTH or config.TISP_LASER_LONGEST_WAVELENGTH < peakwavelength: #ピーク波長がチタンサファイアレーザーの利得帯域外なら上手く露光出来ていないので露光時間を延ばす
                     self.set_integration_time(self.get_integration_time() * 2)
                 else:
                     return peakwavelength

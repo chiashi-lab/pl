@@ -29,6 +29,9 @@ STEPS_PER_ROTATE_ST42BYH1004 = 400 #1回転に必要なステップ数　360deg/
 #実際の表示はUSB\VID_1313&PID_8089\M00331284だった
 CCS200SPECTROMETERID = "USB0::0x1313::0x8089::M00331284::RAW"
 CCS200DLLPATH = "C:/Program Files/IVI Foundation/VISA/Win64/Bin/TLCCS_64.dll"
+CCS200_INTEGRATIONTIME = 0.001 #ccs200の初期露光時間[秒]
+TISP_LASER_SHORTEST_WAVELENGTH = 680 #チタンサファイアレーザーの発振可能な最短波長[nm]　この値をもとにccs200の露光時間を調節している。レーザーの仕様上は700だが頑張れば690nmくらいも発振するので余裕を持たせている。
+TISP_LASER_LONGEST_WAVELENGTH = 870 #チタンサファイアレーザーの発振可能な最長波長[nm]　この値をもとにccs200の露光時間を調節している。レーザーの仕様上は850だが頑張れば860nmくらいも発振するので余裕を持たせている。
 
 ZABERPORT = 'COM9'
 ZABERMINLIMIT = 14.0

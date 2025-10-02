@@ -55,9 +55,9 @@ class Proscan:
         args: speed: float (micrometer/sec)
         return: None
         """
-        speed = Decimal(str(speed)).quantize(Decimal('0.0'), ROUND_HALF_UP)
-        self._speed = float(speed)
-        self._send_command("SMS,"+ str(speed) + ',u\r')
+        speed_decimal = Decimal(str(speed)).quantize(Decimal('0.0'), ROUND_HALF_UP)
+        self._speed = float(speed_decimal)
+        self._send_command("SMS,"+ str(speed_decimal) + ',u\r')
         return
 
     def move_to(self, xpos: int, ypos: int, block: bool = True) -> None:
@@ -70,7 +70,7 @@ class Proscan:
         # calculate speed
         now_pos = self.get_pos()
         dist = np.linalg.norm(np.array([xpos, ypos]) - np.array(now_pos[:2]))
-        speed = self._dist2speed(dist)
+        speed = self._dist2speed(float(dist))
         self.set_speed(speed)
 
         self._send_command('G,'+ str(xpos) + ',' + str(ypos) + '\r')
