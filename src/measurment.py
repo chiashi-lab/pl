@@ -6,6 +6,7 @@ from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.focus_adjuster_driver import Focus_adjuster
 from driver.zaber import zaber_linear_actuator
 from driver.princeton import PrincetonCamera
+from driver.birmrose import Aotf
 from logger import Logger
 import config
 from power_dict import PowerDict
@@ -1093,3 +1094,22 @@ class dev_Zscan_image_Measurement():
         self.shut.close(2)
         self.flipshut.close()
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+
+class hyperspectral_Measurement():
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.symphony = None
+        self.priorstage = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+
+    def get_hyperspectra(self, targetpower:float, minexwavelength:int, maxexwavelength:int, stepexwavelength:int, exposuretime:int, path:str, minemwavelength:int, maxemwavelength:int, stepemwavelength:int, logger:Logger) -> None:
+        pass
