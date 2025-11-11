@@ -1096,7 +1096,7 @@ class dev_Zscan_image_Measurement():
         self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 
-class hyperspectral_Measurement():
+class Hyperspectral_Measurement():
     def __init__(self) -> None:
         self.reset()
 
