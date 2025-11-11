@@ -47,42 +47,75 @@ class Application(tkinter.Frame):
         self.unit_stepexcitewavelength = tkinter.Label(text=u'nm')
         self.unit_stepexcitewavelength.place(x=250, y=90)
 
-        self.button_calcwl = tkinter.Button(text=u'計算', width=10)
-        self.button_calcwl.place(x=410, y=90)
-        self.button_calcwl.bind("<1>", self.calcwl)
+        self.button_calc_ex_wl = tkinter.Button(text=u'計算', width=10)
+        self.button_calc_ex_wl.place(x=410, y=90)
+        self.button_calc_ex_wl.bind("<1>", self.calc_ex_wl)
 
+        self.label_minemissionwavelength = tkinter.Label(text=u'AOTF最短中心波長')
+        self.label_minemissionwavelength.place(x=10, y=150)
+        self.entry_minemissionwavelength = tkinter.Entry(width=7)
+        self.entry_minemissionwavelength.insert(tkinter.END, '1200')
+        self.entry_minemissionwavelength.place(x=190, y=150)
+        self.unit_minemissionwavelength = tkinter.Label(text=u'nm')
+        self.unit_minemissionwavelength.place(x=250, y=150)
+
+        self.label_maxemissionwavelength = tkinter.Label(text=u'AOTF最長中心波長')
+        self.label_maxemissionwavelength.place(x=10, y=190)
+        self.entry_maxemissionwavelength = tkinter.Entry(width=7)
+        self.entry_maxemissionwavelength.insert(tkinter.END, '1500')
+        self.entry_maxemissionwavelength.place(x=190, y=190)
+        self.unit_maxemissionwavelength = tkinter.Label(text=u'nm')
+        self.unit_maxemissionwavelength.place(x=250, y=190)
+
+        self.label_stepemissionwavelength = tkinter.Label(text=u'AOTF中心波長間隔')
+        self.label_stepemissionwavelength.place(x=10, y=230)
+        self.entry_stepemissionwavelength = tkinter.Entry(width=7)
+        self.entry_stepemissionwavelength.insert(tkinter.END, '10')
+        self.entry_stepemissionwavelength.place(x=190, y=230)
+        self.unit_stepemissionwavelength = tkinter.Label(text=u'nm')
+        self.unit_stepemissionwavelength.place(x=250, y=230)
+
+        self.button_calc_em_wl = tkinter.Button(text=u'計算', width=10)
+        self.button_calc_em_wl.place(x=410, y=230)
+        self.button_calc_em_wl.bind("<1>", self.calc_em_wl)
+
+        self.label_LFexpName = tkinter.Label(text=u'LFのexp名')
+        self.label_LFexpName.place(x=10, y=290)
+        self.entry_LFexpName = tkinter.Entry(width=25)
+        self.entry_LFexpName.insert(tkinter.END, 'Exp-10000ms')
+        self.entry_LFexpName.place(x=190, y=290)
 
         self.label_exposuretime = tkinter.Label(text=u'露光時間')
-        self.label_exposuretime.place(x=10, y=170)
-        self.entry_exposuretime = tkinter.Entry(width=7, text='120')
-        self.entry_exposuretime.insert(tkinter.END, '120')
-        self.entry_exposuretime.place(x=190, y=170)
+        self.label_exposuretime.place(x=10, y=330)
+        self.entry_exposuretime = tkinter.Entry(width=7, text='10')
+        self.entry_exposuretime.insert(tkinter.END, '10')
+        self.entry_exposuretime.place(x=190, y=330)
         self.unit_exposuretime = tkinter.Label(text=u'秒')
-        self.unit_exposuretime.place(x=250, y=170)
+        self.unit_exposuretime.place(x=250, y=330)
+
+        self.button_calc_time = tkinter.Button(text=u'計算', width=10)
+        self.button_calc_time.place(x=410, y=330)
+        self.button_calc_time.bind("<1>", self.calc_time)
 
         self.label_targetpower = tkinter.Label(text=u'サンプル照射パワー')
-        self.label_targetpower.place(x=10, y=210)
+        self.label_targetpower.place(x=10, y=370)
         self.entry_targetpower = tkinter.Entry(width=7)
         self.entry_targetpower.insert(tkinter.END, '2')
-        self.entry_targetpower.place(x=190, y=210)
+        self.entry_targetpower.place(x=190, y=370)
         self.unit_targetpower = tkinter.Label(text=u'mW')
-        self.unit_targetpower.place(x=250, y=210)
+        self.unit_targetpower.place(x=250, y=370)
 
         self.label_path = tkinter.Label(text=u'保存先')
-        self.label_path.place(x=10, y=260)
+        self.label_path.place(x=10, y=410)
         self.entry_path = tkinter.Entry(width=40)
         self.entry_path.insert(tkinter.END, 'C:\\Users\\optics\\individual')
-        self.entry_path.place(x=120, y=260)
+        self.entry_path.place(x=120, y=410)
         self.button_path = tkinter.Button(text=u'参照', width=10)
         self.button_path.bind("<1>", self.get_path)
-        self.button_path.place(x=410, y=260)
-
-        self.button_calc_measurement_interval = tkinter.Button(text=u'計算', width=7)
-        self.button_calc_measurement_interval.bind("<1>", self.calc_measurement_interval)
-        self.button_calc_measurement_interval.place(x=400, y=400)
+        self.button_path.place(x=410, y=410)
 
         self.button_start = tkinter.Button(text=u'スタート', width=30)
-        self.button_start.bind("<1>", self.call_pack_scan_ple)
+        self.button_start.bind("<1>", self.call_pack_hyperspectra)
         self.button_start.place(x=20, y=850)
 
         self.pb = ttk.Progressbar(self.master, orient="horizontal", length=200, mode="indeterminate")
@@ -109,31 +142,86 @@ class Application(tkinter.Frame):
         self.button_path["state"] = tkinter.NORMAL
         return
 
-    def calcwl(self, event):
-        if self.button_calcwl["state"] == tkinter.DISABLED:
+    def calc_ex_wl(self, event):
+        if self.button_calc_ex_wl["state"] == tkinter.DISABLED:
             return
-        self.button_calcwl["state"] = tkinter.DISABLED
+        self.button_calc_ex_wl["state"] = tkinter.DISABLED
         try:
-            minWL = int(self.entry_minexwavelength.get())
-            maxWL = int(self.entry_maxexwavelength.get())
-            stepWL = int(self.entry_stepexwavelength.get())
-            wavelengthlist = np.arange(minWL, maxWL + stepWL, stepWL)
-            wavelengthlist = wavelengthlist.tolist()
+            minexWL = int(self.entry_minexcitewavelength.get())
+            maxexWL = int(self.entry_maxexcitewavelength.get())
+            stepexWL = int(self.entry_stepexcitewavelength.get())
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
-            self.button_calcwl["state"] = tkinter.NORMAL
+            self.button_calc_ex_wl["state"] = tkinter.NORMAL
             return
-        if minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or minWL > maxWL:
+        if minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minexWL > maxexWL:
             self.msg.set("正しい値を入力してください")
-            self.button_calcwl["state"] = tkinter.NORMAL
+            self.button_calc_ex_wl["state"] = tkinter.NORMAL
             return
-        self.msg.set(f"励起光波長は{wavelengthlist}nmです")
-        self.button_calcwl["state"] = tkinter.NORMAL
+        exwavelengthlist = np.arange(minexWL, maxexWL + stepexWL, stepexWL)
+        exwavelengthlist = exwavelengthlist.tolist()
+        self.msg.set(f"励起光波長は{exwavelengthlist}nmです")
+        self.button_calc_ex_wl["state"] = tkinter.NORMAL
         return
-    
 
-    
+    def calc_em_wl(self, event):
+        if self.button_calc_em_wl["state"] == tkinter.DISABLED:
+            return
+        self.button_calc_em_wl["state"] = tkinter.DISABLED
+        try:
+            minemWL = int(self.entry_minemissionwavelength.get())
+            maxemWL = int(self.entry_maxemissionwavelength.get())
+            stepemWL = int(self.entry_stepemissionwavelength.get())
+        except Exception as e:
+            print(e)
+            self.msg.set(f"値を正しく入力してください\n{e}")
+            self.button_calc_em_wl["state"] = tkinter.NORMAL
+            return
+        if minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minemWL > maxemWL:
+            self.msg.set("正しい値を入力してください")
+            self.button_calc_em_wl["state"] = tkinter.NORMAL
+            return
+        emwavelengthlist = np.arange(minemWL, maxemWL + stepemWL, stepemWL)
+        emwavelengthlist = emwavelengthlist.tolist()
+        self.msg.set(f"AOTF波長は{emwavelengthlist}nmです")
+        self.button_calc_em_wl["state"] = tkinter.NORMAL
+        return
+
+    def calc_time(self, event):
+        if self.button_calc_time["state"] == tkinter.DISABLED:
+            return
+        self.button_calc_time["state"] = tkinter.DISABLED
+        try:
+            minexWL = int(self.entry_minexcitewavelength.get())
+            maxexWL = int(self.entry_maxexcitewavelength.get())
+            stepexWL = int(self.entry_stepexcitewavelength.get())
+            minemWL = int(self.entry_minemissionwavelength.get())
+            maxemWL = int(self.entry_maxemissionwavelength.get())
+            stepemWL = int(self.entry_stepemissionwavelength.get())
+            exposure = int(self.entry_exposuretime.get())
+        except Exception as e:
+            print(e)
+            self.msg.set(f"値を正しく入力してください\n{e}")
+            self.button_calc_time["state"] = tkinter.NORMAL
+            return
+        if exposure < 0 or exposure > 1000 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minexWL > maxexWL or minemWL > maxemWL:
+            self.msg.set("正しい値を入力してください")
+            self.button_calc_time["state"] = tkinter.NORMAL
+            return
+        # 計測時間の計算
+        pred_h, pred_m, pred_s = None, None, None
+        pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure) *  + 60) * len(np.arange(minexWL, maxexWL + stepexWL, stepexWL)) * len(np.arange(minemWL, maxemWL + stepemWL, stepemWL)) + 80)
+        if pred_h is None and pred_m is None and pred_s is None:
+            msg = "計測にかかる時間は不明です"
+        else:
+            msg = f"計測にかかる時間は約{pred_h}時間{pred_m}分{pred_s}秒です"
+        
+        # 波長リストと計測時間の表示
+        self.msg.set(f"{msg}")
+        self.button_calc_time["state"] = tkinter.NORMAL
+        return
+
     def call_pack_hyperspectra(self, event):
         if self.button_start["state"] == tkinter.DISABLED:
             return
@@ -143,6 +231,9 @@ class Application(tkinter.Frame):
             minexWL = int(self.entry_minexcitewavelength.get())
             maxexWL = int(self.entry_maxexcitewavelength.get())
             stepexWL = int(self.entry_stepexcitewavelength.get())
+            minemWL = int(self.entry_minemissionwavelength.get())
+            maxemWL = int(self.entry_maxemissionwavelength.get())
+            stepemWL = int(self.entry_stepemissionwavelength.get())
             exposure = int(self.entry_exposuretime.get())
             path = self.entry_path.get()
         except Exception as e:
@@ -150,7 +241,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_start["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or exposure < 0 or exposure > 1000 or minexWL > maxexWL:
+        if power < 0.0 or power > 4.0 or exposure < 0 or exposure > 1000 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minexWL > maxexWL or minemWL > maxemWL:
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return
@@ -158,13 +249,12 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_scan_ple, args=(power, minexWL, maxexWL, stepexWL, exposure, path))
+        thread1 = threading.Thread(target=self.pack_hyperspectra, args=(power, minexWL, maxexWL, stepexWL, exposure, path, minemWL, maxemWL, stepemWL))
         thread1.start()
 
     def pack_hyperspectra(self, power:float, minexciteWL:int, maxexciteWL:int, stepexciteWL:int, exposure:int, path:str, minemissionWL:int, maxemissionWL:int, stepemissionWL:int)->None:
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxexciteWL - minexciteWL) / stepexciteWL) + 1) * (((maxemissionWL - minemissionWL) / stepemissionWL) + 1 + 120))#120秒はなんとなくの初期化時間
-        self.button_start["state"] = tkinter.DISABLED
+        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) + 60) * len(np.arange(minexciteWL, maxexciteWL + stepexciteWL, stepexciteWL)) * len(np.arange(minemissionWL, maxemissionWL + stepemissionWL, stepemissionWL)) + 80)
         self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)

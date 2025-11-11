@@ -1106,10 +1106,10 @@ class hyperspectral_Measurement():
         self.mypowerdict = None
         self.NDfilter = None
         self.powermeter = None
-        self.symphony = None
-        self.priorstage = None
         self.tisp_linear_actuator = None
         self.spectrometer = None
+        self.camera = None
+        self.aotf = None
 
     def get_hyperspectra(self, targetpower:float, minexwavelength:int, maxexwavelength:int, stepexwavelength:int, exposuretime:int, path:str, minemwavelength:int, maxemwavelength:int, stepemwavelength:int, logger:Logger) -> None:
         pass
