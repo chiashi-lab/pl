@@ -6,6 +6,7 @@ from driver.thorlab import ThorlabStage, FlipMount, thorlabspectrometer
 from driver.focus_adjuster_driver import Focus_adjuster
 from driver.zaber import zaber_linear_actuator
 from driver.princeton import PrincetonCamera
+from driver.birmrose import Aotf
 from logger import Logger
 import config
 from power_dict import PowerDict
@@ -1089,6 +1090,142 @@ class dev_Zscan_image_Measurement():
             self.shut.open(2)
             self.camera.acquire(block=True)
             self.shut.close(2)
+
+        self.shut.close(2)
+        self.flipshut.close()
+        self.logger.log("Experiment finished at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+
+class Hyperspectral_Measurement():
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.flipshut = None
+        self.shut = None
+        self.mypowerdict = None
+        self.NDfilter = None
+        self.powermeter = None
+        self.tisp_linear_actuator = None
+        self.spectrometer = None
+        self.camera = None
+        self.aotf = None
+
+    def get_hyperspectra(self, targetpower:float, minexwavelength:int, maxexwavelength:int, stepexwavelength:int, exposuretime:int, path:str, minemwavelength:int, maxemwavelength:int, stepemwavelength:int, logger:Logger, experimentname:str) -> None:
+        '''
+        args:
+            targetpower(float): 目標パワー[W]
+            minexwavelength(int): 励起光最短中心波長[nm]
+            maxexwavelength(int): 励起光最長中心波長[nm]
+            stepexwavelength(int): 励起光中心波長ステップ[nm]
+            exposuretime(int): 露光時間[s]
+            path(str): データを保存するディレクトリのパス
+            minemwavelength(int): AOTF最短中心波長[nm]
+            maxemwavelength(int): AOTF最長中心波長[nm]
+            stepemwavelength(int): AOTF中心波長間隔[nm]
+            logger(Logger): ロガーオブジェクト
+        return:
+            None
+        '''
+
+        self.logger = logger
+        self.logger.log("Experiment started at " + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        self.logger.log("Experiment Condition")
+        self.logger.log(f"targetpower:{targetpower}")
+        self.logger.log(f"minimum excite center wavelength:{minexwavelength}")
+        self.logger.log(f"maximum excite center wavelength:{maxexwavelength}")
+        self.logger.log(f"excite center wavelength step:{stepexwavelength}")
+        self.logger.log(f"minimum emission center wavelength:{minemwavelength}")
+        self.logger.log(f"maximum emission center wavelength:{maxemwavelength}")
+        self.logger.log(f"emission center wavelength step:{stepemwavelength}")
+        self.logger.log(f"exposure time:{exposuretime}")
+        self.exwavelengthlist = np.arange(minexwavelength, maxexwavelength + stepexwavelength, stepexwavelength)
+        self.emwavelengthlist = np.arange(minemwavelength, maxemwavelength + stepemwavelength, stepemwavelength)
+        self.logger.log("")
+        self.logger.log("exwavelengthlist")
+        for exwavelength in self.exwavelengthlist:
+            self.logger.log(str(exwavelength))
+        self.logger.log("")
+        self.logger.log("emwavelengthlist")
+        for emwavelength in self.emwavelengthlist:
+            self.logger.log(str(emwavelength))
+        self.logger.log("")
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.logger.log(f"make dir at {path}")
+
+        if self.flipshut is None:
+            self.flipshut = FlipMount()
+        self.flipshut.close()
+        self.logger.log("flipshut is closed")
+
+        if self.shut is None:
+            self.shut = shutter(config.SHUTTERCOMPORT)
+        self.shut.close(2)
+        self.logger.log("shutter is closed")
+
+        self.mypowerdict = PowerDict()
+
+        if self.NDfilter is None:
+            self.NDfilter = ThorlabStage(home=True)
+        self.NDfilter.move_to(0, block=True)
+        self.logger.log(f"stage is at {self.NDfilter.get_position()}")
+
+        self.powermeter = juno()
+        self.powermeter.open()
+        self.powermeter.set_range(0)
+        self.logger.log("powermeter is opened")
+
+        self.tisp_linear_actuator = zaber_linear_actuator()
+        self.logger.log("TiSap actuator is initialized")
+
+        self.spectrometer = thorlabspectrometer()
+        self.logger.log("spectrometer is initialized")
+
+        self.camera = PrincetonCamera()
+        self.camera.experiment.Load(experimentname)
+        self.camera.online_export(enabled=True)
+        self.camera.folder_path = path
+        self.logger.log("camera is initialized")
+        self.logger.log(f"Loaded experiment: {experimentname}")
+        if int(self.camera.exposure_time) != int(exposuretime):
+            self.logger.log(f"camera exposure time and your exposure time is different. camera exposure time is {self.camera.exposure_time}ms")
+        else:
+            self.logger.log(f"camera exposure time and your exposure time is same. camera exposure time is {self.camera.exposure_time}ms")
+        self.logger.log("camera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
+
+        self.aotf = Aotf()
+        self.logger.log("AOTF is initialized")
+
+        self.flipshut.open()
+        self.logger.log("flipshut is opened")
+
+        for exwavelength in self.exwavelengthlist:
+            if not os.path.exists(os.path.join(path, f"{exwavelength}")):
+                os.makedirs(os.path.join(path, f"{exwavelength}"))
+                self.logger.log(f"make dir at {os.path.join(path, f'{exwavelength}')}")
+            self.camera.folder_path = os.path.join(path, f"{exwavelength}")
+
+            self.logger.log(f"start excite wavelength control at {exwavelength}")
+            pid_control_wavelength(targetwavelength=exwavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+            self.logger.log(f"start power control at {exwavelength} for {targetpower}")
+            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(exwavelength, targetpower))
+            self.mypowerdict.add(exwavelength, targetpower, self.NDfilter.get_position())
+
+            for emwavelength in self.emwavelengthlist:
+                filename = f"ex{exwavelength}_em{emwavelength}"
+                if os.path.exists(os.path.join(path, f"{exwavelength}", filename)): # ファイルが存在していたら削除 -> 上書き保存
+                    os.remove(os.path.join(path, f"{exwavelength}", filename))
+                self.camera.file_name = filename
+
+                self.logger.log(f"set AOTF to {emwavelength}")
+                self.aotf.set_wavelength(emwavelength)
+                self.logger.log(f"start to get PL spectra at excite:{exwavelength} emit:{emwavelength}")
+                self.shut.open(2)
+                self.camera.acquire(block=True)
+                self.shut.close(2)
+                self.logger.log(f"PL spectra at excite:{exwavelength}nm emission:{emwavelength}nm is saved") 
 
         self.shut.close(2)
         self.flipshut.close()
