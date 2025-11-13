@@ -235,6 +235,7 @@ class Application(tkinter.Frame):
             maxemWL = int(self.entry_maxemissionwavelength.get())
             stepemWL = int(self.entry_stepemissionwavelength.get())
             exposure = int(self.entry_exposuretime.get())
+            expname = str(self.entry_LFexpName.get())
             path = self.entry_path.get()
         except Exception as e:
             print(e)
@@ -249,17 +250,17 @@ class Application(tkinter.Frame):
             self.msg.set("保存先が存在しません")
             self.button_start["state"] = tkinter.NORMAL
             return
-        thread1 = threading.Thread(target=self.pack_hyperspectra, args=(power, minexWL, maxexWL, stepexWL, exposure, path, minemWL, maxemWL, stepemWL))
+        thread1 = threading.Thread(target=self.pack_hyperspectra, args=(power, minexWL, maxexWL, stepexWL, exposure, path, minemWL, maxemWL, stepemWL, expname))
         thread1.start()
 
-    def pack_hyperspectra(self, power:float, minexciteWL:int, maxexciteWL:int, stepexciteWL:int, exposure:int, path:str, minemissionWL:int, maxemissionWL:int, stepemissionWL:int)->None:
+    def pack_hyperspectra(self, power:float, minexciteWL:int, maxexciteWL:int, stepexciteWL:int, exposure:int, path:str, minemissionWL:int, maxemissionWL:int, stepemissionWL:int, expname:str)->None:
         starttime = datetime.datetime.now()
         endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) + 60) * len(np.arange(minexciteWL, maxexciteWL + stepexciteWL, stepexciteWL)) * len(np.arange(minemissionWL, maxemissionWL + stepemissionWL, stepemissionWL)) + 80)
         self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
         try:
-            self.hyperspectra_measurement_obj.get_hyperspectra(power, minexciteWL, maxexciteWL, stepexciteWL, exposure, path, minemissionWL, maxemissionWL, stepemissionWL, self.logger)
+            self.hyperspectra_measurement_obj.get_hyperspectra(power, minexciteWL, maxexciteWL, stepexciteWL, exposure, path, minemissionWL, maxemissionWL, stepemissionWL, self.logger, expname)
         except Exception as e:
             print(e)
             self.msg.set(f"データ取得中にエラーが発生しました\n{e}")

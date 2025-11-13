@@ -1183,6 +1183,8 @@ class Hyperspectral_Measurement():
         self.spectrometer = thorlabspectrometer()
         self.logger.log("spectrometer is initialized")
 
+
+
         self.camera = PrincetonCamera()
         self.camera.experiment.Load(experimentname)
         self.camera.online_export(enabled=True)
@@ -1195,6 +1197,8 @@ class Hyperspectral_Measurement():
             self.logger.log(f"camera exposure time and your exposure time is same. camera exposure time is {self.camera.exposure_time}ms")
         self.logger.log("camera temp:" + ("Locked" if self.camera.temperature_status else "Unlocked"))
         # TODO AOTFの初期化
+        self.aotf = Aotf()
+        self.logger.log("AOTF is initialized")
 
         self.flipshut.open()
         self.logger.log("flipshut is opened")
@@ -1212,7 +1216,6 @@ class Hyperspectral_Measurement():
                 self.shut.open(2)
                 self.camera.acquire(block=True)
                 self.shut.close(2)
-                os.rename(os.path.join(path,"IMAGE0001_0001_AREA1_1.txt"), os.path.join(path, f"ex{exwavelength}_em{emwavelength}.txt"))
                 self.logger.log(f"PL spectra at excite:{exwavelength}nm emission:{emwavelength}nm is saved") 
 
         self.shut.close(2)
