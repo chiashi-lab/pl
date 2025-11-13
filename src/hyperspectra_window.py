@@ -211,7 +211,7 @@ class Application(tkinter.Frame):
             return
         # 計測時間の計算
         pred_h, pred_m, pred_s = None, None, None
-        pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure) *  + 60) * len(np.arange(minexWL, maxexWL + stepexWL, stepexWL)) * len(np.arange(minemWL, maxemWL + stepemWL, stepemWL)) + 80)
+        pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure / 1000) *  + 60) * len(np.arange(minexWL, maxexWL + stepexWL, stepexWL)) * len(np.arange(minemWL, maxemWL + stepemWL, stepemWL)) + 80)
         if pred_h is None and pred_m is None and pred_s is None:
             msg = "計測にかかる時間は不明です"
         else:
@@ -255,7 +255,7 @@ class Application(tkinter.Frame):
 
     def pack_hyperspectra(self, power:float, minexciteWL:int, maxexciteWL:int, stepexciteWL:int, exposure:int, path:str, minemissionWL:int, maxemissionWL:int, stepemissionWL:int, expname:str)->None:
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) + 60) * len(np.arange(minexciteWL, maxexciteWL + stepexciteWL, stepexciteWL)) * len(np.arange(minemissionWL, maxemissionWL + stepemissionWL, stepemissionWL)) + 80)
+        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure / 1000) + 60) * len(np.arange(minexciteWL, maxexciteWL + stepexciteWL, stepexciteWL)) * len(np.arange(minemissionWL, maxemissionWL + stepemissionWL, stepemissionWL)) + 80)
         self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
         self.pb.start(10)
