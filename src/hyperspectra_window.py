@@ -4,7 +4,7 @@ import sys
 sys.coinit_flags = 2
 from tkinter import filedialog, scrolledtext
 import threading
-from measurment import hyperspectral_Measurement
+from measurment import Hyperspectral_Measurement
 from driver.prior import Proscan
 import config
 import func
@@ -128,7 +128,7 @@ class Application(tkinter.Frame):
         self.log_scrolltxt = scrolledtext.ScrolledText(self.master, wrap=tkinter.WORD, width=60, height=10)
         self.log_scrolltxt.place(x=20, y=600)
 
-        self.hyperspectra_measurement_obj = hyperspectral_Measurement()
+        self.hyperspectra_measurement_obj = Hyperspectral_Measurement()
 
     def get_path(self, event):
         if self.button_path["state"] == tkinter.DISABLED:
