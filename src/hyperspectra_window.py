@@ -137,7 +137,7 @@ class Application(tkinter.Frame):
 
         file = filedialog.askdirectory(initialdir="C:\\Users\\optics\\individual")
         self.entry_path.delete(0, tkinter.END)
-        self.entry_path.insert(tkinter.END, file)
+        self.entry_path.insert(tkinter.END, file.replace("/", "\\"))
 
         self.button_path["state"] = tkinter.NORMAL
         return
@@ -211,7 +211,7 @@ class Application(tkinter.Frame):
             return
         # 計測時間の計算
         pred_h, pred_m, pred_s = None, None, None
-        pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure / 1000) *  + 60) * len(np.arange(minexWL, maxexWL + stepexWL, stepexWL)) * len(np.arange(minemWL, maxemWL + stepemWL, stepemWL)) + 80)
+        pred_h, pred_m, pred_s = func.get_h_m_s((func.waittime4exposure(exposure / 1000) + 60) * len(np.arange(minexWL, maxexWL + stepexWL, stepexWL)) * len(np.arange(minemWL, maxemWL + stepemWL, stepemWL)) + 80)
         if pred_h is None and pred_m is None and pred_s is None:
             msg = "計測にかかる時間は不明です"
         else:
