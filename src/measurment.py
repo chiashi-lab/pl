@@ -1208,7 +1208,7 @@ class Hyperspectral_Measurement():
             self.camera.folder_path = os.path.join(path, f"{exwavelength}")
 
             for emwavelength in self.emwavelengthlist:
-                filename = f"ex{exwavelength}_em{emwavelength}"
+                filename = f"em{emwavelength}_ex{exwavelength}"
                 if os.path.exists(os.path.join(path, f"{exwavelength}", filename)): # ファイルが存在していたら削除 -> 上書き保存
                     os.remove(os.path.join(path, f"{exwavelength}", filename))
                 self.camera.file_name = filename
