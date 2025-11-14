@@ -62,7 +62,7 @@ class Application(tkinter.Frame):
         self.label_maxemissionwavelength = tkinter.Label(text=u'AOTF最長中心波長')
         self.label_maxemissionwavelength.place(x=10, y=190)
         self.entry_maxemissionwavelength = tkinter.Entry(width=7)
-        self.entry_maxemissionwavelength.insert(tkinter.END, '1500')
+        self.entry_maxemissionwavelength.insert(tkinter.END, '1700')
         self.entry_maxemissionwavelength.place(x=190, y=190)
         self.unit_maxemissionwavelength = tkinter.Label(text=u'nm')
         self.unit_maxemissionwavelength.place(x=250, y=190)
@@ -155,7 +155,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_calc_ex_wl["state"] = tkinter.NORMAL
             return
-        if minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minexWL > maxexWL:
+        if minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 150 or minexWL > maxexWL:
             self.msg.set("正しい値を入力してください")
             self.button_calc_ex_wl["state"] = tkinter.NORMAL
             return
@@ -178,7 +178,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_calc_em_wl["state"] = tkinter.NORMAL
             return
-        if minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minemWL > maxemWL:
+        if minemWL < 900 or minemWL > 1700 or maxemWL < 900 or maxemWL > 1700 or stepemWL <= 0 or stepemWL > 800 or minemWL > maxemWL:
             self.msg.set("正しい値を入力してください")
             self.button_calc_em_wl["state"] = tkinter.NORMAL
             return
@@ -205,7 +205,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_calc_time["state"] = tkinter.NORMAL
             return
-        if exposure < 0 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minexWL > maxexWL or minemWL > maxemWL:
+        if exposure < 0 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1700 or maxemWL < 900 or maxemWL > 1700 or stepemWL <= 0 or stepemWL > 800 or minexWL > maxexWL or minemWL > maxemWL:
             self.msg.set("正しい値を入力してください")
             self.button_calc_time["state"] = tkinter.NORMAL
             return

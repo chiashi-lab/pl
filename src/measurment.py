@@ -1207,17 +1207,17 @@ class Hyperspectral_Measurement():
                 self.logger.log(f"make dir at {os.path.join(path, f'{exwavelength}')}")
             self.camera.folder_path = os.path.join(path, f"{exwavelength}")
 
-            self.logger.log(f"start excite wavelength control at {exwavelength}")
-            pid_control_wavelength(targetwavelength=exwavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
-            self.logger.log(f"start power control at {exwavelength} for {targetpower}")
-            pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(exwavelength, targetpower))
-            self.mypowerdict.add(exwavelength, targetpower, self.NDfilter.get_position())
-
             for emwavelength in self.emwavelengthlist:
                 filename = f"ex{exwavelength}_em{emwavelength}"
                 if os.path.exists(os.path.join(path, f"{exwavelength}", filename)): # ファイルが存在していたら削除 -> 上書き保存
                     os.remove(os.path.join(path, f"{exwavelength}", filename))
                 self.camera.file_name = filename
+
+                self.logger.log(f"start excite wavelength control at {exwavelength}")
+                pid_control_wavelength(targetwavelength=exwavelength, TiSap_actuator=self.tisp_linear_actuator, spectrometer=self.spectrometer, logger=logger)
+                self.logger.log(f"start power control at {exwavelength} for {targetpower}")
+                pid_control_power(targetpower=targetpower, powermeter=self.powermeter, NDfilter=self.NDfilter, eps=targetpower*config.EPSRATIO, logger=logger, NDinitpos=self.mypowerdict.get_nearest(exwavelength, targetpower))
+                self.mypowerdict.add(exwavelength, targetpower, self.NDfilter.get_position())
 
                 self.logger.log(f"set AOTF to {emwavelength}")
                 self.aotf.set_wavelength(emwavelength)
