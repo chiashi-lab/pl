@@ -242,7 +242,7 @@ class Application(tkinter.Frame):
             self.msg.set(f"値を正しく入力してください\n{e}")
             self.button_start["state"] = tkinter.NORMAL
             return
-        if power < 0.0 or power > 4.0 or exposure < 0 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1500 or maxemWL < 900 or maxemWL > 1500 or stepemWL <= 0 or stepemWL > 600 or minexWL > maxexWL or minemWL > maxemWL:
+        if power < 0.0 or power > 4.0 or exposure < 0 or minexWL < 700 or minexWL > 850 or maxexWL < 700 or maxexWL > 850 or stepexWL <= 0 or stepexWL > 400 or minemWL < 900 or minemWL > 1700 or maxemWL < 900 or maxemWL > 1700 or stepemWL <= 0 or stepemWL > 600 or minexWL > maxexWL or minemWL > maxemWL:
             self.msg.set("正しい値を入力してください")
             self.button_start["state"] = tkinter.NORMAL
             return

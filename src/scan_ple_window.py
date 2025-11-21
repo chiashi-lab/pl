@@ -177,6 +177,11 @@ class Application(tkinter.Frame):
             numberofsteps = int(self.entry_numberofsteps.get())
             startpos = [int(self.entry_startpos_x.get()), int(self.entry_startpos_y.get())]
             endpos = [int(self.entry_endpos_x.get()), int(self.entry_endpos_y.get())]
+            minWL = int(self.entry_minwavelength.get())
+            maxWL = int(self.entry_maxwavelength.get())
+            stepWL = int(self.entry_stepwavelength.get())
+            wavelengthlist = np.arange(minWL, maxWL + stepWL, stepWL)
+            wavelengthlist = wavelengthlist.tolist()
         except Exception as e:
             print(e)
             self.msg.set(f"値を正しく入力してください\n{e}")
@@ -186,9 +191,28 @@ class Application(tkinter.Frame):
             self.msg.set("測定箇所は2箇所以上必要です")
             self.button_calc_measurement_interval["state"] = tkinter.NORMAL
             return
+        if minWL < 700 or minWL > 850 or maxWL < 700 or maxWL > 850 or stepWL <= 0 or stepWL > 400 or minWL > maxWL:
+            self.msg.set("正しい値を入力してください")
+            self.button_calc_measurement_interval["state"] = tkinter.NORMAL
+            return
+
+        # 計測時間の計算
+        pred_h, pred_m, pred_s = None, None, None
+        try:
+            exposure = int(self.entry_exposuretime.get())
+            pred_h, pred_m, pred_s = func.get_h_m_s(((func.waittime4exposure(exposure) + 60) * len(wavelengthlist) + 20) * numberofsteps + 80)
+        except Exception as e:
+            self.msg.set(f"値を正しく入力してください\n{e}")
+            self.button_calc_measurement_interval["state"] = tkinter.NORMAL
+            return
+        if pred_h is None and pred_m is None and pred_s is None:
+            msg = "計測にかかる時間は不明です"
+        else:
+            msg = f"計測にかかる時間は約{pred_h}時間{pred_m}分{pred_s}秒です"
+
         distance = np.linalg.norm(np.array(startpos) - np.array(endpos)) / 100 #umに変換
         interval = distance / (numberofsteps - 1)
-        self.msg.set(f"測定間隔は{interval:.2f}umです")
+        self.msg.set(f"測定間隔は{interval:.2f}umです\n{msg}")
         self.button_calc_measurement_interval["state"] = tkinter.NORMAL
         return
     
@@ -230,7 +254,8 @@ class Application(tkinter.Frame):
 
     def pack_scan_ple(self, power:float, minWL:int, maxWL:int, stepWL:int, exposure:int, path:str, startpos:tuple, endpos:tuple, numberofsteps:int, autofocus:bool, sweep:bool)->None:
         starttime = datetime.datetime.now()
-        endtime = starttime + datetime.timedelta(seconds= (func.waittime4exposure(exposure) +10) * (((maxWL - minWL) / stepWL) + 1) * numberofsteps + 120)#120秒はなんとなくの初期化時間
+        wavelengthlist = np.arange(minWL, maxWL + stepWL, stepWL).tolist()
+        endtime = starttime + datetime.timedelta(seconds= ((func.waittime4exposure(exposure) + 60) * len(wavelengthlist) + 20) * numberofsteps + 80)
         self.button_start["state"] = tkinter.DISABLED
         self.logger = logger.Logger(log_file_path=os.path.join(path, "log.txt"), timestamp_flag=True, log_scroll=self.log_scrolltxt)
         self.msg.set("計測中...\n" + "開始時刻:" + starttime.strftime("%Y/%m/%d %H:%M:%S") + "\n" + "終了予定時刻:" + endtime.strftime("%Y/%m/%d %H:%M:%S"))
