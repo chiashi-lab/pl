@@ -85,13 +85,14 @@ class juno:
 
         return:
         data(3xN float array): 2D(3xN) array of data
-        0st row: time
+        0st row: timestamp [ms]
         1st row: power [W]
         2nd row: status
 
         if there is no data, return null 2D array(3x0)
         If you want to get the data, just wait a little before do"get_data"
         データは時系列順である．先頭（インデックスの値が小さい）ほど古いデータ，末尾（インデックスの値が大きい）ほど新しいデータである．
+        大体60-70msごとにパワーが計測されており、PCまで送られていないデータがこのメソッドで一気に取得される
         """
         data = self.OphirCOM.GetData(self.DeviceHandle, 0)
         while not data:
@@ -152,6 +153,9 @@ class juno:
         
         return:
         None
+        レンジ0によるautoモードはパワーによってレンジが自動で変わる．
+        便利であるがレンジ切り替えを伴うようなパワー変化があるとデータが不安定になったりするので注意
+        5秒以上の安定時間をおいてからデータを取得することを推奨する
         """
         if not (0 <= range and range <= 5):
             warnings.warn("range should be 0 to 5")

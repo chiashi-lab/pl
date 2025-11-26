@@ -2,6 +2,7 @@ from pylablib.devices import Thorlabs
 import sys
 sys.path.append('../')
 import config
+import func
 from ctypes import *
 import numpy as np
 
@@ -141,23 +142,36 @@ class thorlabspectrometer:
         self._lib = cdll.LoadLibrary(config.CCS200DLLPATH)
         self._ccs_handle = c_int(0)
         self._lib.tlccs_init(config.CCS200SPECTROMETERID.encode(), 1, 1, byref(self._ccs_handle))
-        self.set_integration_time(0.001)
+        self.set_integration_time(config.CCS200_INTEGRATIONTIME)
         self._wavelengths = self._get_wavelengths()
-        self.wavelengths_corrected = [x - 10.931 for x in self._wavelengths]
+        #以下の波長校正式はnotebook/002ccs200.ipynbにて算出したもの
+        #ArHgランプの輝度スペクトルを基準としている
+        self.wavelengths_corrected = [func.ccs200_wavelength_correction(x) for x in self._wavelengths]
 
     def __del__(self) -> None:
         self._lib.tlccs_close (self._ccs_handle)
 
-    def set_integration_time(self, integration_time: int) -> None:
+    def set_integration_time(self, integration_time: float) -> None:
         """
         set the integration time of the spectrometer
         args:
-            time(int): integration time in seconds not milliseconds
+            time(float): integration time in seconds not milliseconds
         return:
             None
         
         """
+        self._integration_time = integration_time
         self._lib.tlccs_setIntegrationTime(self._ccs_handle, c_double(integration_time))
+
+    def get_integration_time(self) -> float:
+        """
+        get the integration time of the spectrometer
+        args:
+            None
+        return:
+            integration_time(float): integration time in seconds not milliseconds
+        """
+        return self._integration_time
 
     def _get_wavelengths(self) -> list:
         """
@@ -171,13 +185,22 @@ class thorlabspectrometer:
         self._lib.tlccs_getWavelengthData(self._ccs_handle, 0, byref(wavelengths), c_void_p(None), c_void_p(None))
         return list(wavelengths)
 
-    def get_spectrum(self) -> tuple:
+    def get_wavelengths(self) -> list:
+        """
+        get the corrected wavelengths from the spectrometer
+        args:
+            None
+        return:
+            wavelengths(list): corrected wavelengths from the spectrometer
+        """
+        return self.wavelengths_corrected
+
+    def get_spectrum(self) -> list:
         """
         get the spectrum from the spectrometer
         args:
             None
         return:
-            wavelengths(list): wavelengths from the spectrometer
             spectrum(list): spectrum from the spectrometer
         """
         self._lib.tlccs_startScan(self._ccs_handle)
@@ -197,17 +220,33 @@ class thorlabspectrometer:
             None
         return:
             peak(float): peak of the spectrum
-        """
+
+        #最もナイーブな実装は以下
         spectrum = self.get_spectrum()
         peakindex = np.argmax(spectrum)
         return self.wavelengths_corrected[peakindex]
+        #この実装だとサチって最大値が複数ある場合に正しく動作しない
+        """
+        for _ in range(10):#露光時間の調整は10回まで行う
+            spectrum = np.array(self.get_spectrum())
+            n_maxvalue = np.count_nonzero(spectrum == np.max(spectrum))
+            if n_maxvalue <= 1:#最大値が一つだけならサチっていない
+                peakindex = np.argmax(spectrum)
+                peakwavelength = self.wavelengths_corrected[peakindex]
+                if peakwavelength < config.TISP_LASER_SHORTEST_WAVELENGTH or config.TISP_LASER_LONGEST_WAVELENGTH < peakwavelength: #ピーク波長がチタンサファイアレーザーの利得帯域外なら上手く露光出来ていないので露光時間を延ばす
+                    self.set_integration_time(self.get_integration_time() * 2)
+                else:
+                    return peakwavelength
+            else: #最大値が複数あるならサチっているので露光時間を短くする
+                self.set_integration_time(self.get_integration_time() / 2)
+
 
 
 if __name__ == "__main__":
     print(Thorlabs.list_kinesis_devices())
     
     stage = ThorlabStage(home=True)
-    stage.move_to(500000,block=True)
+    stage.move_to(0,block=True)
     print(f"moved{stage.get_position()}")
 
     #flip = FlipMount()

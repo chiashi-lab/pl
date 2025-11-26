@@ -1,20 +1,20 @@
-# PLの制御
-python == 3.11.9
+# PLスペクトル取得の基本的な流れ
+pythonで3.11.9動作確認済み
 ![overview](docs/pl-diagram.png)
 
 1. レーザ前ミラーとシャッターの起動。二つで光路を遮断
 2. NDフィルターを搭載したthorlabsステージの初期化
-3. レーザ前ミラーを開く
-4. パワーメーター，CCD検出器，チタンサファイアレーザーに搭載したzaberアクチュエータ，励起光波長フィードバック用簡易分光器の初期化
-5. 励起光波長をPID制御
-6. 励起光パワーをPID制御\
-(6.5. 必要であれば波長700nmでオートフォーカス)
-7. シャッターを開き、レーザーをサンプルに照射
-8. CCD検出器を露光しデータを取得
-9. シャッターを閉じる
-10. CCD検出器からおくられてきたデータをリネーム。指定されたフォルダに"励起光中心波長.txt"として保存
-11. 励起光最短中心波長から励起光最長中心波長まで励起光中心波長間隔ごとにずらしながら5~10を繰り返す
-12. マッピング測定の場合はステージを動かして5~11を繰り返す
+3. パワーメーター，検出器，チタンサファイアレーザーに搭載したzaberアクチュエータ，励起光波長フィードバック用簡易分光器，NDフィルターを搭載したthorlabステージの初期化
+4. レーザ前ミラーを開く\
+(4.1. 必要であれば波長700nmでオートフォーカス)
+5. マッピング測定なら測定ポイントに移動. Z位置（フォーカス位置）も調整する場合は調整する
+6. 励起光波長をPID制御
+7. 励起光パワーをPID制御\
+8. シャッターを開き、レーザーをサンプルに照射
+9. CCD検出器を露光しデータを取得
+10. シャッターを閉じる
+11. 検出器からおくられてきたデータをリネーム。指定されたフォルダに"励起光波長.txt"として保存
+12. 励起光最短波長から励起光最長波長まで励起光波長間隔ごとにずらしながら5~10を繰り返す
 13. シャッターとレーザ前ミラーを閉じて終了
 
 # ディレクトリ構成
@@ -36,16 +36,21 @@ python == 3.11.9
 │   ├── emit_excitation_window.py...励起光照射君のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── func.py...main関数等で使う数式を記述している
 │   ├── logger.py...ログを記録するためのクラス定義
-│   ├── main.py...メインスクリプト．計測の中心となる部分の関数を記述している
-|   ├── scan_ple_sweep_window.py...PLEスペクトルのマッピング測定をsweepしながら行うためのGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── power_dict.py...パワーメータの制御高速化のために辞書型でデータを保存するためのクラス定義
+│   ├── main.py...メインスクリプト．計測の中心となるクラス定義や波長制御、パワー制御、オートフォーカス等の関数定義
+|   ├── dev_scan_ple__window.py...PLEスペクトルのマッピング測定を行うためのGUI．このスクリプトを実行するとGUIが立ち上がる．最新機能が反映されている．
 │   ├── scan_ple_window.py...PLEスペクトルのマッピング測定君のGUI．このスクリプトを実行するとGUIが立ち上がる
 │   ├── single_ple_window.py...PLEスペクトル測定のGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── scan_image_window.py...NIRカメラによるマッピング画像測定のGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── zaber_tool.py...zaber社製のアクチュエータを直接操作するためのGUI．このスクリプトを実行するとGUIが立ち上がる
+│   ├── focus_tool.py...オートフォーカス用のarduinoを直接操作するためのGUI．このスクリプトを実行するとGUIが立ち上がる
 │   └──driver
 │       ├── brimrose.py...brimrose社製AOTFの制御のためのクラス定義
 │       ├── fianium.py...fianium社製LVTFであるsuperchromeの制御のためのクラス定義
 │       ├── focus_adjuster_driver.py...オートフォーカス用arduinoの制御のためのクラス定義
 │       ├── horiba.py...horiba jovan yvon社製の分光器iHR320とCCD検出器symphonyの制御のためのクラス定義
 │       ├── ophir.py...ophir社製のパワーメーターの制御のためのクラス定義
+│       ├── princeton.py...princeton instruments社製のNIRカメラの制御のためのクラス定義
 │       ├── prior.py...prior社製のステージコントローラーの制御のためのクラス定義
 │       ├── sigmakoki.py...sigmakoki社製のシャッターコントローラーの制御のためのクラス定義
 │       ├── thorlabs.py...thorlabs社製のNDフィルター用ステージコントローラー，レーザー前フリップミラー，励起光波長フィードバック制御用の簡易分光器の制御のためのクラス定義
@@ -81,14 +86,14 @@ ophir社製のパワーメーター3A-FSの制御にはophirの公式マニュ�
 [OphirManual](docs/OphirLMMeasurement_COM_Object_0.pdf)
 
 
-## ~~superchrome~~
+## superchrome
+SCレーザーの故障により使用してない
 ~~[superchromeSDK](docs/SuperChromeSDK.pdf)~~
 
-~~dllファイルから制御しようとしたときに4108エラーが発生。（金井がdelphiのサンプルコードを理解できていないのが原因。多分何とかなるハズ）~~
+~~dll同梱の制御GUIをpywinautoによって直接操作している~~
 
-~~面倒くさいのでdll同梱の制御GUIをpywinautoによって直接操作している~~
-
-## ~~分光器 ihR320~~
+## 分光器 ihR320
+pywinautoによって制御可能であるが，制御する必要がないため，使用していない
 
 ~~こちらもpywinautoで直接MonoExampleを操作している~~
 
@@ -115,10 +120,17 @@ thorlabs社製のレーザー前ミラーを制御するためにpylablibを使�
 リニアアクチュエータの安全運用位置の目安は下図参照
 ![linear](docs/ti-sp-linear-act.png)
 
-## オートフォーカス
+## フォーカス調整
 
-オートフォーカス用のarduinoを制御するためにpyserialを用いてシリアル通信を行っている
+オートフォーカス用のarduinoを制御するためにpyserialを用いてシリアル通信を行っている.
+オートフォーカス部分の回路図は下図参照
+モーターにはバイポーラステッピングモーターを使用、モータードライバにはDRV8434による秋月電子AE-DRV8434を使用。モーター部回路部ともに電源電圧は5Vである
+![focus](docs/auto_focus_circuit.png)
 
 ## サンプルステージ
 
 prior社製のサンプルステージを制御してマッピング測定を行うためにpyserialを用いてシリアル通信を行っている
+
+## NIRカメラ
+princeton社製のNIRカメラを制御するためにprincetonが公式に配布しているSDKを使用している。
+NIR data reader code is copied from [https://github.com/sliakat/SpeReadPy](https://github.com/sliakat/SpeReadPy) very thnaks to [@sliakat](https://github.com/sliakat)
